@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PIXEL LOG · 像素日志</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="top">
+  <span class="logo">PIXEL LOG</span>
+  <nav>
+    <a href="#" class="on">日志</a>
+    <a href="#">成就</a>
+    <a href="#">关于</a>
+  </nav>
+  <button class="btn primary">新游戏+</button>
+</header>
+
+<main>
+  <h1>本周开发日志</h1>
+  <p class="sub">PLAYER: anonymous · LV.42 · 2026-07</p>
+
+  <div class="stats">
+    <div class="panel">
+      <div class="k">通关任务</div>
+      <div class="v">12</div>
+    </div>
+    <div class="panel">
+      <div class="k">获得金币</div>
+      <div class="v coin">3,580</div>
+    </div>
+    <div class="panel">
+      <div class="k">BUG 残血</div>
+      <div class="v">7</div>
+    </div>
+  </div>
+
+  <h2>任务列表</h2>
+  <table>
+    <thead>
+      <tr><th>任务</th><th>难度</th><th class="num">经验</th><th>状态</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>重写渲染管线</td><td>★★★</td><td class="num">1,200</td><td><span class="tag ok">已通关</span></td></tr>
+      <tr><td>修掉落帧</td><td>★★</td><td class="num">800</td><td><span class="tag ok">已通关</span></td></tr>
+      <tr><td>BOSS：缓存一致性</td><td>★★★★★</td><td class="num">5,000</td><td><span class="tag hot">进行中</span></td></tr>
+    </tbody>
+  </table>
+
+  <button class="btn primary">继续？</button>
+  <button class="btn">读取存档</button>
+</main>
+</body>
+</html>

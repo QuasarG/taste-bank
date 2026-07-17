@@ -1,0 +1,25 @@
+/* 像素风专属：2px 边框加粗与按钮「咔哒」位移，scoped 在 [data-style="pixel"] 下 */
+
+[data-style="pixel"] .sl-card,
+[data-style="pixel"] .sl-btn,
+[data-style="pixel"] .sl-input,
+[data-style="pixel"] .sl-badge {
+  border-width: 2px;
+}
+
+[data-style="pixel"] .sl-btn {
+  box-shadow: 3px 3px 0 var(--sl-color-ink, #0B0D17);
+}
+[data-style="pixel"] .sl-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--sl-color-ink, #0B0D17);
+}
+[data-style="pixel"] .sl-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+[data-style="pixel"] .sl-h3,
+[data-style="pixel"] .sl-table th {
+  border-bottom-width: 2px;
+}

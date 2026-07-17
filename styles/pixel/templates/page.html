@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>像素街机 Pixel Arcade · 模板快照</title>
+<style>
+  :root {
+    --bg: #1A1C2C; --surface: #262B44; --text: #F4F4F4; --muted: #8B9BB4;
+    --line: #3A4066; --accent: #FF6B35; --coin: #FFCD4A; --ink: #0B0D17;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+    font-size: 0.95rem; line-height: 1.7;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 24px; border-bottom: 2px solid var(--line);
+  }
+  .logo { letter-spacing: 0.15em; font-weight: 700; color: var(--coin); }
+  nav { flex: 1; display: flex; gap: 16px; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.8rem; }
+  nav a.on { color: var(--accent); }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 1.6rem; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 32px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .panel {
+    background: var(--surface); border: 2px solid var(--line);
+    padding: 16px; box-shadow: 4px 4px 0 var(--ink);
+  }
+  .k { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; }
+  .v { font-size: 1.8rem; margin-top: 4px; }
+  .v.coin { color: var(--coin); }
+  h2 {
+    font-size: 0.8rem; color: var(--muted); letter-spacing: 0.12em;
+    border-bottom: 2px solid var(--line); padding-bottom: 4px; margin-bottom: 16px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 32px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; }
+  .num { text-align: right; }
+  .tag { display: inline-block; padding: 0 8px; font-size: 0.7rem; border: 2px solid var(--line); color: var(--muted); }
+  .tag.ok { color: #7BD88F; border-color: #7BD88F; }
+  .tag.hot { color: var(--accent); border-color: var(--accent); }
+  .btn {
+    font: inherit; font-size: 0.85rem; cursor: pointer;
+    color: var(--text); background: var(--surface);
+    border: 2px solid var(--line); padding: 8px 20px; margin-right: 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 80ms steps(2, end), box-shadow 80ms steps(2, end);
+  }
+  .btn:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn:active { transform: translate(3px, 3px); box-shadow: none; }
+  .btn.primary { background: var(--accent); color: var(--ink); border-color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">PIXEL LOG</span>
+  <nav>
+    <a href="#" class="on">日志</a>
+    <a href="#">成就</a>
+    <a href="#">关于</a>
+  </nav>
+  <button class="btn primary">新游戏+</button>
+</header>
+<main>
+  <h1>本周开发日志</h1>
+  <p class="sub">PLAYER: anonymous · LV.42 · 2026-07</p>
+  <div class="stats">
+    <div class="panel"><div class="k">通关任务</div><div class="v">12</div></div>
+    <div class="panel"><div class="k">获得金币</div><div class="v coin">3,580</div></div>
+    <div class="panel"><div class="k">BUG 残血</div><div class="v">7</div></div>
+  </div>
+  <h2>任务列表</h2>
+  <table>
+    <thead><tr><th>任务</th><th>难度</th><th class="num">经验</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr><td>重写渲染管线</td><td>★★★</td><td class="num">1,200</td><td><span class="tag ok">已通关</span></td></tr>
+      <tr><td>修掉落帧</td><td>★★</td><td class="num">800</td><td><span class="tag ok">已通关</span></td></tr>
+      <tr><td>BOSS：缓存一致性</td><td>★★★★★</td><td class="num">5,000</td><td><span class="tag hot">进行中</span></td></tr>
+    </tbody>
+  </table>
+  <button class="btn primary">继续？</button>
+  <button class="btn">读取存档</button>
+</main>
+</body>
+</html>

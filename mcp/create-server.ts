@@ -134,7 +134,7 @@ export function createStyleLabServer(): McpServer {
     {
       title: '投稿新风格',
       description:
-        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）。校验通过后立即被网站与 MCP 收录。slug 冲突或校验失败会报错并说明原因。',
+        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）。校验通过后立即被网站与 MCP 收录。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
       inputSchema: {
         meta: metaSchema.describe('风格元信息，slug 只允许小写字母数字和连字符'),
         tokens: tokensSchema.describe('设计变量，必须包含 bg/surface/text/muted/line/accent 六个色角色'),
