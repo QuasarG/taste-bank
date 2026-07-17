@@ -1,25 +1,31 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Bench from '../../components/Bench.astro';
-import { listStyles, loadStyle, readStyleFile } from '../../lib/store';
+import { loadStyle, readStyleFile, type StylePack } from '../../lib/store';
 import { fullCss, assembleSkill } from '../../lib/assemble';
 
-export function getStaticPaths() {
-  return listStyles().map((slug) => ({ params: { slug } }));
-}
-
 const slug = Astro.params.slug!;
-const pack = loadStyle(slug);
-const css = fullCss(slug, pack.tokens, pack.overrides);
-const skill = assembleSkill(pack.meta, pack.tokens, pack.skillRaw);
+let pack: StylePack | null = null;
+try {
+  pack = loadStyle(slug);
+} catch {
+  Astro.response.status = 404;
+}
+const css = pack ? fullCss(slug, pack.tokens, pack.overrides) : '';
+const skill = pack ? assembleSkill(pack.meta, pack.tokens, pack.skillRaw) : '';
 ---
 
-<Base title={pack.meta.name}>
-  <style set:html={css} />
+<Base title={pack ? pack.meta.name : '风格不存在'}>
+  {
+    !pack ? (
+      <h1 class="page-title">风格不存在：{slug}</h1>
+    ) : (
+      <>
+        <style set:html={css} />
 
-  <div class="detail-head">
-    <h1 class="page-title">{pack.meta.name} <span class="ver">v{pack.meta.version}</span></h1>
-    <p class="page-sub">{pack.meta.summary}</p>
+        <div class="detail-head">
+          <h1 class="page-title">{pack.meta.name} <span class="ver">v{pack.meta.version}</span></h1>
+          <p class="page-sub">{pack.meta.summary}</p>
     <dl class="kv">
       <dt>适用场景</dt><dd>{pack.meta.useCase}</dd>
       <dt>Signature</dt><dd>{pack.meta.signature}</dd>
@@ -82,4 +88,7 @@ const skill = assembleSkill(pack.meta, pack.tokens, pack.skillRaw);
       });
     });
   </script>
+      </>
+    )
+  }
 </Base>
