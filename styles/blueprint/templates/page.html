@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>蓝图 Blueprint · 模板快照</title>
+<style>
+  :root {
+    --bg: #0F2D52; --surface: #143A66; --text: #E8F1FF; --muted: #8FB3E8;
+    --line: #3D6CA8; --accent: #7FD4FF; --warn: #FFB86B;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 1rem; line-height: 1.6;
+  }
+  .mono { font-family: "IBM Plex Mono", "JetBrains Mono", Consolas, monospace; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; border-bottom: 1px solid var(--line);
+  }
+  .logo { font-family: "Space Grotesk", sans-serif; letter-spacing: 0.12em; }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 24px; font-size: 0.85rem; }
+  nav a.active { color: var(--accent); }
+  main { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 2rem; font-weight: 600; margin-bottom: 8px; }
+  .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 32px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .card {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 2px; padding: 16px;
+  }
+  .card::before, .card::after {
+    content: ''; position: absolute; width: 10px; height: 10px;
+    border-style: solid; border-color: var(--accent);
+  }
+  .card::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .card::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; }
+  .stat-value { font-size: 1.8rem; margin-top: 4px; }
+  .stat-value.accent { color: var(--accent); }
+  h2 {
+    font-size: 0.85rem; font-weight: 600; letter-spacing: 0.1em; color: var(--muted);
+    border-bottom: 1px dashed var(--line); padding-bottom: 4px; margin-bottom: 16px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; letter-spacing: 0.06em; }
+  td.num, th.num { text-align: right; font-family: "IBM Plex Mono", Consolas, monospace; }
+  .badge {
+    display: inline-block; padding: 1px 8px; font-size: 0.72rem;
+    border: 1px solid var(--line); border-radius: 2px; color: var(--muted);
+  }
+  .badge.ok { color: var(--accent); border-color: var(--accent); }
+  .badge.warn { color: var(--warn); border-color: var(--warn); }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">NODEWATCH</span>
+  <nav class="mono">
+    <a href="#" class="active">概览</a><a href="#">节点</a><a href="#">告警</a><a href="#">文档</a>
+  </nav>
+</header>
+<main>
+  <h1>集群概览</h1>
+  <p class="sub mono">REGION cn-east-1 · 更新于 12:04:33</p>
+
+  <div class="stats">
+    <div class="card">
+      <div class="stat-label mono">在线节点</div>
+      <div class="stat-value accent mono">47<span style="color:var(--muted)">/50</span></div>
+    </div>
+    <div class="card">
+      <div class="stat-label mono">平均延迟</div>
+      <div class="stat-value mono">23<small style="font-size:0.85rem;color:var(--muted)"> ms</small></div>
+    </div>
+    <div class="card">
+      <div class="stat-label mono">待处理告警</div>
+      <div class="stat-value mono" style="color:var(--warn)">3</div>
+    </div>
+  </div>
+
+  <h2 class="mono">节点列表</h2>
+  <table>
+    <thead>
+      <tr><th>节点</th><th>区域</th><th class="num">CPU</th><th class="num">内存</th><th>状态</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">node-01</td><td>cn-east-1a</td><td class="num">34%</td><td class="num">61%</td><td><span class="badge ok">正常</span></td></tr>
+      <tr><td class="mono">node-02</td><td>cn-east-1b</td><td class="num">72%</td><td class="num">58%</td><td><span class="badge ok">正常</span></td></tr>
+      <tr><td class="mono">node-03</td><td>cn-east-1a</td><td class="num">91%</td><td class="num">87%</td><td><span class="badge warn">过载</span></td></tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
