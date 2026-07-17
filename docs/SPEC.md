@@ -59,6 +59,22 @@ frontmatter 必须有 `name` 与 `description`（agent 靠 description 判断何
 token 值不写进 SKILL.md 正文——库会自动把 tokens.json 生成的 CSS 变量块
 追加为「## Tokens」附录，避免两处维护产生漂移。
 
+## 投稿契约（submit_style / POST /api/styles.json）
+
+```jsonc
+{
+  "meta": { "...": "同 meta.json" },
+  "tokens": { "...": "同 tokens.json" },
+  "skill": "SKILL.md 全文（markdown，含 frontmatter，≥50 字）",
+  "overrides": "可选，同 overrides.css",
+  "templates": { "page.html": "...", "extra.vue": "..." }
+}
+```
+
+- `templates` 可选，但若提供必须至少含一个 `.html`；文件名限 `[\w.-]` + 白名单扩展名
+- skill / overrides / 模板内容同样过危险片段黑名单（即模板禁止内嵌 `<script>`）
+- slug 已存在时拒绝（409），覆盖更新请先升版本后走人工 git 流程
+
 ## 每个文件给谁用
 
 | 文件 | 网站 | MCP / agent |
