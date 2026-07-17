@@ -1,0 +1,30 @@
+---
+import '../styles/shell.css';
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = 'anonymous 的个人前端风格库' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title} · Style Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="/">Style Lab</a>
+      <nav class="site-nav">
+        <a href="/">风格库</a>
+      </nav>
+    </header>
+    <main class="container">
+      <slot />
+    </main>
+    <footer class="site-footer">Style Lab · 每套风格 = 一份 agent 可直接使用的 skill</footer>
+  </body>
+</html>

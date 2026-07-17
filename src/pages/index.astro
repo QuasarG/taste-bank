@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import Bench from '../components/Bench.astro';
+import { listStyles, loadStyle } from '../lib/store';
+import { fullCss } from '../lib/assemble';
+
+const styles = listStyles().map((slug) => loadStyle(slug));
+---
+
+<Base title="风格库">
+  <h1 class="page-title">风格库</h1>
+  <p class="page-sub">共 {styles.length} 套风格 · 每套 = SKILL.md + tokens + 模板，agent 可直接取用</p>
+
+  <div class="gallery">
+    {
+      styles.map((s) => (
+        <a class="style-card" href={`/styles/${s.slug}`}>
+          <div class="preview" data-style={s.slug}>
+            <style set:html={fullCss(s.slug, s.tokens, s.overrides)} />
+            <Bench mini />
+          </div>
+          <div class="style-info">
+            <h2>
+              {s.meta.name} <span class="ver">v{s.meta.version}</span>
+            </h2>
+            <p class="summary">{s.meta.summary}</p>
+            <div class="tags">
+              {s.meta.mood.map((m) => (
+                <span class="tag">{m}</span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+</Base>

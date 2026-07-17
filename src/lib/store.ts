@@ -3,7 +3,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { metaSchema, tokensSchema, type Meta, type Tokens } from './schema';
 
-export const STYLES_DIR = fileURLToPath(new URL('../../styles/', import.meta.url));
+// 三级兜底：Astro 构建期模块会被打包挪窝，不能只靠 import.meta.url
+function resolveStylesDir(): string {
+  if (process.env.STYLE_LAB_DIR) return path.resolve(process.env.STYLE_LAB_DIR, 'styles');
+  const fromCwd = path.resolve(process.cwd(), 'styles');
+  if (fs.existsSync(fromCwd)) return fromCwd;
+  return fileURLToPath(new URL('../../styles/', import.meta.url));
+}
+
+export const STYLES_DIR = resolveStylesDir();
 
 export interface StylePack {
   slug: string;

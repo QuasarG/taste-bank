@@ -1,0 +1,85 @@
+---
+import Base from '../../layouts/Base.astro';
+import Bench from '../../components/Bench.astro';
+import { listStyles, loadStyle, readStyleFile } from '../../lib/store';
+import { fullCss, assembleSkill } from '../../lib/assemble';
+
+export function getStaticPaths() {
+  return listStyles().map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const pack = loadStyle(slug);
+const css = fullCss(slug, pack.tokens, pack.overrides);
+const skill = assembleSkill(pack.meta, pack.tokens, pack.skillRaw);
+---
+
+<Base title={pack.meta.name}>
+  <style set:html={css} />
+
+  <div class="detail-head">
+    <h1 class="page-title">{pack.meta.name} <span class="ver">v{pack.meta.version}</span></h1>
+    <p class="page-sub">{pack.meta.summary}</p>
+    <dl class="kv">
+      <dt>适用场景</dt><dd>{pack.meta.useCase}</dd>
+      <dt>Signature</dt><dd>{pack.meta.signature}</dd>
+      <dt>文案语气</dt><dd>{pack.meta.rules.voice}</dd>
+    </dl>
+    <div class="rules">
+      <div>
+        <h3>Do</h3>
+        <ul>{pack.meta.rules.do.map((r) => <li>{r}</li>)}</ul>
+      </div>
+      <div>
+        <h3>Don't</h3>
+        <ul>{pack.meta.rules.dont.map((r) => <li>{r}</li>)}</ul>
+      </div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>组件测试台（实时渲染当前 tokens）</h2>
+    <div class="bench-wrap" data-style={slug}>
+      <Bench />
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>SKILL.md（复制后喂给 agent）</h2>
+    <button class="copy-btn" data-copy="skill-md">复制</button>
+    <pre class="code" id="skill-md">{skill}</pre>
+  </section>
+
+  <section class="panel">
+    <h2>tokens.css（含 overrides）</h2>
+    <button class="copy-btn" data-copy="tokens-css">复制</button>
+    <pre class="code" id="tokens-css">{css}</pre>
+  </section>
+
+  <section class="panel">
+    <h2>Pack 文件清单</h2>
+    {
+      pack.files.map((f) => (
+        <details class="file">
+          <summary>{f}</summary>
+          <pre class="code">{readStyleFile(slug, f)}</pre>
+        </details>
+      ))
+    }
+  </section>
+
+  <script>
+    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const target = document.getElementById(btn.dataset.copy!);
+        if (!target) return;
+        await navigator.clipboard.writeText(target.textContent ?? '');
+        const old = btn.textContent;
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => {
+          btn.textContent = old;
+        }, 1500);
+      });
+    });
+  </script>
+</Base>

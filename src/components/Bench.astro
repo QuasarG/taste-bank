@@ -1,0 +1,142 @@
+---
+import '../styles/bench.css';
+interface Props {
+  mini?: boolean;
+}
+const { mini = false } = Astro.props;
+---
+
+<div class="sl-bench">
+  <nav class="sl-nav">
+    <span class="sl-logo">NODEWATCH</span>
+    <span class="sl-nav-links">
+      <a href="#">概览</a><a href="#">节点</a><a href="#">告警</a>
+    </span>
+    <span class="sl-btn sl-btn-primary sl-btn-sm">接入节点</span>
+  </nav>
+
+  <section class="sl-section">
+    <h1 class="sl-h1">集群概览</h1>
+    <p class="sl-p">界面应当像图纸一样被阅读：信息靠线条与留白组织，层级一目了然，没有一处多余的装饰。</p>
+    <p class="sl-data">1,024.75</p>
+    <p class="sl-small">辅助说明小字 · REGION cn-east-1</p>
+  </section>
+
+  <section class="sl-section">
+    <h3 class="sl-h3">按钮 / BUTTON</h3>
+    <div class="sl-row">
+      {
+        mini ? (
+          <>
+            <span class="sl-btn sl-btn-primary">主要操作</span>
+            <span class="sl-btn">次要操作</span>
+            <span class="sl-btn sl-btn-ghost">幽灵按钮</span>
+          </>
+        ) : (
+          <>
+            <button class="sl-btn sl-btn-primary">主要操作</button>
+            <button class="sl-btn">次要操作</button>
+            <button class="sl-btn sl-btn-ghost">幽灵按钮</button>
+            <button class="sl-btn" disabled>
+              禁用态
+            </button>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  {
+    !mini && (
+      <section class="sl-section">
+        <h3 class="sl-h3">表单 / FORM</h3>
+        <label class="sl-field">
+          <span class="sl-label">节点名称</span>
+          <input class="sl-input" placeholder="例如 node-04" />
+        </label>
+        <label class="sl-field">
+          <span class="sl-label">区域</span>
+          <select class="sl-input">
+            <option>cn-east-1a</option>
+            <option>cn-east-1b</option>
+          </select>
+        </label>
+        <label class="sl-field">
+          <span class="sl-label">备注</span>
+          <textarea class="sl-input" rows="3" placeholder="选填" />
+        </label>
+        <label class="sl-check">
+          <input type="checkbox" checked /> 启用告警通知
+        </label>
+      </section>
+    )
+  }
+
+  <section class="sl-section">
+    <h3 class="sl-h3">卡片 / CARD</h3>
+    <div class="sl-card">
+      <h4 class="sl-card-title">节点 node-03</h4>
+      <p class="sl-small">CPU 持续 5 分钟高于 90%，建议扩容或迁移负载。</p>
+      <div class="sl-card-foot">
+        <span class="sl-badge">过载</span>
+        <span class="sl-btn sl-btn-sm">查看详情</span>
+      </div>
+    </div>
+  </section>
+
+  {
+    !mini && (
+      <>
+        <section class="sl-section">
+          <h3 class="sl-h3">表格 / TABLE</h3>
+          <table class="sl-table">
+            <thead>
+              <tr>
+                <th>节点</th>
+                <th>区域</th>
+                <th class="num">CPU</th>
+                <th class="num">内存</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>node-01</td>
+                <td>cn-east-1a</td>
+                <td class="num">34%</td>
+                <td class="num">61%</td>
+                <td>
+                  <span class="sl-badge">正常</span>
+                </td>
+              </tr>
+              <tr>
+                <td>node-02</td>
+                <td>cn-east-1b</td>
+                <td class="num">72%</td>
+                <td class="num">58%</td>
+                <td>
+                  <span class="sl-badge">正常</span>
+                </td>
+              </tr>
+              <tr>
+                <td>node-03</td>
+                <td>cn-east-1a</td>
+                <td class="num">91%</td>
+                <td class="num">87%</td>
+                <td>
+                  <span class="sl-badge">过载</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="sl-section">
+          <h3 class="sl-h3">反馈 / FEEDBACK</h3>
+          <p class="sl-alert">端口格式无效：应为 1-65535 的整数。</p>
+          <div class="sl-empty">暂无告警记录。接入节点后，异常会出现在这里。</div>
+        </section>
+      </>
+    )
+  }
+</div>
