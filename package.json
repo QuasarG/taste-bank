@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "test": "node --import tsx --test tests/*.test.ts",
-    "mcp": "tsx mcp/server.ts"
+    "mcp": "tsx mcp/server.ts",
+    "mcp:http": "tsx mcp/http.ts"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",
