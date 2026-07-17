@@ -8,6 +8,12 @@ export const safeString = z
   .max(500)
   .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段');
 
+// 长文本版（SKILL.md / overrides / 模板内容），同一份黑名单
+export const safeText = z
+  .string()
+  .max(200_000)
+  .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段');
+
 export const hexColor = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, '必须是合法 hex 颜色');
