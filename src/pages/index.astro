@@ -183,8 +183,8 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
     });
   }
 
-  // 主视觉落地：切 iframe / 占位封面与信息栏
-  function applyActive() {
+  // 主视觉落地：切 iframe / 占位封面与信息栏（纯 DOM 交换，无动画）
+  function doSwap() {
     const el = items[active];
     const slug = el.dataset.slug;
     if (slug) {
@@ -206,6 +206,40 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
     document.title = `${el.querySelector('.wheel-name')?.textContent ?? ''} · Style Lab`;
   }
 
+  // 带方向切换：旧内容滑出渐隐，新内容从另一侧滑入（方向跟翻牌走）
+  let switching = false;
+  async function applyActive(dir: 1 | -1) {
+    if (switching) {
+      doSwap();
+      return;
+    }
+    switching = true;
+    const stage = document.querySelector<HTMLElement>('.stage-live')!;
+    const curAside = document.querySelector<HTMLElement>('.info-col:not([hidden])');
+    for (const el of [stage, curAside]) {
+      if (!el) continue;
+      el.style.transform = `translateY(${-18 * dir}px)`;
+      el.style.opacity = '0';
+    }
+    await new Promise((r) => setTimeout(r, 170));
+    doSwap();
+    const nextAside = document.querySelector<HTMLElement>('.info-col:not([hidden])');
+    for (const el of [stage, curAside, nextAside]) {
+      if (!el) continue;
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${18 * dir}px)`;
+      el.style.opacity = '0';
+    }
+    void stage.offsetWidth; // 强制 reflow，让进入起点生效
+    for (const el of [stage, curAside, nextAside]) {
+      if (!el) continue;
+      el.style.transition = '';
+      el.style.transform = '';
+      el.style.opacity = '';
+    }
+    switching = false;
+  }
+
   function openWheel() {
     if (!wheelOpen) {
       wheelOpen = true;
@@ -220,6 +254,7 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
   }
 
   // 滚轮翻牌：信息栏与全览网格内不拦截，页面其余区域召唤轮盘
+  let lastDir: 1 | -1 = 1;
   window.addEventListener(
     'wheel',
     (e) => {
@@ -231,13 +266,14 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       const now = performance.now();
       if (now - wheelLock > 170) {
         wheelLock = now;
-        active = (active + (e.deltaY > 0 ? 1 : -1) + items.length) % items.length;
+        lastDir = e.deltaY > 0 ? 1 : -1;
+        active = (active + lastDir + items.length) % items.length;
         layoutWheel();
       }
       clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
         closeWheel();
-        applyActive();
+        applyActive(lastDir);
       }, 600);
     },
     { passive: false },
@@ -250,10 +286,11 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       layoutWheel();
     });
     el.addEventListener('click', () => {
+      const dir: 1 | -1 = i >= active ? 1 : -1;
       active = i;
       clearTimeout(settleTimer);
       closeWheel();
-      applyActive();
+      applyActive(dir);
     });
   });
 
@@ -280,9 +317,11 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
   document.querySelector('[data-browse-close]')!.addEventListener('click', closeBrowse);
   document.querySelectorAll<HTMLElement>('[data-goto]').forEach((el) => {
     el.addEventListener('click', () => {
-      active = Number(el.dataset.goto);
+      const goto = Number(el.dataset.goto);
+      const dir: 1 | -1 = goto >= active ? 1 : -1;
+      active = goto;
       closeBrowse();
-      applyActive();
+      applyActive(dir);
     });
   });
   window.addEventListener('keydown', (e) => {

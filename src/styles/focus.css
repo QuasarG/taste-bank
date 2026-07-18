@@ -12,6 +12,7 @@
 .stage-live {
   position: relative; background: #fff;
   border-right: 1px solid var(--shell-line);
+  transition: transform 0.18s var(--shell-easing), opacity 0.18s var(--shell-easing);
 }
 .live-frame { display: block; width: 100%; height: 100%; border: 0; }
 /* 滚轮捕获层：拦滚轮召唤轮盘，mousedown 时放行让 iframe 可交互，移出舞台复位 */
@@ -23,7 +24,10 @@
 }
 .slot-big { font-size: 1.6rem; letter-spacing: 0.2em; color: rgba(17, 17, 17, 0.4); text-transform: uppercase; }
 
-.info-col { overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.info-col {
+  overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+  transition: transform 0.18s var(--shell-easing), opacity 0.18s var(--shell-easing);
+}
 .info-card {
   position: relative; background: var(--shell-surface);
   border: 1px solid var(--shell-line); padding: 14px 16px 12px;
