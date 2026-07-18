@@ -13,19 +13,33 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
   color: SLOT_COLORS[i % SLOT_COLORS.length],
 }));
 const firstSlug = styles.length > 0 ? styles[0].slug : null;
+// slug → 模板页列表（翻页器用）
+const templatesMap = Object.fromEntries(
+  styles.map((s) => [
+    s.slug,
+    s.files.filter((f) => f.startsWith('templates/') && f.endsWith('.html')).sort().map((f) => f.replace('templates/', '')),
+  ]),
+);
 ---
 
 <Base title="风格库" wide>
   <div class="focus" data-focus>
     <section class="stage-live">
-      {
-        firstSlug && (
-          <iframe class="live-frame" src={`/styles/${firstSlug}/template.html`} title="风格实时渲染" />
-        )
-      }
-      <div class="wheel-trap" data-wheel-trap></div>
-      <div class="stage-slot" data-stage-slot hidden={firstSlug !== null}>
-        <span class="slot-big">SLOT 01</span>
+      <div class="stage-body">
+        {
+          firstSlug && (
+            <iframe class="live-frame" src={`/styles/${firstSlug}/template.html`} title="风格实时渲染" />
+          )
+        }
+        <div class="wheel-trap" data-wheel-trap></div>
+        <div class="stage-slot" data-stage-slot hidden={firstSlug !== null}>
+          <span class="slot-big">SLOT 01</span>
+        </div>
+      </div>
+      <div class="stage-pager" data-pager hidden>
+        <button class="pager-btn" data-page-prev aria-label="上一页">◀</button>
+        <span class="pager-label" data-page-label>1 / 1</span>
+        <button class="pager-btn" data-page-next aria-label="下一页">▶</button>
       </div>
     </section>
 
@@ -87,20 +101,20 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       <button class="wheel-expand" data-browse-open title="浏览全部风格">←<span>浏览全部</span></button>
       {
         styles.map((s) => (
-          <button class="wheel-card" data-slug={s.slug}>
+          <div class="wheel-card" data-slug={s.slug}>
             <img src={`/api/styles/${s.slug}/screenshot.png`} alt={s.meta.name} loading="lazy" />
             <span class="wheel-name">{s.meta.name}</span>
-          </button>
+          </div>
         ))
       }
       {
         slots.map((slot) => (
-          <button class="wheel-card is-slot" data-slot={slot.n} data-color={slot.color}>
+          <div class="wheel-card is-slot" data-slot={slot.n} data-color={slot.color}>
             <span class="wheel-slotcover" style={`--pc:${slot.color}`}>
               SLOT {String(slot.n).padStart(2, '0')}
             </span>
             <span class="wheel-name">待收录</span>
-          </button>
+          </div>
         ))
       }
     </div>
@@ -111,8 +125,7 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       <h1>全部风格</h1>
       <button class="copy-btn browse-close" data-browse-close>× 返回</button>
     </div>
-    <div class="browse-grid">
-      {
+    <div class="browse-grid">      {
         styles.map((s, i) => (
           <div class="style-card" data-goto={i} role="button" tabindex="0">
             <div class="preview">
@@ -154,16 +167,23 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
   </div>
 </Base>
 
+<script type="application/json" data-templates-json set:html={JSON.stringify(templatesMap)} />
+
 <script>
-  // 沉浸翻阅：滚轮召唤右缘轮盘，停滚 600ms 收回并切换左区实时渲染。
-  // ←按钮 / ESC 控制全览网格；信息栏与 iframe 随主视觉切换。
+  // 沉浸翻阅：滚轮召唤右缘轮盘，停滚 1200ms 收回并切换左区实时渲染。
+  // 轮盘只听滚轮（无悬浮/点击检测）；多页模板用 ◀ ▶ 翻页器。
   const items = Array.from(document.querySelectorAll<HTMLElement>('.wheel-card'));
   const wheelEl = document.querySelector<HTMLElement>('[data-wheel]')!;
   const frame = document.querySelector<HTMLIFrameElement>('.live-frame');
   const slotCover = document.querySelector<HTMLElement>('[data-stage-slot]')!;
   const slotLabel = document.querySelector<HTMLElement>('.slot-big')!;
   const browseEl = document.querySelector<HTMLElement>('[data-browse]')!;
+  const pagerEl = document.querySelector<HTMLElement>('[data-pager]')!;
+  const pageLabel = document.querySelector<HTMLElement>('[data-page-label]')!;
   const narrow = window.matchMedia('(max-width: 900px)');
+  const templatesMap: Record<string, string[]> = JSON.parse(
+    document.querySelector('[data-templates-json]')!.textContent!,
+  );
 
   let active = 0;
   let wheelOpen = false;
@@ -183,6 +203,28 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
     });
   }
 
+  // 模板翻页：重置到第一页并按文件数显示翻页器
+  let pageIndex = 0;
+  let curFiles: string[] = [];
+  function setFramePage(slug: string) {
+    curFiles = templatesMap[slug] ?? ['page.html'];
+    pageIndex = 0;
+    if (frame) frame.src = `/styles/${slug}/template.html?file=${curFiles[0]}`;
+    pagerEl.hidden = curFiles.length <= 1;
+    pageLabel.textContent = `1 / ${curFiles.length}`;
+  }
+  function turnPage(dir: 1 | -1) {
+    if (curFiles.length <= 1) return;
+    pageIndex = (pageIndex + dir + curFiles.length) % curFiles.length;
+    const el = items[active];
+    if (frame && el.dataset.slug) {
+      frame.src = `/styles/${el.dataset.slug}/template.html?file=${curFiles[pageIndex]}`;
+    }
+    pageLabel.textContent = `${pageIndex + 1} / ${curFiles.length}`;
+  }
+  document.querySelector('[data-page-prev]')!.addEventListener('click', () => turnPage(-1));
+  document.querySelector('[data-page-next]')!.addEventListener('click', () => turnPage(1));
+
   // 主视觉落地：切 iframe / 占位封面与信息栏（纯 DOM 交换，无动画）
   function doSwap() {
     const el = items[active];
@@ -191,11 +233,11 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       slotCover.hidden = true;
       if (frame) {
         frame.hidden = false;
-        const url = `/styles/${slug}/template.html`;
-        if (!frame.src.includes(url)) frame.src = url;
+        if (!frame.src.includes(`/styles/${slug}/template.html`)) setFramePage(slug);
       }
     } else {
       if (frame) frame.hidden = true;
+      pagerEl.hidden = true;
       slotCover.hidden = false;
       slotCover.style.setProperty('--pc', el.dataset.color ?? '#E5E5E0');
       slotLabel.textContent = `SLOT ${(el.dataset.slot ?? '').padStart(2, '0')}`;
@@ -253,14 +295,12 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
     wheelEl.setAttribute('aria-hidden', 'true');
   }
 
-  // 滚轮翻牌：信息栏与全览网格内不拦截，页面其余区域召唤轮盘
+  // 滚轮翻牌：全览网格内不拦截，其余区域一律映射给轮盘（外层页面锁死一页）
   let lastDir: 1 | -1 = 1;
   window.addEventListener(
     'wheel',
     (e) => {
       if (browseOpen || narrow.matches) return;
-      const t = e.target as HTMLElement;
-      if (t.closest('.info-col') || t.closest('.browse')) return;
       e.preventDefault();
       openWheel();
       const now = performance.now();
@@ -274,25 +314,12 @@ const firstSlug = styles.length > 0 ? styles[0].slug : null;
       settleTimer = window.setTimeout(() => {
         closeWheel();
         applyActive(lastDir);
-      }, 600);
+      }, 1200);
     },
     { passive: false },
   );
 
-  // 悬停预览主视觉，点击直接选定
-  items.forEach((el, i) => {
-    el.addEventListener('mouseenter', () => {
-      active = i;
-      layoutWheel();
-    });
-    el.addEventListener('click', () => {
-      const dir: 1 | -1 = i >= active ? 1 : -1;
-      active = i;
-      clearTimeout(settleTimer);
-      closeWheel();
-      applyActive(dir);
-    });
-  });
+  // 轮盘只听滚轮：不做悬浮聚焦、不做点击选定，避免误触跳界面
 
   // 全览网格
   function openBrowse() {

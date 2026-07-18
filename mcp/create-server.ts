@@ -135,7 +135,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
     {
       title: '投稿新风格',
       description:
-        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）+ 可选 ownerPubkey 登记所有权。邀请码由客户端在 MCP 配置中注入（HTTP 的 x-invite-code 头或 stdio 的 STYLE_LAB_INVITE 环境变量），不在本工具参数内。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
+        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）+ 可选 ownerPubkey 登记所有权。邀请码由客户端在 MCP 配置中注入（HTTP 的 x-invite-code 头或 stdio 的 STYLE_LAB_INVITE 环境变量），不在本工具参数内。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。模板页必须在一屏 16:9 内完整呈现、禁止页内滚动，放不下可拆多页（page.html、page2.html……）。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
       inputSchema: {
         meta: metaSchema.describe('风格元信息，slug 只允许小写字母数字和连字符'),
         tokens: tokensSchema.describe('设计变量，必须包含 bg/surface/text/muted/line/accent 六个色角色'),
