@@ -10,7 +10,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (req.url === '/mcp' && req.method === 'POST') {
-    // 无状态模式：每个请求一对新的 server/transport 实例
+    // 无状态模式：每个请求一对新的 server/transport 实例；邀请码从头注入
     const chunks: Buffer[] = [];
     for await (const chunk of req) chunks.push(chunk as Buffer);
     let body: unknown;
@@ -20,7 +20,8 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(400, { 'content-type': 'text/plain' }).end('bad json');
       return;
     }
-    const mcpServer = createStyleLabServer();
+    const inviteCode = req.headers['x-invite-code'];
+    const mcpServer = createStyleLabServer({ inviteCode: Array.isArray(inviteCode) ? inviteCode[0] : inviteCode });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {
       transport.close();

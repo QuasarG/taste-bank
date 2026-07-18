@@ -4,10 +4,10 @@ import { z } from 'zod';
 import { metaSchema, tokensSchema, safeText } from './schema';
 import { STYLES_DIR, loadStyle } from './store';
 import { canonicalMessage, isValidPubkey, timestampInWindow, verifyMessage } from './auth';
+import { checkInvite } from './invites';
+import { StyleConflictError, StyleForbiddenError, StyleVersionError } from './errors';
 
-export class StyleConflictError extends Error {}
-export class StyleForbiddenError extends Error {}
-export class StyleVersionError extends Error {}
+export { StyleConflictError, StyleForbiddenError, StyleVersionError };
 
 // 投稿契约：meta/tokens 走校验，skill 至少 50 字，模板文件名白名单，ownerPubkey 登记所有权
 export const submitSchema = z.object({
@@ -58,8 +58,10 @@ function writePack(dir: string, data: z.infer<typeof submitSchema>, names: strin
   return written;
 }
 
-export function createStylePack(input: unknown): SubmitResult {
+// 邀请码由传输层注入（HTTP 头 / stdio 环境变量），不属于投稿内容
+export function createStylePack(input: unknown, inviteCode?: string): SubmitResult {
   const data = submitSchema.parse(input);
+  checkInvite(inviteCode, data.ownerPubkey);
   const dir = path.join(STYLES_DIR, data.meta.slug);
   if (fs.existsSync(dir)) {
     throw new StyleConflictError(`风格已存在: ${data.meta.slug}，更新请走 PUT /api/styles/:slug.json 或 update_style`);

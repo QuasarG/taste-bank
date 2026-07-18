@@ -14,6 +14,10 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'stylelab-manage-'));
 fs.mkdirSync(path.join(TMP, 'styles'), { recursive: true });
 
+process.env.STYLE_LAB_DIR = TMP;
+const { createInvite } = await import('../src/lib/invites');
+const INVITE = createInvite('manage.test');
+
 let child: ChildProcess;
 const keys = generateKeypair();
 
@@ -67,8 +71,12 @@ after(() => {
 });
 
 test('所有权管理全链路', { timeout: 120_000 }, async () => {
-  const post = (b: unknown) =>
-    fetch(`${BASE}/api/styles.json`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
+  const post = (b: unknown, invite: string | null = INVITE) =>
+    fetch(`${BASE}/api/styles.json`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(invite ? { 'x-invite-code': invite } : {}) },
+      body: JSON.stringify(b),
+    });
   const put = (slug: string, raw: string, headers: Record<string, string>) =>
     fetch(`${BASE}/api/styles/${slug}.json`, { method: 'PUT', headers, body: raw });
   const del = (slug: string, headers: Record<string, string>) =>
@@ -95,10 +103,9 @@ test('所有权管理全链路', { timeout: 120_000 }, async () => {
   const staleTs = String(Date.now() - 10 * 60 * 1000);
   assert.equal((await del('owned', signedHeaders('delete', 'owned', '', keys.privateKey, staleTs))).status, 403);
 
-  // 5. 无 owner 的风格：任何签名都不好使 → 403
-  assert.equal((await post(pack('unowned', '1.0.0'))).status, 201);
-  const unownedUp = JSON.stringify(pack('unowned', '2.0.0'));
-  assert.equal((await put('unowned', unownedUp, signedHeaders('update', 'unowned', unownedUp))).status, 403);
+  // 5. 邀请码门禁：无码 / 错码 → 403
+  assert.equal((await post(pack('noinvite', '1.0.0', keys.publicKey), null)).status, 403);
+  assert.equal((await post(pack('noinvite', '1.0.0', keys.publicKey), 'sl_wrong-code')).status, 403);
 
   // 6. 正确签名删除 → 200，随后 404
   assert.equal((await del('owned', signedHeaders('delete', 'owned', ''))).status, 200);

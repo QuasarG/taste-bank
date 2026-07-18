@@ -10,8 +10,13 @@ process.env.STYLE_LAB_DIR = TMP;
 
 const { createStylePack, StyleConflictError } = await import('../src/lib/create');
 const { loadStyle } = await import('../src/lib/store');
+const { createInvite } = await import('../src/lib/invites');
+const { generateKeypair } = await import('../src/lib/auth');
 
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
+
+const keys = generateKeypair();
+const CODE = createInvite('create.test');
 
 const valid = {
   meta: {
@@ -31,12 +36,13 @@ const valid = {
   },
   skill: '# 测试包\n\n## 概述\n\n这是一段用于单元测试的、长度达标的风格说明文字，描述这套风格的整体气质、适用场景与用法。',
   templates: { 'page.html': '<!DOCTYPE html><html><body>hi</body></html>' },
+  ownerPubkey: keys.publicKey,
 };
 
 test('合法投稿创建全部文件且可被 loadStyle 读回', () => {
-  const res = createStylePack(structuredClone(valid));
+  const res = createStylePack(structuredClone(valid), CODE);
   assert.equal(res.slug, 'testpack');
-  for (const f of ['meta.json', 'tokens.json', 'SKILL.md', 'templates/page.html']) {
+  for (const f of ['meta.json', 'tokens.json', 'SKILL.md', 'templates/page.html', 'owner.key']) {
     assert.ok(res.files.includes(f), `未写入: ${f}`);
   }
   const pack = loadStyle('testpack');
@@ -46,52 +52,58 @@ test('合法投稿创建全部文件且可被 loadStyle 读回', () => {
 });
 
 test('重复 slug 抛 StyleConflictError', () => {
-  assert.throws(() => createStylePack(structuredClone(valid)), StyleConflictError);
+  assert.throws(() => createStylePack(structuredClone(valid), CODE), StyleConflictError);
 });
 
 test('templates 缺少 .html 被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'no-html';
   bad.templates = { 'note.md': '# hi' };
-  assert.throws(() => createStylePack(bad), /至少包含一个 \.html/);
+  assert.throws(() => createStylePack(bad, CODE), /至少包含一个 \.html/);
 });
 
 test('模板文件名带路径穿越被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'evil-name';
   bad.templates = { '../evil.html': '<html></html>', 'page.html': '<html></html>' };
-  assert.throws(() => createStylePack(bad), /非法模板文件名/);
+  assert.throws(() => createStylePack(bad, CODE), /非法模板文件名/);
 });
 
 test('模板内容含 <script 被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'evil-script';
   bad.templates = { 'page.html': '<html><script>alert(1)</script></html>' };
-  assert.throws(() => createStylePack(bad), /危险片段/);
+  assert.throws(() => createStylePack(bad, CODE), /危险片段/);
 });
 
 test('overrides 含 url( 被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'evil-css';
   (bad as Record<string, unknown>).overrides = '.x { background: url(https://evil.com/a.png) }';
-  assert.throws(() => createStylePack(bad), /危险片段/);
+  assert.throws(() => createStylePack(bad, CODE), /危险片段/);
 });
 
 test('tokens 非法（坏 hex）被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'bad-hex';
   bad.tokens.color.bg = 'blue';
-  assert.throws(() => createStylePack(bad));
+  assert.throws(() => createStylePack(bad, CODE));
 });
 
 test('skill 混入 AWS key / JWT 被拒并要求脱敏', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'leaky';
   bad.skill += '\n参考密钥 AKIAIOSFODNN7EXAMPLE 别学我。';
-  assert.throws(() => createStylePack(bad), /疑似包含密钥/);
+  assert.throws(() => createStylePack(bad, CODE), /疑似包含密钥/);
 
   const bad2 = structuredClone(valid);
   bad2.meta.slug = 'leaky2';
   bad2.skill += '\neyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQssw5c';
-  assert.throws(() => createStylePack(bad2), /疑似包含密钥/);
+  assert.throws(() => createStylePack(bad2, CODE), /疑似包含密钥/);
+});
+
+test('无邀请码被拒', () => {
+  const bad = structuredClone(valid);
+  bad.meta.slug = 'no-invite';
+  assert.throws(() => createStylePack(bad), /邀请码/);
 });

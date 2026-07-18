@@ -15,6 +15,12 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'stylelab-api-'));
 fs.mkdirSync(path.join(TMP, 'styles'), { recursive: true });
 fs.cpSync(path.join(ROOT, 'tests', 'fixtures', 'styles', 'blueprint'), path.join(TMP, 'styles', 'blueprint'), { recursive: true });
 
+process.env.STYLE_LAB_DIR = TMP;
+const { createInvite } = await import('../src/lib/invites');
+const { generateKeypair } = await import('../src/lib/auth');
+const INVITE = createInvite('api.test');
+const keys = generateKeypair();
+
 let child: ChildProcess;
 
 async function waitReady(): Promise<void> {
@@ -46,6 +52,7 @@ const newPack = (slug: string) => ({
   },
   skill: '# 接口包\n\n## 概述\n\n这是一段用于 API 集成测试的、长度达标的风格说明文字，描述整体气质与用法。',
   templates: { 'page.html': '<!DOCTYPE html><html><body>api</body></html>' },
+  ownerPubkey: keys.publicKey,
 });
 
 before(async () => {
@@ -93,12 +100,15 @@ test('GET 单风格 / 404 / skill.md / tokens.css', async () => {
 });
 
 test('POST 投稿全链路：201 → 可读回 → 重复 409 → 非法 400', async () => {
-  const post = async (body: unknown) =>
+  const post = async (body: unknown, invite: string | null = INVITE) =>
     fetch(`${BASE}/api/styles.json`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...(invite ? { 'x-invite-code': invite } : {}) },
       body: typeof body === 'string' ? body : JSON.stringify(body),
     });
+
+  // 无邀请码 → 403
+  assert.equal((await post(newPack('noinvite'), null)).status, 403);
 
   const created = await post(newPack('apipack'));
   assert.equal(created.status, 201);

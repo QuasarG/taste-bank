@@ -9,7 +9,9 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "mcp": "tsx mcp/server.ts",
     "mcp:http": "tsx mcp/http.ts",
-    "keygen": "node scripts/keygen.mjs"
+    "keygen": "tsx scripts/keygen.mjs",
+    "sign": "tsx scripts/sign.mjs",
+    "invite": "tsx scripts/invite.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",

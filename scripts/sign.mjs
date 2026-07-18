@@ -1,6 +1,6 @@
 // 管理签名工具：node scripts/sign.mjs <私钥> <update|delete> <slug> [payload文件]
 import fs from 'node:fs';
-import { canonicalMessage, signMessage } from '../src/lib/auth';
+import { canonicalMessage, signMessage } from '../src/lib/auth.ts';
 
 const [, , privateKey, action, slug, payloadFile] = process.argv;
 if (!privateKey || !action || !slug || !['update', 'delete'].includes(action)) {

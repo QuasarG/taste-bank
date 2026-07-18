@@ -13,8 +13,8 @@ const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] });
 const fail = (e: unknown) => ({ content: [{ type: 'text' as const, text: String(e) }], isError: true });
 
-// stdio 与 HTTP 两种传输共用的 server 工厂
-export function createStyleLabServer(): McpServer {
+// stdio 与 HTTP 两种传输共用的 server 工厂；inviteCode 由传输层注入
+export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpServer {
   const server = new McpServer({ name: 'style-lab', version: '0.2.0' });
 
   server.registerTool(
@@ -135,19 +135,19 @@ export function createStyleLabServer(): McpServer {
     {
       title: '投稿新风格',
       description:
-        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）。校验通过后立即被网站与 MCP 收录。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
+        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）+ 可选 ownerPubkey 登记所有权。邀请码由客户端在 MCP 配置中注入（HTTP 的 x-invite-code 头或 stdio 的 STYLE_LAB_INVITE 环境变量），不在本工具参数内。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
       inputSchema: {
         meta: metaSchema.describe('风格元信息，slug 只允许小写字母数字和连字符'),
         tokens: tokensSchema.describe('设计变量，必须包含 bg/surface/text/muted/line/accent 六个色角色'),
         skill: z.string().describe('SKILL.md 全文（markdown，含 frontmatter，至少 50 字）'),
         overrides: z.string().optional().describe('可选 overrides.css，scoped 在 [data-style="<slug>"] 下'),
         templates: z.record(z.string(), z.string()).optional().describe('模板文件名 → 内容，至少含一个 .html'),
-        ownerPubkey: z.string().optional().describe('可选 ed25519 公钥（base64）。登记后该风格仅持有对应私钥者可更新/删除'),
+        ownerPubkey: z.string().optional().describe('可选 ed25519 公钥（base64）。登记后该风格仅持有对应私钥者可更新/删除；邀请制下与邀请码一码一身份绑定'),
       },
     },
     async (input) => {
       try {
-        return text(JSON.stringify(createStylePack(input), null, 2));
+        return text(JSON.stringify(createStylePack(input, opts.inviteCode), null, 2));
       } catch (e) {
         return fail(e);
       }

@@ -16,6 +16,12 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'stylelab-mcphttp-'));
 fs.mkdirSync(path.join(TMP, 'styles'), { recursive: true });
 fs.cpSync(path.join(ROOT, 'tests', 'fixtures', 'styles', 'blueprint'), path.join(TMP, 'styles', 'blueprint'), { recursive: true });
 
+process.env.STYLE_LAB_DIR = TMP;
+const { createInvite } = await import('../src/lib/invites');
+const { generateKeypair } = await import('../src/lib/auth');
+const INVITE = createInvite('mcp-http.test');
+const keys = generateKeypair();
+
 let child: ChildProcess;
 let client: Client;
 
@@ -41,6 +47,7 @@ const newPack = {
   },
   skill: '# HTTP 包\n\n## 概述\n\n这是一段用于 MCP HTTP 集成测试的、长度达标的风格说明文字，描述气质与用法。',
   templates: { 'page.html': '<!DOCTYPE html><html><body>mcp</body></html>' },
+  ownerPubkey: keys.publicKey,
 };
 
 before(async () => {
@@ -57,7 +64,11 @@ before(async () => {
     await new Promise((r) => setTimeout(r, 300));
   }
   client = new Client({ name: 'http-smoke', version: '0.0.1' });
-  await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`)));
+  await client.connect(
+    new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), {
+      requestInit: { headers: { 'x-invite-code': INVITE } },
+    }),
+  );
 });
 
 after(async () => {

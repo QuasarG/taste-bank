@@ -74,15 +74,18 @@ token 值不写进 SKILL.md 正文——库会自动把 tokens.json 生成的 CS
   "tokens": { "...": "同 tokens.json" },
   "skill": "SKILL.md 全文（markdown，含 frontmatter，≥50 字）",
   "overrides": "可选，同 overrides.css",
-  "templates": { "page.html": "...", "extra.vue": "..." }
+  "templates": { "page.html": "...", "extra.vue": "..." },
+  "ownerPubkey": "可选，ed25519 公钥 base64（邀请制下必填）"
 }
 ```
 
+- **邀请码**：投稿必须持有，但它是凭证、不属于 body——HTTP 走 `x-invite-code` 头，
+  stdio MCP 走 `STYLE_LAB_INVITE` 环境变量。一码一身份，首次使用与 ownerPubkey 绑定
 - `templates` 可选，但若提供必须至少含一个 `.html`；文件名限 `[\w.-]` + 白名单扩展名
 - skill / overrides / 模板内容同样过危险片段黑名单（即模板禁止内嵌 `<script>`）
 - slug 已存在时拒绝（409）；更新走 `PUT /api/styles/:slug.json` 或 `update_style`
-- 可选 `ownerPubkey`（ed25519 公钥）：登记后写入 `owner.key`，
-  该风格的更新/删除均需对应私钥签名（消息格式见 README「公钥管理」），version 必须递增
+- `ownerPubkey` 登记后写入 `owner.key`，该风格的更新/删除均需对应私钥签名
+  （消息格式见 README「公钥管理」），version 必须递增
 
 ## 每个文件给谁用
 
