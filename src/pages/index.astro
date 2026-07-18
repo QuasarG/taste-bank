@@ -1,8 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import Bench from '../components/Bench.astro';
 import { listStyles, loadStyle } from '../lib/store';
-import { fullCss } from '../lib/assemble';
 
 const styles = listStyles().map((slug) => loadStyle(slug));
 ---
@@ -15,9 +13,8 @@ const styles = listStyles().map((slug) => loadStyle(slug));
     {
       styles.map((s) => (
         <a class="style-card" href={`/styles/${s.slug}`}>
-          <div class="preview" data-style={s.slug}>
-            <style set:html={fullCss(s.slug, s.tokens, s.overrides)} />
-            <Bench mini />
+          <div class="preview">
+            <img class="preview-img" src={`/api/styles/${s.slug}/screenshot.png`} alt={`${s.meta.name} 模板截图`} loading="lazy" />
           </div>
           <div class="style-info">
             <h2>
@@ -35,3 +32,4 @@ const styles = listStyles().map((slug) => loadStyle(slug));
     }
   </div>
 </Base>
+

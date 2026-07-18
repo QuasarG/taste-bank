@@ -41,8 +41,12 @@ a { color: inherit; }
 }
 .style-card:hover { border-color: var(--shell-accent); }
 .preview {
-  height: 300px; overflow: hidden; pointer-events: none;
-  border-bottom: 1px solid var(--shell-line);
+  height: 300px; overflow: hidden; position: relative;
+  border-bottom: 1px solid var(--shell-line); background: #fff;
+}
+.preview-img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
 }
 .style-info { padding: 14px 16px; }
 .style-info h2 { font-size: 1.05rem; }
