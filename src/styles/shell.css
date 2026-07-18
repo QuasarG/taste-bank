@@ -63,6 +63,10 @@ a { color: inherit; }
 }
 .panel > h2 { font-size: 1rem; margin-bottom: 12px; }
 .bench-wrap { border: 1px solid var(--shell-line); border-radius: 8px; overflow: hidden; }
+.tpl-frame {
+  display: block; width: 100%; height: 78vh; min-height: 480px;
+  border: 1px solid var(--shell-line); border-radius: 8px; background: #fff;
+}
 
 .copy-btn {
   font-size: 0.78rem; padding: 2px 12px; margin-bottom: 8px;

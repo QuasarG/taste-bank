@@ -13,6 +13,13 @@ try {
 }
 const css = pack ? fullCss(slug, pack.tokens, pack.overrides) : '';
 const skill = pack ? assembleSkill(pack.meta, pack.tokens, pack.skillRaw) : '';
+// 选模板快照：优先 page.html，否则取第一个 html
+const templateFile = (() => {
+  if (!pack) return null;
+  const htmls = pack.files.filter((f) => f.startsWith('templates/') && f.endsWith('.html'));
+  if (htmls.length === 0) return null;
+  return (htmls.includes('templates/page.html') ? 'templates/page.html' : htmls[0]).replace('templates/', '');
+})();
 ---
 
 <Base title={pack ? pack.meta.name : '风格不存在'}>
@@ -43,8 +50,17 @@ const skill = pack ? assembleSkill(pack.meta, pack.tokens, pack.skillRaw) : '';
     </div>
   </div>
 
+  {
+    templateFile && (
+      <section class="panel">
+        <h2>模板快照（原页面布局的脱敏镜像，实时渲染）</h2>
+        <iframe class="tpl-frame" src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板快照`} />
+      </section>
+    )
+  }
+
   <section class="panel">
-    <h2>组件测试台（实时渲染当前 tokens）</h2>
+    <h2>组件测试台（标准骨架换肤，跨风格对比用）</h2>
     <div class="bench-wrap" data-style={slug}>
       <Bench />
     </div>
