@@ -3,8 +3,9 @@ import '../styles/shell.css';
 interface Props {
   title: string;
   description?: string;
+  wide?: boolean;
 }
-const { title, description = '个人前端风格库' } = Astro.props;
+const { title, description = '个人前端风格库', wide = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -22,7 +23,7 @@ const { title, description = '个人前端风格库' } = Astro.props;
         <a href="/">风格库</a>
       </nav>
     </header>
-    <main class="container">
+    <main class={wide ? '' : 'container'}>
       <slot />
     </main>
     <footer class="site-footer">Style Lab · 每套风格 = 一份 agent 可直接使用的 skill</footer>
