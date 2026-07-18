@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadStyle } from '../src/lib/store';
-import { tokensToCss, fullCss, assembleSkill } from '../src/lib/assemble';
+import { fileURLToPath } from 'node:url';
+
+process.env.STYLE_LAB_DIR = fileURLToPath(new URL('fixtures', import.meta.url));
+const { loadStyle } = await import('../src/lib/store');
+const { tokensToCss, fullCss, assembleSkill } = await import('../src/lib/assemble');
 
 const pack = loadStyle('blueprint');
 

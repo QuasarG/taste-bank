@@ -5,6 +5,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
+const FIXTURES = fileURLToPath(new URL('fixtures', import.meta.url));
 
 function firstText(res: unknown): string {
   const content = (res as { content: Array<{ type: string; text?: string }> }).content;
@@ -17,6 +18,7 @@ test('MCP server 冒烟：工具列表与全部工具调用', { timeout: 60000 }
     command: process.execPath,
     args: ['--import', 'tsx', 'mcp/server.ts'],
     cwd: ROOT,
+    env: { ...process.env, STYLE_LAB_DIR: FIXTURES } as Record<string, string>,
   });
   const client = new Client({ name: 'smoke-test', version: '0.0.1' });
   await client.connect(transport);

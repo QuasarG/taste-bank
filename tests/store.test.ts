@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
+import { fileURLToPath } from 'node:url';
+
+// 用独立 fixture，不依赖真实风格库内容
+process.env.STYLE_LAB_DIR = fileURLToPath(new URL('fixtures', import.meta.url));
+const { listStyles, loadStyle, readStyleFile } = await import('../src/lib/store');
 
 test('listStyles 收录 blueprint', () => {
   assert.ok(listStyles().includes('blueprint'));

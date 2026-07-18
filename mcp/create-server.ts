@@ -134,7 +134,7 @@ export function createStyleLabServer(): McpServer {
     {
       title: '投稿新风格',
       description:
-        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）。校验通过后立即被网站与 MCP 收录。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），仅把业务专有名词替换为中性等价词；高置信度密钥模式会被服务端直接拒收。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
+        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）。校验通过后立即被网站与 MCP 收录。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
       inputSchema: {
         meta: metaSchema.describe('风格元信息，slug 只允许小写字母数字和连字符'),
         tokens: tokensSchema.describe('设计变量，必须包含 bg/surface/text/muted/line/accent 六个色角色'),

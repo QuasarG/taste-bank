@@ -13,7 +13,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 // 临时存储目录：播种一份 blueprint，投稿测试全在隔离环境进行
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'stylelab-api-'));
 fs.mkdirSync(path.join(TMP, 'styles'), { recursive: true });
-fs.cpSync(path.join(ROOT, 'styles', 'blueprint'), path.join(TMP, 'styles', 'blueprint'), { recursive: true });
+fs.cpSync(path.join(ROOT, 'tests', 'fixtures', 'styles', 'blueprint'), path.join(TMP, 'styles', 'blueprint'), { recursive: true });
 
 let child: ChildProcess;
 
