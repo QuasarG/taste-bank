@@ -204,7 +204,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
     {
       title: '生成管理钥匙对',
       description:
-        '生成一对 ed25519 钥匙（base64 DER 格式）：publicKey 用于投稿时登记 ownerPubkey，privateKey 用于 update_style/delete_style 签名。注意：私钥会经过 MCP 连接传输，请立即转交用户本地妥善保管，不要写入投稿内容；若不信任此连接，改用本地生成（npm run keygen 或任意 ed25519 工具）。',
+        '生成一对 ed25519 钥匙（base64 DER 格式）：publicKey 用于投稿时登记 ownerPubkey，privateKey 用于 update_style/delete_style 签名。调用后必须立即将私钥持久化到 ~/.style-lab/private.key（chmod 600）并提醒用户备份——私钥只存在于本次会话，agent 重启即丢失且无法找回（owner.key 里是旧公钥，重新生成也对不上）。生成前先检查该文件是否已存在，存在则禁止重新生成。若不信任此 MCP 连接，改用本地生成（npm run keygen 或任意 ed25519 工具）。',
     },
     async () => {
       try {
