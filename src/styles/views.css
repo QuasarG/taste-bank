@@ -2,10 +2,10 @@
    三视图共用同一组 .style-card 节点，外层 .stage 由 [data-view] 切换布局；
    Orbit / Layered 的 transform 由 JS 注入 inline style（避免 DOM 三倍截图请求） */
 
-/* —— Archive：分散网格 —— */
+/* —— Archive：分散网格（最小卡宽加大，单卡更清晰） —— */
 [data-view="archive"] .stage {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 24px;
   background: transparent;
   border: none;
