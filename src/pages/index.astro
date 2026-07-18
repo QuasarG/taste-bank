@@ -101,14 +101,14 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
     return { w: el.offsetWidth / 2, h: el.offsetHeight / 2 };
   }
 
-  // Orbit：椭圆轨道；指针横移驱动整环旋转，纵移制造纵深
+  // Orbit：椭圆轨道；指针横移驱动整环旋转，纵移制造纵深；半径同时受舞台宽度约束防越界
   function targetOrbit(i: number, n: number) {
-    const radius = Math.min(340, 110 + n * 26);
-    const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + cpx * 0.55;
+    const radius = Math.max(140, Math.min(320, 110 + n * 26, stage.offsetWidth / 2 - 240));
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + cpx * 0.8;
     return {
       tx: Math.cos(angle) * radius,
-      ty: Math.sin(angle) * radius * 0.58 + cpy * 30,
-      rot: Math.sin(angle) * 9 + cpx * 5,
+      ty: Math.sin(angle) * radius * 0.55 + cpy * 44,
+      rot: Math.sin(angle) * 9 + cpx * 8,
       z: Math.round(20 + Math.sin(angle) * 10),
     };
   }
@@ -117,11 +117,11 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
   function targetLayered(i: number, n: number) {
     const t = n <= 1 ? 0 : (i / (n - 1)) * 2 - 1;
     const depth = n <= 1 ? 1 : 1 - (i / (n - 1)) * 0.72;
-    const spread = Math.min(300, 60 + n * 26);
+    const spread = Math.min(300, 60 + n * 26, stage.offsetWidth / 2 - 200);
     return {
-      tx: t * spread + cpx * 46 * depth,
-      ty: Math.abs(t) * 26 + cpy * 26 * depth,
-      rot: t * 7 + cpx * 5 * depth,
+      tx: t * spread + cpx * 70 * depth,
+      ty: Math.abs(t) * 26 + cpy * 40 * depth,
+      rot: t * 7 + cpx * 8 * depth,
       z: n - i,
     };
   }

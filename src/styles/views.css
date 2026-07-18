@@ -2,34 +2,35 @@
    三视图共用同一组 .style-card 节点，外层 .stage 由 [data-view] 切换布局；
    Orbit / Layered 的 transform 由 JS 注入 inline style（避免 DOM 三倍截图请求） */
 
-/* —— Archive：横屏矩阵网格 —— */
+/* —— Archive：分散网格 —— */
 [data-view="archive"] .stage {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1px;                       /* 密集：卡片间仅 1px 缝 */
-  background: var(--shell-line);  /* 缝隙显出底色，形成网格线 */
-  border: 1px solid var(--shell-line);
+  gap: 24px;
+  background: transparent;
+  border: none;
 }
 [data-view="archive"] .style-card .preview {
   aspect-ratio: 16 / 10;          /* 固定横屏 */
 }
 
-/* —— Orbit / Layered：绝对定位舞台 —— */
+/* —— Orbit / Layered：绝对定位舞台（高度保证卡片不越界遮挡上方） —— */
 [data-view="orbit"] .stage,
 [data-view="layered"] .stage {
   position: relative;
-  min-height: 560px;
   display: block;
   background: transparent;
   border: none;
 }
-[data-view="orbit"] .stage { perspective: 1100px; }
+[data-view="orbit"] .stage { min-height: 780px; perspective: 1100px; }
+[data-view="layered"] .stage { min-height: 640px; }
 [data-view="orbit"] .style-card,
 [data-view="layered"] .style-card {
   position: absolute;
   top: 50%; left: 50%;
   width: clamp(280px, 28vw, 440px);     /* 两视图的卡片可比 archive 更大 */
   /* transform 由 rAF 循环逐帧驱动，不参与 transition，避免互相打架 */
+  box-shadow: 0 14px 36px rgba(17, 17, 17, 0.14);
   transition: box-shadow var(--shell-duration) var(--shell-easing),
               border-color var(--shell-duration) var(--shell-easing);
   will-change: transform;
