@@ -1,35 +1,196 @@
 ---
 import Base from '../layouts/Base.astro';
+import '../styles/views.css';
 import { listStyles, loadStyle } from '../lib/store';
 
 const styles = listStyles().map((slug) => loadStyle(slug));
+
+// 占位卡补满舞台，新风格投稿后自然被顶掉
+const SLOT_COLORS = ['#E9DCC8', '#D5E2EC', '#DCE8D5', '#EDD5DC', '#E8E3C8', '#DFD5EC', '#D5E8E4', '#ECD5C8'];
+const TOTAL = 9;
+const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) => ({
+  n: i + 1,
+  color: SLOT_COLORS[i % SLOT_COLORS.length],
+}));
 ---
 
 <Base title="风格库">
   <h1 class="page-title">风格库</h1>
   <p class="page-sub">共 {styles.length} 套风格 · 每套 = SKILL.md + tokens + 模板，agent 可直接取用</p>
 
-  <div class="gallery">
-    {
-      styles.map((s) => (
-        <a class="style-card" href={`/styles/${s.slug}`}>
-          <div class="preview">
-            <img class="preview-img" src={`/api/styles/${s.slug}/screenshot.png`} alt={`${s.meta.name} 模板截图`} loading="lazy" />
-          </div>
-          <div class="style-info">
-            <h2>
-              {s.meta.name} <span class="ver">v{s.meta.version}</span>
-            </h2>
-            <p class="summary">{s.meta.summary}</p>
-            <div class="tags">
-              {s.meta.mood.map((m) => (
-                <span class="tag">{m}</span>
-              ))}
+  <div class="switcher" role="tablist" aria-label="视图模式">
+    <button data-view-btn="archive" class="is-active" role="tab" aria-selected="true">ARCHIVE</button>
+    <button data-view-btn="orbit" role="tab" aria-selected="false">orbit</button>
+    <button data-view-btn="layered" role="tab" aria-selected="false">layered</button>
+  </div>
+
+  <main data-view="archive" data-stage>
+    <div class="stage">
+      {
+        styles.map((s) => (
+          <a class="style-card" href={`/styles/${s.slug}`}>
+            <div class="preview">
+              <img
+                class="preview-img"
+                src={`/api/styles/${s.slug}/screenshot.png`}
+                alt={`${s.meta.name} 模板截图`}
+                loading="lazy"
+              />
+            </div>
+            <div class="style-info">
+              <h2>
+                {s.meta.name} <span class="ver">v{s.meta.version}</span>
+              </h2>
+              <p class="summary">{s.meta.summary}</p>
+              <div class="tags">
+                {s.meta.mood.map((m) => (
+                  <span class="tag">{m}</span>
+                ))}
+              </div>
+            </div>
+          </a>
+        ))
+      }
+      {
+        slots.map((slot) => (
+          <div class="style-card is-placeholder" aria-hidden="true">
+            <div class="preview placeholder-cover" style={`--pc:${slot.color}`}>
+              <span class="slot-no">SLOT {String(slot.n).padStart(2, '0')}</span>
+            </div>
+            <div class="style-info">
+              <h2>
+                待收录 <span class="ver">placeholder</span>
+              </h2>
+              <p class="summary">占位卡片，新风格投稿后自动替换。</p>
+              <div class="tags">
+                <span class="tag">占位</span>
+              </div>
             </div>
           </div>
-        </a>
-      ))
-    }
-  </div>
+        ))
+      }
+    </div>
+    <p class="stage-hint">move your pointer to explore the collection</p>
+  </main>
 </Base>
 
+<script>
+  // 三视图状态机：每张卡的当前值每帧向「布局目标 + 指针视差 + hover」lerp。
+  // 指针跟随与视图切换动画共用这一个循环，无 CSS transition 参与。
+  const stage = document.querySelector<HTMLElement>('[data-stage]')!;
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-view-btn]');
+  const cardEls = Array.from(document.querySelectorAll<HTMLElement>('.style-card'));
+  const STORE_KEY = 'style-lab-view';
+  const VIEWS = ['archive', 'orbit', 'layered'] as const;
+  type View = (typeof VIEWS)[number];
+
+  interface CardState {
+    el: HTMLElement;
+    cx: number; cy: number; crot: number; cscale: number;
+    hover: number;
+  }
+  const cards: CardState[] = cardEls.map((el) => ({ el, cx: 0, cy: 0, crot: 0, cscale: 1, hover: 1 }));
+
+  let view: View = 'archive';
+  let px = 0, py = 0;   // 指针目标（相对舞台中心，-1..1）
+  let cpx = 0, cpy = 0; // 插值后的指针
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const narrow = window.matchMedia('(max-width: 720px)');
+
+  function cardHalf(el: HTMLElement) {
+    return { w: el.offsetWidth / 2, h: el.offsetHeight / 2 };
+  }
+
+  // Orbit：椭圆轨道；指针横移驱动整环旋转，纵移制造纵深
+  function targetOrbit(i: number, n: number) {
+    const radius = Math.min(340, 110 + n * 26);
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + cpx * 0.55;
+    return {
+      tx: Math.cos(angle) * radius,
+      ty: Math.sin(angle) * radius * 0.58 + cpy * 30,
+      rot: Math.sin(angle) * 9 + cpx * 5,
+      z: Math.round(20 + Math.sin(angle) * 10),
+    };
+  }
+
+  // Layered：扇形牌堆；逐层视差，前排（i 小）跟随多，后排拖尾
+  function targetLayered(i: number, n: number) {
+    const t = n <= 1 ? 0 : (i / (n - 1)) * 2 - 1;
+    const depth = n <= 1 ? 1 : 1 - (i / (n - 1)) * 0.72;
+    const spread = Math.min(300, 60 + n * 26);
+    return {
+      tx: t * spread + cpx * 46 * depth,
+      ty: Math.abs(t) * 26 + cpy * 26 * depth,
+      rot: t * 7 + cpx * 5 * depth,
+      z: n - i,
+    };
+  }
+
+  function tick() {
+    cpx += (px - cpx) * 0.075;
+    cpy += (py - cpy) * 0.075;
+    if ((view === 'orbit' || view === 'layered') && !narrow.matches) {
+      const target = view === 'orbit' ? targetOrbit : targetLayered;
+      const n = cards.length;
+      cards.forEach((s, i) => {
+        const t = target(i, n);
+        s.cx += (t.tx - s.cx) * 0.13;
+        s.cy += (t.ty - s.cy) * 0.13;
+        s.crot += (t.rot - s.crot) * 0.13;
+        s.cscale += (s.hover - s.cscale) * 0.16;
+        const { w, h } = cardHalf(s.el);
+        s.el.style.transform = `translate(${-w + s.cx}px, ${-h + s.cy}px) rotate(${s.crot}deg) scale(${s.cscale})`;
+        s.el.style.zIndex = String(s.hover > 1 ? 100 : t.z);
+      });
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function setView(next: View) {
+    view = next;
+    stage.dataset.view = next;
+    buttons.forEach((b) => {
+      const on = b.dataset.viewBtn === next;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    if (next === 'archive') {
+      // 交还 CSS grid 排版，清掉循环注入的 inline 样式
+      cards.forEach((s) => {
+        s.el.style.transform = '';
+        s.el.style.zIndex = '';
+      });
+    } else {
+      // 从当前 grid 位置无缝起飞：先把当前值同步为渲染位置附近
+      cards.forEach((s) => {
+        s.cscale = 1;
+      });
+    }
+    try { localStorage.setItem(STORE_KEY, next); } catch {}
+  }
+
+  buttons.forEach((b) => b.addEventListener('click', () => setView(b.dataset.viewBtn as View)));
+
+  // 指针追踪：相对舞台中心归一化
+  stage.addEventListener('pointermove', (e) => {
+    const r = stage.getBoundingClientRect();
+    px = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+    py = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+  });
+  stage.addEventListener('pointerleave', () => { px = 0; py = 0; });
+
+  cards.forEach((s) => {
+    s.el.addEventListener('mouseenter', () => { s.hover = 1.15; });
+    s.el.addEventListener('mouseleave', () => { s.hover = 1; });
+  });
+
+  // reduced-motion：Orbit/Layered 在 CSS 里已回退网格，这里不再启动循环
+  if (!reduced) requestAnimationFrame(tick);
+
+  let initial: View = 'archive';
+  try {
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved && (VIEWS as readonly string[]).includes(saved)) initial = saved as View;
+  } catch {}
+  setView(initial);
+</script>

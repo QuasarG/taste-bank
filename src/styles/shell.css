@@ -1,47 +1,91 @@
-/* 外壳：工具感、克制，不与展品争戏 */
+/* 外壳：黑白编辑感、克制，不与展品争戏。
+   原暖灰圆角 → 冷中性纸面 + 无圆角 + 大写无衬线标题。 */
 * { margin: 0; box-sizing: border-box; }
 :root {
-  --shell-bg: #F6F6F4;
-  --shell-surface: #FFFFFF;
-  --shell-text: #191919;
-  --shell-muted: #6B6B6B;
-  --shell-line: #E4E4E0;
-  --shell-accent: #2F5DB3;
+  --shell-bg: #ECECEA;        /* 冷中性纸面，比原 #F6F6F4 更冷 */
+  --shell-surface: #FAFAF8;   /* 卡片底，比 bg 略亮 */
+  --shell-text: #111;         /* 主墨色（编辑感的核心） */
+  --shell-muted: #6E6E6C;
+  --shell-faint: #9A9A98;
+  --shell-line: #D8D8D4;      /* 薄分隔线 */
+  --shell-ink: #111;          /* 主墨色别名，与 active 视图按钮呼应 */
+  --shell-accent: #111;       /* 交互强调改为墨色，不再用蓝 */
+  --shell-duration: 180ms;
+  --shell-easing: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --shell-tracking: 0.06em;   /* 标题字距 */
+  --shell-tracking-wide: 0.12em;
 }
 body {
   background: var(--shell-bg);
   color: var(--shell-text);
-  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; }
 
+/* 顶栏：细线、字标大写、导航小字 */
 .site-header {
   display: flex; align-items: baseline; justify-content: space-between;
-  padding: 14px 24px; border-bottom: 1px solid var(--shell-line);
-  background: var(--shell-surface);
+  padding: 16px 28px; border-bottom: 1px solid var(--shell-line);
+  background: var(--shell-bg);
+  position: sticky; top: 0; z-index: 20;
+  backdrop-filter: saturate(1.1);
 }
-.site-title { font-weight: 650; letter-spacing: 0.02em; text-decoration: none; }
-.site-nav a { color: var(--shell-muted); text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
+.site-title {
+  font-weight: 650; letter-spacing: var(--shell-tracking-wide);
+  text-transform: uppercase; text-decoration: none; font-size: 0.95rem;
+}
+.site-nav a {
+  color: var(--shell-muted); text-decoration: none; margin-left: 22px;
+  font-size: 0.82rem; letter-spacing: var(--shell-tracking);
+  text-transform: uppercase;
+}
 .site-nav a:hover { color: var(--shell-text); }
 .site-footer {
-  border-top: 1px solid var(--shell-line); padding: 20px 24px;
-  color: var(--shell-muted); font-size: 0.8rem; text-align: center;
+  border-top: 1px solid var(--shell-line); padding: 22px 28px;
+  color: var(--shell-muted); font-size: 0.78rem; text-align: center;
+  letter-spacing: var(--shell-tracking);
 }
 
-.container { max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
-.page-title { font-size: 1.6rem; margin-bottom: 4px; }
-.page-sub { color: var(--shell-muted); margin-bottom: 28px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 36px 28px 72px; }
+.page-title {
+  font-size: 1.5rem; margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: var(--shell-tracking);
+  font-weight: 650;
+}
+.page-sub { color: var(--shell-muted); margin-bottom: 28px; font-size: 0.9rem; }
 
-.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+/* —— 视图切换器：active = 黑底白字，其余透明描边小写 —— */
+.switcher {
+  display: inline-flex; gap: 0; margin-bottom: 28px;
+  border: 1px solid var(--shell-line); background: var(--shell-surface);
+}
+.switcher button {
+  font: inherit; font-size: 0.78rem; cursor: pointer;
+  padding: 7px 16px; border: none; background: transparent;
+  color: var(--shell-muted); letter-spacing: var(--shell-tracking);
+  text-transform: lowercase;
+  transition: background var(--shell-duration) var(--shell-easing),
+              color var(--shell-duration) var(--shell-easing);
+  border-right: 1px solid var(--shell-line);
+}
+.switcher button:last-child { border-right: none; }
+.switcher button:hover { color: var(--shell-text); }
+.switcher button.is-active {
+  background: var(--shell-ink); color: #FAFAF8;
+}
+
+/* —— 卡片：去圆角、薄边框、hover 描墨边 —— */
 .style-card {
   display: block; background: var(--shell-surface);
-  border: 1px solid var(--shell-line); border-radius: 10px;
-  overflow: hidden; text-decoration: none; transition: border-color 0.15s;
+  border: 1px solid var(--shell-line); border-radius: 0;
+  overflow: hidden; text-decoration: none;
+  transition: border-color var(--shell-duration) var(--shell-easing);
 }
-.style-card:hover { border-color: var(--shell-accent); }
+.style-card:hover { border-color: var(--shell-ink); }
 .preview {
-  height: 300px; overflow: hidden; position: relative;
+  overflow: hidden; position: relative;
   border-bottom: 1px solid var(--shell-line); background: #fff;
 }
 .preview-img {
@@ -49,38 +93,59 @@ a { color: inherit; }
   object-fit: cover; object-position: top center;
 }
 .style-info { padding: 14px 16px; }
-.style-info h2 { font-size: 1.05rem; }
-.ver { font-size: 0.78rem; color: var(--shell-muted); font-weight: 400; }
-.summary { color: var(--shell-muted); font-size: 0.88rem; margin-top: 2px; }
-.tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-.tag { font-size: 0.75rem; color: var(--shell-muted); border: 1px solid var(--shell-line); border-radius: 99px; padding: 0 8px; }
+.style-info h2 {
+  font-size: 1rem; letter-spacing: var(--shell-tracking);
+  text-transform: uppercase; font-weight: 600;
+}
+.ver { font-size: 0.74rem; color: var(--shell-faint); font-weight: 400; letter-spacing: 0.04em; }
+.summary { color: var(--shell-muted); font-size: 0.85rem; margin-top: 4px; }
+.tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.tag {
+  font-size: 0.7rem; color: var(--shell-muted);
+  border: 1px solid var(--shell-line); border-radius: 0;
+  padding: 1px 8px; letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
 
-.kv { display: grid; grid-template-columns: 88px 1fr; gap: 4px 16px; font-size: 0.92rem; margin: 16px 0; }
-.kv dt { color: var(--shell-muted); }
+/* —— 详情页 KV / 规则 / panel —— */
+.kv { display: grid; grid-template-columns: 96px 1fr; gap: 4px 16px; font-size: 0.9rem; margin: 16px 0; }
+.kv dt { color: var(--shell-muted); text-transform: uppercase; font-size: 0.74rem; letter-spacing: var(--shell-tracking); padding-top: 2px; }
 .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 8px; }
-.rules h3 { font-size: 0.85rem; color: var(--shell-muted); margin-bottom: 6px; }
-.rules ul { padding-left: 18px; font-size: 0.9rem; }
+.rules h3 {
+  font-size: 0.78rem; color: var(--shell-muted); margin-bottom: 8px;
+  text-transform: uppercase; letter-spacing: var(--shell-tracking);
+}
+.rules ul { padding-left: 18px; font-size: 0.88rem; }
 
 .panel {
   background: var(--shell-surface); border: 1px solid var(--shell-line);
-  border-radius: 10px; padding: 20px; margin-bottom: 24px;
+  border-radius: 0; padding: 22px; margin-bottom: 24px;
 }
-.panel > h2 { font-size: 1rem; margin-bottom: 12px; }
-.bench-wrap { border: 1px solid var(--shell-line); border-radius: 8px; overflow: hidden; }
+.panel > h2 {
+  font-size: 0.9rem; margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: var(--shell-tracking); font-weight: 600;
+}
+.bench-wrap { border: 1px solid var(--shell-line); border-radius: 0; overflow: hidden; }
 .tpl-frame {
   display: block; width: 100%; height: 78vh; min-height: 480px;
-  border: 1px solid var(--shell-line); border-radius: 8px; background: #fff;
+  border: 1px solid var(--shell-line); border-radius: 0; background: #fff;
 }
 
 .copy-btn {
-  font-size: 0.78rem; padding: 2px 12px; margin-bottom: 8px;
-  border: 1px solid var(--shell-line); border-radius: 6px;
+  font-size: 0.74rem; padding: 3px 14px; margin-bottom: 8px;
+  border: 1px solid var(--shell-line); border-radius: 0;
   background: var(--shell-surface); cursor: pointer; color: var(--shell-text);
+  letter-spacing: var(--shell-tracking); text-transform: uppercase;
+  transition: background var(--shell-duration) var(--shell-easing),
+              color var(--shell-duration) var(--shell-easing);
 }
-.copy-btn:hover { border-color: var(--shell-accent); color: var(--shell-accent); }
+.copy-btn:hover { background: var(--shell-ink); color: #FAFAF8; }
 pre.code {
-  background: #F1F1ED; border: 1px solid var(--shell-line); border-radius: 8px;
-  padding: 12px; font-size: 0.78rem; overflow: auto; max-height: 340px;
+  background: #F2F2EE; border: 1px solid var(--shell-line); border-radius: 0;
+  padding: 14px; font-size: 0.78rem; overflow: auto; max-height: 340px;
 }
-details.file summary { cursor: pointer; color: var(--shell-muted); font-size: 0.88rem; padding: 4px 0; }
+details.file summary {
+  cursor: pointer; color: var(--shell-muted); font-size: 0.86rem; padding: 4px 0;
+  letter-spacing: 0.02em;
+}
 details.file summary:hover { color: var(--shell-text); }
