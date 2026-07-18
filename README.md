@@ -50,8 +50,11 @@ POST body：
 登记后仅持有对应私钥者可管理该风格；未登记的风格任何人都不可更新/删除。
 
 ```bash
-npm run keygen   # 生成钥匙对（公钥投稿用，私钥本地保管）
+npm run keygen   # 生成钥匙对（公钥投稿用，私钥本地保管；需本地 Node + 仓库）
 ```
+
+没有本地仓库/Node 时：调 MCP 的 `generate_keypair` 工具（私钥会经过 MCP 连接传输，慎用），
+或任意 ed25519 工具，产出 base64 DER 格式即可（私钥 pkcs8 / 公钥 spki）。
 
 签名规则：消息 = `style-lab:<update|delete>:<slug>:<timestamp>:<sha256(payload)>`，
 ed25519 签名后 base64。update 的 payload 为 pack JSON 字符串，delete 为空串。

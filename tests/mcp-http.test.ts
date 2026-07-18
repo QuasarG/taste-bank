@@ -69,7 +69,7 @@ after(async () => {
 test('MCP over HTTP：工具列表含 submit_style', async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name);
-  for (const want of ['list_styles', 'get_style_skill', 'submit_style', 'update_style', 'delete_style']) {
+  for (const want of ['list_styles', 'get_style_skill', 'submit_style', 'update_style', 'delete_style', 'generate_keypair']) {
     assert.ok(names.includes(want), `缺少工具: ${want}`);
   }
 });
@@ -89,4 +89,13 @@ test('MCP over HTTP：读取与投稿全链路', async () => {
 
   const dup = await client.callTool({ name: 'submit_style', arguments: newPack });
   assert.equal((dup as { isError?: boolean }).isError, true);
+});
+
+test('MCP over HTTP：generate_keypair 产出可用钥匙', async () => {
+  const { isValidPubkey, canonicalMessage, signMessage, verifyMessage } = await import('../src/lib/auth');
+  const res = await client.callTool({ name: 'generate_keypair', arguments: {} });
+  const { publicKey, privateKey } = JSON.parse(firstText(res));
+  assert.ok(isValidPubkey(publicKey));
+  const sig = signMessage(canonicalMessage('delete', 'x', '1', ''), privateKey);
+  assert.ok(verifyMessage(canonicalMessage('delete', 'x', '1', ''), sig, publicKey));
 });

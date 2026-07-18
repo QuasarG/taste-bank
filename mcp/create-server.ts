@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
 import { assembleSkill, fullCss } from '../src/lib/assemble';
 import { createStylePack, updateStylePack, deleteStylePack } from '../src/lib/create';
+import { generateKeypair } from '../src/lib/auth';
 import { metaSchema, tokensSchema } from '../src/lib/schema';
 
 const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
@@ -192,6 +193,22 @@ export function createStyleLabServer(): McpServer {
     async ({ slug, timestamp, signature }) => {
       try {
         return text(JSON.stringify(deleteStylePack(slug, { timestamp, signature }), null, 2));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    'generate_keypair',
+    {
+      title: '生成管理钥匙对',
+      description:
+        '生成一对 ed25519 钥匙（base64 DER 格式）：publicKey 用于投稿时登记 ownerPubkey，privateKey 用于 update_style/delete_style 签名。注意：私钥会经过 MCP 连接传输，请立即转交用户本地妥善保管，不要写入投稿内容；若不信任此连接，改用本地生成（npm run keygen 或任意 ed25519 工具）。',
+    },
+    async () => {
+      try {
+        return text(JSON.stringify(generateKeypair(), null, 2));
       } catch (e) {
         return fail(e);
       }
