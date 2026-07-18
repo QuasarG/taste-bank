@@ -1,6 +1,6 @@
 # Style Lab
 
-anonymous 的个人前端风格库。每套风格是一个结构化 pack（SKILL.md + tokens + 模板文件），
+个人前端风格库。每套风格是一个结构化 pack（SKILL.md + tokens + 模板文件），
 网站负责展示与复制，HTTP API 与 MCP server 负责把风格直接递到 coding agent 手里。
 
 ## 快速开始
@@ -72,7 +72,7 @@ stdio（本地 agent 推荐）：
     "style-lab": {
       "command": "node",
       "args": ["--import", "tsx", "mcp/server.ts"],
-      "cwd": "/mnt/c/Users/anonymous/projects/style-lab"
+      "cwd": "/path/to/style-lab"
     }
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: blueprint-style
-description: anonymous 风格库 · 蓝图 Blueprint。深蓝图纸底、发丝线、等宽标注、零阴影零渐变。用于开发者工具、仪表盘、技术文档等需要工程图纸气质的页面。
+description: 风格库 · 蓝图 Blueprint。深蓝图纸底、发丝线、等宽标注、零阴影零渐变。用于开发者工具、仪表盘、技术文档等需要工程图纸气质的页面。
 ---
 
 # 蓝图 Blueprint

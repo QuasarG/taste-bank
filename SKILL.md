@@ -1,6 +1,6 @@
 ---
 name: style-lab
-description: anonymous 的个人前端风格库。通过 MCP 工具（或本地文件）获取风格 pack——含 SKILL.md、tokens、模板文件——让任意 coding agent 复现统一的前端风格。当用户要求使用其个人风格库中的风格实现前端时使用；也包含把任意项目提炼成风格 pack 并投稿的 agent 工作流。
+description: 个人前端风格库。通过 MCP 工具（或本地文件）获取风格 pack——含 SKILL.md、tokens、模板文件——让任意 coding agent 复现统一的前端风格。当用户要求使用其个人风格库中的风格实现前端时使用；也包含把任意项目提炼成风格 pack 并投稿的 agent 工作流。
 ---
 
 # Style Lab 使用说明

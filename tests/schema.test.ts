@@ -19,7 +19,7 @@ const validMeta = {
   slug: 'blueprint', name: '蓝图', version: '1.0.0', summary: '图纸气质',
   mood: ['精确'], useCase: '仪表盘', signature: '坐标刻痕',
   rules: { do: ['用发丝线'], dont: ['禁阴影'], voice: '简短' },
-  author: 'anonymous', createdAt: '2026-07-17',
+  author: 'tester', createdAt: '2026-07-17',
 };
 
 test('合法 tokens 通过校验', () => {
