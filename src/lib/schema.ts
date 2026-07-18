@@ -8,11 +8,21 @@ export const safeString = z
   .max(500)
   .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段');
 
+// 高置信度密钥/隐私模式，命中即拒收（语义隐私靠投稿方自查，见 SKILL.md 提炼工作流）
+const SECRETS = [
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+  /AKIA[0-9A-Z]{16}/,
+  /ghp_[A-Za-z0-9]{36}/,
+  /sk-[A-Za-z0-9]{20,}/,
+  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/,
+];
+
 // 长文本版（SKILL.md / overrides / 模板内容），同一份黑名单
 export const safeText = z
   .string()
   .max(200_000)
-  .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段');
+  .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段')
+  .refine((v) => !SECRETS.some((r) => r.test(v)), '疑似包含密钥或隐私信息，请先脱敏');
 
 export const hexColor = z
   .string()

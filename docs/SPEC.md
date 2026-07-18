@@ -50,6 +50,8 @@ styles/<slug>/
 - color 必须含六个角色：`bg / surface / text / muted / line / accent`，其余随意扩展
 - 颜色一律 hex；尺寸一律 `<数字><px|rem|em|%|vh|vw>`；shadow 允许 `"none"`
 - **安全红线**：任何字符串值不得出现 `url(`、`@import`、`expression(`、`javascript:`、`<script`，schema 直接拒收
+- **隐私红线**：skill / overrides / 模板内容命中高置信度密钥模式（私钥块、AKIA、GitHub PAT、`sk-`、JWT）直接拒收；
+  语义隐私（项目名、公司名、域名、用户名）由投稿方按 SKILL.md 提炼工作流第 6 步脱敏
 
 ## SKILL.md 写作要求
 

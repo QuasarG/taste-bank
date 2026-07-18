@@ -83,3 +83,15 @@ test('tokens 非法（坏 hex）被拒', () => {
   bad.tokens.color.bg = 'blue';
   assert.throws(() => createStylePack(bad));
 });
+
+test('skill 混入 AWS key / JWT 被拒并要求脱敏', () => {
+  const bad = structuredClone(valid);
+  bad.meta.slug = 'leaky';
+  bad.skill += '\n参考密钥 AKIAIOSFODNN7EXAMPLE 别学我。';
+  assert.throws(() => createStylePack(bad), /疑似包含密钥/);
+
+  const bad2 = structuredClone(valid);
+  bad2.meta.slug = 'leaky2';
+  bad2.skill += '\neyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQssw5c';
+  assert.throws(() => createStylePack(bad2), /疑似包含密钥/);
+});
