@@ -11,9 +11,13 @@ styles/<slug>/
 ├── tokens.json      # 必需。全部设计变量，唯一事实来源
 ├── SKILL.md         # 必需。喂给 coding agent 的风格说明（带 frontmatter）
 ├── overrides.css    # 可选。变量表达不了的风格修饰，scoped 在 [data-style="<slug>"] 下
-└── templates/       # 必需，至少 1 个 HTML 文件。该风格的完整页面/组件模板快照
+└── templates/       # 必需，至少 1 个 HTML 文件。原页面的「脱敏镜像」快照
     └── page.html    # 自包含（内联 CSS），可直接在浏览器打开
 ```
+
+模板快照原则：**换词不换骨**——保留原页面的布局结构、组件丰富度与视觉细节，
+只把业务专有名词（产品名/公司名/人名/业务术语/域名）替换为中性等价词。
+不要重写成通用演示页，快照的价值就在于「长得就像原页面」。
 
 `templates/` 里可以放任意前端形式的文件：HTML、CSS、Vue SFC、React 组件均可，
 整套打包。agent 通过 `get_style_file` 逐个取走。
