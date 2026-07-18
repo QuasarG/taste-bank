@@ -69,7 +69,7 @@ after(async () => {
 test('MCP over HTTP：工具列表含 submit_style', async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name);
-  for (const want of ['list_styles', 'get_style_skill', 'submit_style']) {
+  for (const want of ['list_styles', 'get_style_skill', 'submit_style', 'update_style', 'delete_style']) {
     assert.ok(names.includes(want), `缺少工具: ${want}`);
   }
 });

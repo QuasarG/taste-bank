@@ -80,7 +80,9 @@ token 值不写进 SKILL.md 正文——库会自动把 tokens.json 生成的 CS
 
 - `templates` 可选，但若提供必须至少含一个 `.html`；文件名限 `[\w.-]` + 白名单扩展名
 - skill / overrides / 模板内容同样过危险片段黑名单（即模板禁止内嵌 `<script>`）
-- slug 已存在时拒绝（409），覆盖更新请先升版本后走人工 git 流程
+- slug 已存在时拒绝（409）；更新走 `PUT /api/styles/:slug.json` 或 `update_style`
+- 可选 `ownerPubkey`（ed25519 公钥）：登记后写入 `owner.key`，
+  该风格的更新/删除均需对应私钥签名（消息格式见 README「公钥管理」），version 必须递增
 
 ## 每个文件给谁用
 

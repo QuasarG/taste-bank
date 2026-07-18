@@ -28,6 +28,9 @@ npm run mcp:http  # MCP server · HTTP 模式，默认 http://127.0.0.1:3100/mcp
 | `GET /api/styles/:slug/skill.md` | 组装好的 SKILL.md（text/markdown） |
 | `GET /api/styles/:slug/tokens.css` | tokens 生成的 scoped CSS（含 overrides） |
 | `POST /api/styles.json` | 投稿，body 见下；成功 201，冲突 409，校验失败 400 |
+| `PUT /api/styles/:slug.json` | 更新（需签名，version 必须递增） |
+| `DELETE /api/styles/:slug.json` | 删除（需签名） |
+| `GET /api/styles/:slug/screenshot.png` | 模板截图（Chromium 渲染，内容哈希缓存） |
 
 POST body：
 
@@ -40,6 +43,24 @@ POST body：
   "templates": { "page.html": "<!DOCTYPE html>..." }
 }
 ```
+
+## 公钥管理（无登录更新/删除）
+
+投稿时可选带 `ownerPubkey`（ed25519 公钥，base64）登记所有权。
+登记后仅持有对应私钥者可管理该风格；未登记的风格任何人都不可更新/删除。
+
+```bash
+npm run keygen   # 生成钥匙对（公钥投稿用，私钥本地保管）
+```
+
+签名规则：消息 = `style-lab:<update|delete>:<slug>:<timestamp>:<sha256(payload)>`，
+ed25519 签名后 base64。update 的 payload 为 pack JSON 字符串，delete 为空串。
+`node scripts/sign.mjs <私钥> <update|delete> <slug> [payload文件]` 可直接生成并打印 curl 示例。
+
+- HTTP：`PUT /api/styles/:slug.json`（body=payload，头 `x-timestamp` / `x-signature`）、
+  `DELETE /api/styles/:slug.json`（同头部）
+- MCP：`update_style` / `delete_style` 工具，参数同义
+- 规则：version 必须大于现有版本；timestamp 窗口 5 分钟；所有权跨更新自动保留
 
 ## MCP 接入
 

@@ -25,7 +25,7 @@ test('MCP server 冒烟：工具列表与全部工具调用', { timeout: 60000 }
   try {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
-    for (const want of ['list_styles', 'get_style', 'get_style_skill', 'get_style_css', 'get_style_file', 'get_usage_guide']) {
+    for (const want of ['list_styles', 'get_style', 'get_style_skill', 'get_style_css', 'get_style_file', 'get_usage_guide', 'submit_style', 'update_style', 'delete_style']) {
       assert.ok(names.includes(want), `缺少工具: ${want}`);
     }
 

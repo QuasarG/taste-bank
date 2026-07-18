@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
 import { assembleSkill, fullCss } from '../src/lib/assemble';
-import { createStylePack } from '../src/lib/create';
+import { createStylePack, updateStylePack, deleteStylePack } from '../src/lib/create';
 import { metaSchema, tokensSchema } from '../src/lib/schema';
 
 const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
@@ -141,11 +141,57 @@ export function createStyleLabServer(): McpServer {
         skill: z.string().describe('SKILL.md 全文（markdown，含 frontmatter，至少 50 字）'),
         overrides: z.string().optional().describe('可选 overrides.css，scoped 在 [data-style="<slug>"] 下'),
         templates: z.record(z.string(), z.string()).optional().describe('模板文件名 → 内容，至少含一个 .html'),
+        ownerPubkey: z.string().optional().describe('可选 ed25519 公钥（base64）。登记后该风格仅持有对应私钥者可更新/删除'),
       },
     },
     async (input) => {
       try {
         return text(JSON.stringify(createStylePack(input), null, 2));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    'update_style',
+    {
+      title: '更新自己的风格',
+      description:
+        '更新已登记所有者的风格：payload 为与 submit_style 同构的 JSON 字符串（version 必须大于现有版本）。签名消息格式 style-lab:update:<slug>:<timestamp>:<sha256(payload)>，用私钥 ed25519 签名，可用 scripts/sign.mjs 生成。',
+      inputSchema: {
+        slug: z.string().describe('风格 slug'),
+        payload: z.string().describe('pack JSON 字符串（同 POST /api/styles.json 的 body）'),
+        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        signature: z.string().describe('base64 ed25519 签名'),
+      },
+    },
+    async ({ slug, payload, timestamp, signature }) => {
+      try {
+        const body = JSON.parse(payload);
+        if (body?.meta?.slug && body.meta.slug !== slug) throw new Error(`payload 的 slug 与参数不一致`);
+        return text(JSON.stringify(updateStylePack(body, { timestamp, signature }, payload), null, 2));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    'delete_style',
+    {
+      title: '删除自己的风格',
+      description:
+        '删除已登记所有者的风格，不可恢复。签名消息格式 style-lab:delete:<slug>:<timestamp>:<sha256(空串)>，用私钥 ed25519 签名，可用 scripts/sign.mjs 生成。',
+      inputSchema: {
+        slug: z.string().describe('风格 slug'),
+        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        signature: z.string().describe('base64 ed25519 签名'),
+      },
+    },
+    async ({ slug, timestamp, signature }) => {
+      try {
+        return text(JSON.stringify(deleteStylePack(slug, { timestamp, signature }), null, 2));
       } catch (e) {
         return fail(e);
       }
