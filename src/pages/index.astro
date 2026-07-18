@@ -75,8 +75,8 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
 </Base>
 
 <script>
-  // 三视图状态机：每张卡的当前值每帧向「布局目标 + 指针视差 + hover」lerp。
-  // 指针跟随与视图切换动画共用这一个循环，无 CSS transition 参与。
+  // 三视图状态机：每张卡的当前值每帧向「布局目标 + 指针视差 + 主视觉」lerp。
+  // 主视觉卡（悬停或默认第一张）唯一不透明并放大，其余按距离渐透明。
   const stage = document.querySelector<HTMLElement>('[data-stage]')!;
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-view-btn]');
   const cardEls = Array.from(document.querySelectorAll<HTMLElement>('.style-card'));
@@ -86,12 +86,12 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
 
   interface CardState {
     el: HTMLElement;
-    cx: number; cy: number; crot: number; cscale: number;
-    hover: number;
+    cx: number; cy: number; crot: number; cscale: number; copacity: number;
   }
-  const cards: CardState[] = cardEls.map((el) => ({ el, cx: 0, cy: 0, crot: 0, cscale: 1, hover: 1 }));
+  const cards: CardState[] = cardEls.map((el) => ({ el, cx: 0, cy: 0, crot: 0, cscale: 1, copacity: 1 }));
 
   let view: View = 'archive';
+  let active = 0;         // 主视觉卡索引，默认第一张（真实风格）
   let px = 0, py = 0;   // 指针目标（相对舞台中心，-1..1）
   let cpx = 0, cpy = 0; // 插值后的指针
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -101,28 +101,38 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
     return { w: el.offsetWidth / 2, h: el.offsetHeight / 2 };
   }
 
-  // Orbit：椭圆轨道；指针横移驱动整环旋转，纵移制造纵深；半径同时受舞台宽度约束防越界
+  // Orbit：正圆环、无旋转角；主视觉居中不透明，环上卡片按环距渐透明
   function targetOrbit(i: number, n: number) {
-    const radius = Math.max(140, Math.min(320, 110 + n * 26, stage.offsetWidth / 2 - 240));
-    const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + cpx * 0.8;
+    if (i === active) return { tx: 0, ty: 0, rot: 0, z: 60, opacity: 1, scale: 1.14 };
+    const others = Math.max(1, n - 1);
+    const k = i < active ? i : i - 1; // 非主视觉卡在环上的序号
+    const radius = Math.max(160, Math.min(320, 120 + n * 22, stage.offsetWidth / 2 - 240));
+    const angle = (k / others) * Math.PI * 2 - Math.PI / 2 + cpx * 0.5;
+    const dist = Math.min(Math.abs(i - active), n - Math.abs(i - active)); // 环距
     return {
       tx: Math.cos(angle) * radius,
-      ty: Math.sin(angle) * radius * 0.55 + cpy * 44,
-      rot: Math.sin(angle) * 9 + cpx * 8,
-      z: Math.round(20 + Math.sin(angle) * 10),
+      ty: Math.sin(angle) * radius * 0.55 + cpy * 30,
+      rot: 0,
+      z: 20 - dist,
+      opacity: Math.max(0.26, 0.62 - dist * 0.09),
+      scale: 0.94,
     };
   }
 
-  // Layered：扇形牌堆；逐层视差，前排（i 小）跟随多，后排拖尾
+  // Layered：扇形牌堆；主视觉抬起放大且不透明，其余按索引距离渐透明
   function targetLayered(i: number, n: number) {
     const t = n <= 1 ? 0 : (i / (n - 1)) * 2 - 1;
     const depth = n <= 1 ? 1 : 1 - (i / (n - 1)) * 0.72;
     const spread = Math.min(300, 60 + n * 26, stage.offsetWidth / 2 - 200);
+    const dist = Math.abs(i - active);
+    const isActive = i === active;
     return {
-      tx: t * spread + cpx * 70 * depth,
-      ty: Math.abs(t) * 26 + cpy * 40 * depth,
-      rot: t * 7 + cpx * 8 * depth,
-      z: n - i,
+      tx: t * spread + cpx * 60 * depth,
+      ty: Math.abs(t) * 26 + cpy * 34 * depth - (isActive ? 26 : 0),
+      rot: t * 6 + cpx * 6 * depth,
+      z: isActive ? 60 : n - i,
+      opacity: isActive ? 1 : Math.max(0.3, 0.62 - dist * 0.08),
+      scale: isActive ? 1.12 : 0.96,
     };
   }
 
@@ -137,10 +147,13 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
         s.cx += (t.tx - s.cx) * 0.13;
         s.cy += (t.ty - s.cy) * 0.13;
         s.crot += (t.rot - s.crot) * 0.13;
-        s.cscale += (s.hover - s.cscale) * 0.16;
+        s.cscale += (t.scale - s.cscale) * 0.15;
+        s.copacity += (t.opacity - s.copacity) * 0.15;
         const { w, h } = cardHalf(s.el);
         s.el.style.transform = `translate(${-w + s.cx}px, ${-h + s.cy}px) rotate(${s.crot}deg) scale(${s.cscale})`;
-        s.el.style.zIndex = String(s.hover > 1 ? 100 : t.z);
+        s.el.style.zIndex = String(t.z);
+        s.el.style.opacity = String(s.copacity);
+        s.el.classList.toggle('is-active', i === active);
       });
     }
     requestAnimationFrame(tick);
@@ -159,6 +172,7 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
       cards.forEach((s) => {
         s.el.style.transform = '';
         s.el.style.zIndex = '';
+        s.el.style.opacity = '';
       });
     } else {
       // 从当前 grid 位置无缝起飞：先把当前值同步为渲染位置附近
@@ -177,12 +191,24 @@ const slots = Array.from({ length: Math.max(0, TOTAL - styles.length) }, (_, i) 
     px = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
     py = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
   });
-  stage.addEventListener('pointerleave', () => { px = 0; py = 0; });
+  stage.addEventListener('pointerleave', () => { px = 0; py = 0; active = 0; });
 
-  cards.forEach((s) => {
-    s.el.addEventListener('mouseenter', () => { s.hover = 1.15; });
-    s.el.addEventListener('mouseleave', () => { s.hover = 1; });
+  // 悬停即主视觉：飞到 C 位、唯一不透明
+  cards.forEach((s, i) => {
+    s.el.addEventListener('mouseenter', () => { active = i; });
   });
+
+  // 滚轮轮播：orbit/layered 下拦截滚轮切主视觉，不滚页面；节流防触控板连跳
+  let wheelLock = 0;
+  stage.addEventListener('wheel', (e) => {
+    if ((view !== 'orbit' && view !== 'layered') || narrow.matches) return;
+    e.preventDefault();
+    const now = performance.now();
+    if (now - wheelLock < 200) return;
+    wheelLock = now;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    active = (active + dir + cards.length) % cards.length;
+  }, { passive: false });
 
   // reduced-motion：Orbit/Layered 在 CSS 里已回退网格，这里不再启动循环
   if (!reduced) requestAnimationFrame(tick);
