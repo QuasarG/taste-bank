@@ -3,6 +3,8 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createStyleLabServer } from './create-server';
 
 const PORT = Number(process.env.STYLE_LAB_MCP_PORT ?? 3100);
+// 默认只绑 localhost，部署公网时显式设 STYLE_LAB_MCP_HOST=0.0.0.0 + HTTPS
+const HOST = process.env.STYLE_LAB_MCP_HOST ?? '127.0.0.1';
 
 const server = http.createServer(async (req, res) => {
   if (req.url === '/health') {
@@ -34,6 +36,6 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
 });
 
-server.listen(PORT, () => {
-  console.log(`style-lab mcp http listening on http://127.0.0.1:${PORT}/mcp`);
+server.listen(PORT, HOST, () => {
+  console.log(`style-lab mcp http listening on http://${HOST}:${PORT}/mcp`);
 });

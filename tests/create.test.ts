@@ -76,6 +76,20 @@ test('模板内容含 <script 被拒', () => {
   assert.throws(() => createStylePack(bad, CODE), /危险片段/);
 });
 
+test('模板内容含事件处理器 / iframe / link 被拒', () => {
+  const cases = [
+    '<html><img src="x" onerror="alert(1)"></html>',
+    '<html><iframe src="https://evil.com"></iframe></html>',
+    '<html><link rel="stylesheet" href="https://evil.com/x.css"></html>',
+  ];
+  for (const [i, html] of cases.entries()) {
+    const bad = structuredClone(valid);
+    bad.meta.slug = `evil-attr-${i}`;
+    bad.templates = { 'page.html': html };
+    assert.throws(() => createStylePack(bad, CODE), /危险片段/);
+  }
+});
+
 test('overrides 含 url( 被拒', () => {
   const bad = structuredClone(valid);
   bad.meta.slug = 'evil-css';

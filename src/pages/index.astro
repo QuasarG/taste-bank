@@ -28,7 +28,7 @@ const templatesMap = Object.fromEntries(
       <div class="stage-body">
         {
           firstSlug && (
-            <iframe class="live-frame" src={`/styles/${firstSlug}/template.html`} title="风格实时渲染" />
+            <iframe class="live-frame" src={`/styles/${firstSlug}/template.html`} title="风格实时渲染" sandbox="" />
           )
         }
         <div class="wheel-trap" data-wheel-trap></div>

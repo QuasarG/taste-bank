@@ -1,7 +1,19 @@
 import { z } from 'zod';
 
 // 危险片段黑名单：任何字符串值命中即拒收，防注入
-const FORBIDDEN = [/url\s*\(/i, /@import/i, /expression\s*\(/i, /javascript:/i, /<\s*script/i];
+const FORBIDDEN = [
+  /url\s*\(/i,
+  /@import/i,
+  /expression\s*\(/i,
+  /javascript:/i,
+  /<\s*script/i,
+  // HTML 属性面：事件处理器、嵌套浏览上下文、外链资源、刷新跳转
+  /<\s*iframe/i,
+  /<\s*link\b/i,
+  /<\s*base\b/i,
+  /http-equiv\s*=\s*["']?refresh/i,
+  /\son[a-z]+\s*=/i,
+];
 
 export const safeString = z
   .string()

@@ -54,7 +54,7 @@ const templateFile = (() => {
     templateFile && (
       <section class="panel">
         <h2>模板快照（原页面布局的脱敏镜像，实时渲染）</h2>
-        <iframe class="tpl-frame" src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板快照`} />
+        <iframe class="tpl-frame" src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板快照`} sandbox="" />
       </section>
     )
   }
