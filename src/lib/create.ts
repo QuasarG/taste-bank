@@ -5,6 +5,8 @@ import { metaSchema, tokensSchema, safeText } from './schema';
 import { STYLES_DIR, loadStyle } from './store';
 import { canonicalMessage, isValidPubkey, timestampInWindow, verifyMessage } from './auth';
 import { checkInvite } from './invites';
+import { checkRate, rateKey } from './ratelimit';
+import { pendingPath } from './review';
 import { StyleConflictError, StyleForbiddenError, StyleVersionError } from './errors';
 
 export { StyleConflictError, StyleForbiddenError, StyleVersionError };
@@ -29,6 +31,22 @@ const TEMPLATE_NAME = /^[\w][\w.-]*\.(html|css|vue|jsx|tsx|svelte|md)$/;
 export interface SubmitResult {
   slug: string;
   files: string[];
+  status: 'pending';
+}
+
+export interface SubmitOptions {
+  inviteCode?: string;
+  timestamp?: string;
+  signature?: string;
+  rawPayload?: string; // 签名原文（HTTP 为请求体，MCP 为 payload 字符串），缺省 JSON.stringify(input)
+}
+
+// 投稿验签：邀请码管门票，签名管「这次操作确实是持钥人本人」
+function assertSubmitAuth(data: z.infer<typeof submitSchema>, opts: SubmitOptions, raw: string): void {
+  const { timestamp, signature } = authSchema.parse({ timestamp: opts.timestamp ?? '', signature: opts.signature ?? '' });
+  if (!timestampInWindow(timestamp)) throw new StyleForbiddenError('timestamp 超出 5 分钟窗口');
+  const msg = canonicalMessage('submit', data.meta.slug, timestamp, raw);
+  if (!verifyMessage(msg, signature, data.ownerPubkey!)) throw new StyleForbiddenError('投稿签名验证失败');
 }
 
 function validateTemplates(templates: Record<string, string>): string[] {
@@ -58,16 +76,20 @@ function writePack(dir: string, data: z.infer<typeof submitSchema>, names: strin
   return written;
 }
 
-// 邀请码由 HTTP 请求头注入，不属于投稿内容
-export function createStylePack(input: unknown, inviteCode?: string): SubmitResult {
+// 邀请码由 HTTP 请求头注入；签名证明持钥人；投稿统一进审核队列
+export function createStylePack(input: unknown, opts: SubmitOptions = {}): SubmitResult {
   const data = submitSchema.parse(input);
-  checkInvite(inviteCode, data.ownerPubkey);
+  checkRate(rateKey('submit', data.ownerPubkey), 20, 60_000);
+  checkInvite(opts.inviteCode, data.ownerPubkey);
+  const raw = opts.rawPayload ?? JSON.stringify(input);
+  assertSubmitAuth(data, opts, raw);
   const dir = path.join(STYLES_DIR, data.meta.slug);
-  if (fs.existsSync(dir)) {
-    throw new StyleConflictError(`风格已存在: ${data.meta.slug}，更新请走 PUT /api/styles/:slug.json 或 update_style`);
+  if (fs.existsSync(dir) || fs.existsSync(pendingPath(data.meta.slug))) {
+    throw new StyleConflictError(`风格已存在或在审核队列中: ${data.meta.slug}，更新请走 PUT /api/styles/:slug.json 或 update_style`);
   }
   const names = validateTemplates(data.templates ?? {});
-  return { slug: data.meta.slug, files: writePack(dir, data, names) };
+  const files = writePack(pendingPath(data.meta.slug), data, names);
+  return { slug: data.meta.slug, files, status: 'pending' };
 }
 
 // 验明正身：仅登记过 owner.key 的风格可管理，签名证明持有对应私钥
@@ -87,6 +109,7 @@ function assertOwnership(slug: string, action: string, payload: string, auth: un
 export function updateStylePack(input: unknown, auth: unknown, rawPayload: string): SubmitResult {
   const data = submitSchema.parse(input);
   const slug = data.meta.slug;
+  checkRate(`manage:${slug}`, 30, 60_000);
   assertOwnership(slug, 'update', rawPayload, auth);
   const existing = loadStyle(slug);
   if (compareVersion(data.meta.version, existing.meta.version) <= 0) {
@@ -95,10 +118,12 @@ export function updateStylePack(input: unknown, auth: unknown, rawPayload: strin
   // 所有权跨更新保留，除非显式换新公钥
   data.ownerPubkey ??= fs.readFileSync(path.join(STYLES_DIR, slug, 'owner.key'), 'utf8').trim();
   const names = validateTemplates(data.templates ?? {});
-  return { slug, files: writePack(path.join(STYLES_DIR, slug), data, names) };
+  const files = writePack(path.join(STYLES_DIR, slug), data, names);
+  return { slug, files, status: 'pending' as const };
 }
 
 export function deleteStylePack(slug: string, auth: unknown): { slug: string; deleted: true } {
+  checkRate(`manage:${slug}`, 30, 60_000);
   assertOwnership(slug, 'delete', '', auth);
   fs.rmSync(path.join(STYLES_DIR, slug), { recursive: true, force: true });
   return { slug, deleted: true };

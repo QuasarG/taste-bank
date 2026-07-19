@@ -6,7 +6,6 @@ import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
 import { assembleSkill, fullCss } from '../src/lib/assemble';
 import { createStylePack, updateStylePack, deleteStylePack } from '../src/lib/create';
 import { generateKeypair } from '../src/lib/auth';
-import { metaSchema, tokensSchema } from '../src/lib/schema';
 
 const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
 
@@ -133,21 +132,19 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
   server.registerTool(
     'submit_style',
     {
-      title: '投稿新风格',
+      title: '投稿新风格（需签名）',
       description:
-        '提交一套新风格 pack：meta + tokens + skill 全文 + 可选 overrides + 可选模板文件（至少含一个 .html）+ 可选 ownerPubkey 登记所有权。邀请码由客户端在 MCP 配置中注入（x-invite-code 请求头），不在本工具参数内。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。模板页必须在一屏 16:9 内完整呈现、禁止页内滚动，放不下可拆多页（page.html、page2.html……）。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
+        '提交一套新风格 pack：payload 为 JSON 字符串（含 meta/tokens/skill/可选 overrides/templates/ownerPubkey），签名消息格式 style-lab:submit:<slug>:<timestamp>:<sha256(payload)>，用 ownerPubkey 对应私钥 ed25519 签名（scripts/sign.mjs 或自包含脚本可生成）。邀请码由 x-invite-code 请求头注入，不在参数内。校验通过后进入审核队列，库主 approve 后才上架。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿」工作流再动手，并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。模板页必须在一屏 16:9 内完整呈现、禁止页内滚动，放不下可拆多页（page.html、page2.html……）。校验失败会报错并说明原因，修正后重试，不要绕过校验。',
       inputSchema: {
-        meta: metaSchema.describe('风格元信息，slug 只允许小写字母数字和连字符'),
-        tokens: tokensSchema.describe('设计变量，必须包含 bg/surface/text/muted/line/accent 六个色角色'),
-        skill: z.string().describe('SKILL.md 全文（markdown，含 frontmatter，至少 50 字）'),
-        overrides: z.string().optional().describe('可选 overrides.css，scoped 在 [data-style="<slug>"] 下'),
-        templates: z.record(z.string(), z.string()).optional().describe('模板文件名 → 内容，至少含一个 .html'),
-        ownerPubkey: z.string().optional().describe('可选 ed25519 公钥（base64）。登记后该风格仅持有对应私钥者可更新/删除；邀请制下与邀请码一码一身份绑定'),
+        payload: z.string().describe('pack JSON 字符串（同 POST /api/styles.json 的 body，ownerPubkey 必填）'),
+        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        signature: z.string().describe('base64 ed25519 签名'),
       },
     },
-    async (input) => {
+    async ({ payload, timestamp, signature }) => {
       try {
-        return text(JSON.stringify(createStylePack(input, opts.inviteCode), null, 2));
+        const body = JSON.parse(payload);
+        return text(JSON.stringify(createStylePack(body, { inviteCode: opts.inviteCode, timestamp, signature, rawPayload: payload }), null, 2));
       } catch (e) {
         return fail(e);
       }

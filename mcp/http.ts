@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createStyleLabServer } from './create-server';
+import { checkRate, rateKey } from '../src/lib/ratelimit';
 
 const PORT = Number(process.env.STYLE_LAB_MCP_PORT ?? 3100);
 // 默认只绑 localhost，部署公网时显式设 STYLE_LAB_MCP_HOST=0.0.0.0 + HTTPS
@@ -23,6 +24,13 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const inviteCode = req.headers['x-invite-code'];
+    // 按来源 IP 粗限流，防无脑刷请求
+    try {
+      checkRate(rateKey('ip', req.socket.remoteAddress), 120, 60_000);
+    } catch {
+      res.writeHead(429, { 'content-type': 'text/plain' }).end('rate limited');
+      return;
+    }
     const mcpServer = createStyleLabServer({ inviteCode: Array.isArray(inviteCode) ? inviteCode[0] : inviteCode });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {

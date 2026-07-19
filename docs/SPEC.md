@@ -83,13 +83,16 @@ token 值不写进 SKILL.md 正文——库会自动把 tokens.json 生成的 CS
 }
 ```
 
-- **邀请码**：投稿必须持有，但它是凭证、不属于 body——HTTP 走 `x-invite-code` 头，
-  HTTP 头 `x-invite-code`。一码一身份，首次使用与 ownerPubkey 绑定
+- **邀请码**：HTTP 头 `x-invite-code`。一码一身份，首次使用与 ownerPubkey 绑定
+- **签名**：HTTP 走 `x-timestamp` / `x-signature` 头（MCP 走同名参数），
+  消息 = `style-lab:submit:<slug>:<timestamp>:<sha256(body原文)>`
+- **审核**：投稿统一进 `data/pending/`，库主 `npm run review -- approve` 后才上架
 - `templates` 可选，但若提供必须至少含一个 `.html`；文件名限 `[\w.-]` + 白名单扩展名
-- skill / overrides / 模板内容同样过危险片段黑名单（即模板禁止内嵌 `<script>`）
-- slug 已存在时拒绝（409）；更新走 `PUT /api/styles/:slug.json` 或 `update_style`
+- skill / overrides / 模板内容同样过危险片段黑名单（含事件处理器、iframe、link 等 HTML 属性面）
+- slug 已存在或已在队列中时拒绝（409）；更新走 `PUT /api/styles/:slug.json` 或 `update_style`
 - `ownerPubkey` 登记后写入 `owner.key`，该风格的更新/删除均需对应私钥签名
   （消息格式见 README「公钥管理」），version 必须递增
+- 限流：投稿按公钥 20 次/分，超限 429
 
 ## 每个文件给谁用
 

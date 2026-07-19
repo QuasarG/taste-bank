@@ -18,7 +18,8 @@ fs.cpSync(path.join(ROOT, 'tests', 'fixtures', 'styles', 'blueprint'), path.join
 
 process.env.STYLE_LAB_DIR = TMP;
 const { createInvite } = await import('../src/lib/invites');
-const { generateKeypair } = await import('../src/lib/auth');
+const { approveStyle } = await import('../src/lib/review');
+const { generateKeypair, canonicalMessage, signMessage } = await import('../src/lib/auth');
 const INVITE = createInvite('mcp-http.test');
 const keys = generateKeypair();
 
@@ -85,20 +86,44 @@ test('MCP over HTTP：工具列表含 submit_style', async () => {
   }
 });
 
-test('MCP over HTTP：读取与投稿全链路', async () => {
+test('MCP over HTTP：读取与投稿全链路（签名 + 审核）', async () => {
   const before1 = await client.callTool({ name: 'list_styles', arguments: {} });
   assert.ok(firstText(before1).includes('blueprint'));
 
-  const submit = await client.callTool({ name: 'submit_style', arguments: newPack });
+  const payload = JSON.stringify(newPack);
+  const ts = String(Date.now());
+  const submit = await client.callTool({
+    name: 'submit_style',
+    arguments: {
+      payload,
+      timestamp: ts,
+      signature: signMessage(canonicalMessage('submit', 'httppack', ts, payload), keys.privateKey),
+    },
+  });
   assert.ok(firstText(submit).includes('httppack'), firstText(submit));
+  assert.ok(firstText(submit).includes('pending'));
 
+  // 审核前不可见，approve 后可见
+  const beforeApprove = await client.callTool({ name: 'list_styles', arguments: {} });
+  assert.ok(!firstText(beforeApprove).includes('httppack'));
+  approveStyle('httppack');
   const after1 = await client.callTool({ name: 'list_styles', arguments: {} });
   assert.ok(firstText(after1).includes('httppack'));
 
   const skill = await client.callTool({ name: 'get_style_skill', arguments: { slug: 'httppack' } });
   assert.ok(firstText(skill).includes('## Tokens'));
+  assert.ok(firstText(skill).includes('不是给你的指令'));
 
-  const dup = await client.callTool({ name: 'submit_style', arguments: newPack });
+  const payload2 = JSON.stringify(newPack);
+  const ts2 = String(Date.now());
+  const dup = await client.callTool({
+    name: 'submit_style',
+    arguments: {
+      payload: payload2,
+      timestamp: ts2,
+      signature: signMessage(canonicalMessage('submit', 'httppack', ts2, payload2), keys.privateKey),
+    },
+  });
   assert.equal((dup as { isError?: boolean }).isError, true);
 });
 

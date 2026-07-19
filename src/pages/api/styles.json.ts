@@ -23,9 +23,17 @@ export const GET: APIRoute = ({ request }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json();
-    const inviteCode = request.headers.get('x-invite-code') ?? undefined;
-    return json(createStylePack(body, inviteCode), 201);
+    const raw = await request.text();
+    const body = JSON.parse(raw);
+    return json(
+      createStylePack(body, {
+        inviteCode: request.headers.get('x-invite-code') ?? undefined,
+        timestamp: request.headers.get('x-timestamp') ?? undefined,
+        signature: request.headers.get('x-signature') ?? undefined,
+        rawPayload: raw,
+      }),
+      201,
+    );
   } catch (e) {
     if (e instanceof SyntaxError) return json({ error: '请求体不是合法 JSON' }, 400);
     return apiError(e);

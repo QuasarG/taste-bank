@@ -6,4 +6,4 @@ console.log('公钥（投稿时作为 ownerPubkey 提交，可公开）:');
 console.log(publicKey);
 console.log('\n私钥（本地保管，泄露=失去风格管理权）:');
 console.log(privateKey);
-console.log('\n签名用法: node scripts/sign.mjs <私钥> <update|delete> <slug> [payload文件]');
+console.log('\n签名用法: node scripts/sign.mjs <私钥> <submit|update|delete> <slug> [payload文件]');

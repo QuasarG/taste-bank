@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generateKeypair, canonicalMessage, signMessage } from '../src/lib/auth';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PORT = 4561;
@@ -17,7 +18,7 @@ fs.cpSync(path.join(ROOT, 'tests', 'fixtures', 'styles', 'blueprint'), path.join
 
 process.env.STYLE_LAB_DIR = TMP;
 const { createInvite } = await import('../src/lib/invites');
-const { generateKeypair } = await import('../src/lib/auth');
+const { approveStyle } = await import('../src/lib/review');
 const INVITE = createInvite('api.test');
 const keys = generateKeypair();
 
@@ -99,24 +100,32 @@ test('GET 单风格 / 404 / skill.md / tokens.css', async () => {
   assert.ok((await css.text()).includes('--sl-color-bg: #0F2D52;'));
 });
 
-test('POST 投稿全链路：201 → 可读回 → 重复 409 → 非法 400', async () => {
-  const post = async (body: unknown, invite: string | null = INVITE) =>
-    fetch(`${BASE}/api/styles.json`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', ...(invite ? { 'x-invite-code': invite } : {}) },
-      body: typeof body === 'string' ? body : JSON.stringify(body),
-    });
+test('POST 投稿全链路：签名 → pending → approve → 读回 → 409/400/403', async () => {
+  const post = async (body: unknown, opts: { invite?: string | null; sign?: boolean } = {}) => {
+    const raw = typeof body === 'string' ? body : JSON.stringify(body);
+    const headers: Record<string, string> = { 'content-type': 'application/json' };
+    if (opts.invite !== null) headers['x-invite-code'] = opts.invite ?? INVITE;
+    if (opts.sign !== false) {
+      const slug = (body as { meta?: { slug?: string } })?.meta?.slug ?? '';
+      const ts = String(Date.now());
+      headers['x-timestamp'] = ts;
+      headers['x-signature'] = signMessage(canonicalMessage('submit', slug, ts, raw), keys.privateKey);
+    }
+    return fetch(`${BASE}/api/styles.json`, { method: 'POST', headers, body: raw });
+  };
 
-  // 无邀请码 → 403
-  assert.equal((await post(newPack('noinvite'), null)).status, 403);
+  // 无邀请码 → 403；无签名 → 403
+  assert.equal((await post(newPack('noinvite'), { invite: null })).status, 403);
+  assert.equal((await post(newPack('unsigned'), { sign: false })).status, 403);
 
   const created = await post(newPack('apipack'));
   assert.equal(created.status, 201);
-  const createdData = await created.json();
-  assert.ok(createdData.files.includes('SKILL.md'));
+  assert.equal((await created.json()).status, 'pending');
 
-  const readback = await fetch(`${BASE}/api/styles/apipack.json`);
-  assert.equal(readback.status, 200);
+  // 审核前不可见，approve 后可见
+  assert.equal((await fetch(`${BASE}/api/styles/apipack.json`)).status, 404);
+  approveStyle('apipack');
+  assert.equal((await fetch(`${BASE}/api/styles/apipack.json`)).status, 200);
 
   const dup = await post(newPack('apipack'));
   assert.equal(dup.status, 409);

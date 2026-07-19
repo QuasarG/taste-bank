@@ -16,6 +16,7 @@ fs.mkdirSync(path.join(TMP, 'styles'), { recursive: true });
 
 process.env.STYLE_LAB_DIR = TMP;
 const { createInvite } = await import('../src/lib/invites');
+const { approveStyle } = await import('../src/lib/review');
 const INVITE = createInvite('manage.test');
 
 let child: ChildProcess;
@@ -71,19 +72,22 @@ after(() => {
 });
 
 test('所有权管理全链路', { timeout: 120_000 }, async () => {
-  const post = (b: unknown, invite: string | null = INVITE) =>
-    fetch(`${BASE}/api/styles.json`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', ...(invite ? { 'x-invite-code': invite } : {}) },
-      body: JSON.stringify(b),
-    });
+  const post = (b: unknown, invite: string | null = INVITE) => {
+    const raw = JSON.stringify(b);
+    const slug = (b as { meta?: { slug?: string } })?.meta?.slug ?? '';
+    const headers: Record<string, string> = { 'content-type': 'application/json' };
+    if (invite) headers['x-invite-code'] = invite;
+    Object.assign(headers, signedHeaders('submit', slug, raw));
+    return fetch(`${BASE}/api/styles.json`, { method: 'POST', headers, body: raw });
+  };
   const put = (slug: string, raw: string, headers: Record<string, string>) =>
     fetch(`${BASE}/api/styles/${slug}.json`, { method: 'PUT', headers, body: raw });
   const del = (slug: string, headers: Record<string, string>) =>
     fetch(`${BASE}/api/styles/${slug}.json`, { method: 'DELETE', headers });
 
-  // 1. 带公钥投稿 → 201，owner.key 入库
+  // 1. 带公钥签名投稿 → 201 pending，approve 后 owner.key 可见
   assert.equal((await post(pack('owned', '1.0.0', keys.publicKey))).status, 201);
+  approveStyle('owned');
   const detail = await (await fetch(`${BASE}/api/styles/owned.json`)).json();
   assert.ok(detail.files.includes('owner.key'));
 

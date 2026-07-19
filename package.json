@@ -10,7 +10,8 @@
     "mcp:http": "tsx mcp/http.ts",
     "keygen": "tsx scripts/keygen.mjs",
     "sign": "tsx scripts/sign.mjs",
-    "invite": "tsx scripts/invite.mjs"
+    "invite": "tsx scripts/invite.mjs",
+    "review": "tsx scripts/review.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",
