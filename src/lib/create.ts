@@ -58,7 +58,7 @@ function writePack(dir: string, data: z.infer<typeof submitSchema>, names: strin
   return written;
 }
 
-// 邀请码由传输层注入（HTTP 头 / stdio 环境变量），不属于投稿内容
+// 邀请码由 HTTP 请求头注入，不属于投稿内容
 export function createStylePack(input: unknown, inviteCode?: string): SubmitResult {
   const data = submitSchema.parse(input);
   checkInvite(inviteCode, data.ownerPubkey);

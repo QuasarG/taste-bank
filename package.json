@@ -7,7 +7,6 @@
     "dev": "astro dev",
     "build": "astro build",
     "test": "node --import tsx --test tests/*.test.ts",
-    "mcp": "tsx mcp/server.ts",
     "mcp:http": "tsx mcp/http.ts",
     "keygen": "tsx scripts/keygen.mjs",
     "sign": "tsx scripts/sign.mjs",

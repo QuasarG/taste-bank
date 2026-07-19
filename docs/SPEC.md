@@ -84,7 +84,7 @@ token 值不写进 SKILL.md 正文——库会自动把 tokens.json 生成的 CS
 ```
 
 - **邀请码**：投稿必须持有，但它是凭证、不属于 body——HTTP 走 `x-invite-code` 头，
-  stdio MCP 走 `STYLE_LAB_INVITE` 环境变量。一码一身份，首次使用与 ownerPubkey 绑定
+  HTTP 头 `x-invite-code`。一码一身份，首次使用与 ownerPubkey 绑定
 - `templates` 可选，但若提供必须至少含一个 `.html`；文件名限 `[\w.-]` + 白名单扩展名
 - skill / overrides / 模板内容同样过危险片段黑名单（即模板禁止内嵌 `<script>`）
 - slug 已存在时拒绝（409）；更新走 `PUT /api/styles/:slug.json` 或 `update_style`
