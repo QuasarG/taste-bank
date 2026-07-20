@@ -1,8 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Bench from '../../components/Bench.astro';
-import { loadStyle, readStyleFile, type StylePack } from '../../lib/store';
-import { fullCss, assembleSkill } from '../../lib/assemble';
+import { loadStyle, type StylePack } from '../../lib/store';
+import { assembleSkill } from '../../lib/assemble';
 
 const slug = Astro.params.slug!;
 let pack: StylePack | null = null;
@@ -11,15 +10,7 @@ try {
 } catch {
   Astro.response.status = 404;
 }
-const css = pack ? fullCss(slug, pack.tokens, pack.overrides) : '';
 const skill = pack ? assembleSkill(pack.meta, pack.tokens, pack.skillRaw) : '';
-// 选模板快照：优先 page.html，否则取第一个 html
-const templateFile = (() => {
-  if (!pack) return null;
-  const htmls = pack.files.filter((f) => f.startsWith('templates/') && f.endsWith('.html'));
-  if (htmls.length === 0) return null;
-  return (htmls.includes('templates/page.html') ? 'templates/page.html' : htmls[0]).replace('templates/', '');
-})();
 ---
 
 <Base title={pack ? pack.meta.name : '风格不存在'}>
@@ -28,82 +19,32 @@ const templateFile = (() => {
       <h1 class="page-title">风格不存在：{slug}</h1>
     ) : (
       <>
-        <style set:html={css} />
-
         <div class="detail-head">
           <h1 class="page-title">{pack.meta.name} <span class="ver">v{pack.meta.version}</span></h1>
           <p class="page-sub">{pack.meta.summary}</p>
-    <dl class="kv">
-      <dt>适用场景</dt><dd>{pack.meta.useCase}</dd>
-      <dt>Signature</dt><dd>{pack.meta.signature}</dd>
-      <dt>文案语气</dt><dd>{pack.meta.rules.voice}</dd>
-    </dl>
-    <div class="rules">
-      <div>
-        <h3>Do</h3>
-        <ul>{pack.meta.rules.do.map((r) => <li>{r}</li>)}</ul>
-      </div>
-      <div>
-        <h3>Don't</h3>
-        <ul>{pack.meta.rules.dont.map((r) => <li>{r}</li>)}</ul>
-      </div>
-    </div>
-  </div>
+        </div>
 
-  {
-    templateFile && (
-      <section class="panel">
-        <h2>模板快照（原页面布局的脱敏镜像，实时渲染）</h2>
-        <iframe class="tpl-frame" src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板快照`} sandbox="" />
-      </section>
-    )
-  }
+        <section class="panel">
+          <h2>给 AI Agent 的提示词</h2>
+          <p class="page-sub">复制后粘贴给你的 coding agent，即可让它严格按此风格实现界面。</p>
+          <button class="copy-btn" data-copy="skill-md">复制</button>
+          <pre class="code" id="skill-md">{skill}</pre>
+        </section>
 
-  <section class="panel">
-    <h2>组件测试台（标准骨架换肤，跨风格对比用）</h2>
-    <div class="bench-wrap" data-style={slug}>
-      <Bench />
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>SKILL.md（复制后喂给 agent）</h2>
-    <button class="copy-btn" data-copy="skill-md">复制</button>
-    <pre class="code" id="skill-md">{skill}</pre>
-  </section>
-
-  <section class="panel">
-    <h2>tokens.css（含 overrides）</h2>
-    <button class="copy-btn" data-copy="tokens-css">复制</button>
-    <pre class="code" id="tokens-css">{css}</pre>
-  </section>
-
-  <section class="panel">
-    <h2>Pack 文件清单</h2>
-    {
-      pack.files.map((f) => (
-        <details class="file">
-          <summary>{f}</summary>
-          <pre class="code">{readStyleFile(slug, f)}</pre>
-        </details>
-      ))
-    }
-  </section>
-
-  <script>
-    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const target = document.getElementById(btn.dataset.copy!);
-        if (!target) return;
-        await navigator.clipboard.writeText(target.textContent ?? '');
-        const old = btn.textContent;
-        btn.textContent = '已复制 ✓';
-        setTimeout(() => {
-          btn.textContent = old;
-        }, 1500);
-      });
-    });
-  </script>
+        <script>
+          document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const target = document.getElementById(btn.dataset.copy!);
+              if (!target) return;
+              await navigator.clipboard.writeText(target.textContent ?? '');
+              const old = btn.textContent;
+              btn.textContent = '已复制 ✓';
+              setTimeout(() => {
+                btn.textContent = old;
+              }, 1500);
+            });
+          });
+        </script>
       </>
     )
   }
