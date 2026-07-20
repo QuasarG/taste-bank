@@ -119,3 +119,46 @@ HTTP 服务：`npm run mcp:http`，默认 `http://127.0.0.1:3100/mcp`（Streamab
 |---|---|---|
 | `STYLE_LAB_DIR` | 项目根 | 指向包含 `styles/` 的目录，测试/多实例隔离用 |
 | `STYLE_LAB_MCP_PORT` | 3100 | MCP HTTP 端口 |
+| `STYLE_LAB_MCP_HOST` | 127.0.0.1 | MCP 绑定地址，公网暴露设 `0.0.0.0` |
+| `CHROMIUM_PATH` | /usr/bin/chromium | 截图用 Chromium 可执行文件路径 |
+| `STYLE_LAB_ADMIN_TOKEN` | 空（管理台关闭） | 审核管理台口令，设置后 `/admin` 可用 |
+
+## 审核管理台
+
+设置 `STYLE_LAB_ADMIN_TOKEN` 后访问 `/admin`，口令登录（Cookie 7 天），
+可查看待审列表、预览模板、阅读 SKILL.md，并 approve / reject。
+未设置该变量时管理台整体关闭（所有 admin 端点 403）。
+
+| 端点 | 说明 |
+|---|---|
+| `GET/POST/DELETE /api/admin/session.json` | 探测登录态 / 口令登录（发 Cookie）/ 退出 |
+| `GET /api/admin/pending.json` | 待审列表 |
+| `GET /api/admin/pending/:slug.json` | 待审详情（meta + skill + 文件清单） |
+| `POST /api/admin/pending/:slug/approve.json` | 通过并上架 |
+| `POST /api/admin/pending/:slug/reject.json` | 拒绝并清除 |
+| `GET /pending/:slug/template.html` | 待审模板预览（与公开路由同一份 CSP） |
+
+管理端点接受 `x-admin-token` 头或登录 Cookie；变更类请求请带 `content-type: application/json`
+（Astro 的 checkOrigin 会拦无 content-type 的跨源 POST）。
+
+## 生产部署
+
+两个进程：网站（Astro standalone）+ MCP HTTP，共享同一个 `STYLE_LAB_DIR`。
+
+```bash
+npm ci --omit=dev
+npm run build
+# 网站：HOST / PORT 控制监听（默认 0.0.0.0:4321）
+HOST=0.0.0.0 PORT=4321 STYLE_LAB_DIR=/srv/style-lab npm start
+# MCP：另起一个进程
+STYLE_LAB_MCP_HOST=0.0.0.0 STYLE_LAB_DIR=/srv/style-lab npm run mcp:http
+```
+
+- **持久化**：`STYLE_LAB_DIR` 指向代码树外的目录（如 `/srv/style-lab`，内含 `styles/` 与 `data/`），
+  邀请码、审核队列、截图缓存、已上架风格全在里面，重新部署不受影响
+- **Chromium**：截图端点运行时需要系统 Chromium（Debian/Ubuntu：`apt install chromium`），
+  路径不同用 `CHROMIUM_PATH` 指定；缺失时仅截图端点不可用，其余功能不受影响
+- **管理操作**：`npm run review` / `npm run invite` 在服务器上执行，走同一个 `STYLE_LAB_DIR`；
+  审核也可走 Web 管理台 `/admin`（需 `STYLE_LAB_ADMIN_TOKEN`）
+- **安全提示**：MCP 裸 HTTP 暴露时邀请码在请求头明文传输，有域名后应套 HTTPS 反代
+  （届时 admin Cookie 可补 `Secure` 标志）

@@ -14,7 +14,7 @@ body { overflow: hidden; }
 }
 .stage-live {
   display: flex; flex-direction: column;
-  position: relative; background: #fff;
+  position: relative; background: var(--shell-surface);
   border-right: 1px solid var(--shell-line);
   transition: transform 0.18s var(--shell-easing), opacity 0.18s var(--shell-easing);
 }
@@ -32,17 +32,22 @@ body { overflow: hidden; }
 .pager-btn {
   font: inherit; font-size: 0.82rem; cursor: pointer;
   width: 40px; height: 28px;
-  border: 1px solid var(--shell-line); background: transparent; color: var(--shell-text);
-  transition: background var(--shell-duration) var(--shell-easing), color var(--shell-duration) var(--shell-easing);
+  border: 1px solid var(--shell-line-strong); background: transparent; color: var(--shell-text);
+  transition: background var(--shell-duration) var(--shell-easing), color var(--shell-duration) var(--shell-easing),
+              border-color var(--shell-duration) var(--shell-easing);
 }
-.pager-btn:hover { background: var(--shell-ink); color: #FAFAF8; }
-.pager-label { font-size: 0.74rem; letter-spacing: 0.1em; color: var(--shell-muted); }
+.pager-btn:hover { background: var(--shell-cyan); color: #0B0B0D; border-color: var(--shell-cyan); }
+.pager-label { font-size: 0.74rem; letter-spacing: 0.1em; color: var(--shell-muted); font-variant-numeric: tabular-nums; }
 .stage-slot {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   background: var(--pc, #E5E5E0);
 }
-.slot-big { font-size: 1.6rem; letter-spacing: 0.2em; color: rgba(17, 17, 17, 0.4); text-transform: uppercase; }
+.slot-big {
+  font-family: var(--shell-font-mix);
+  font-size: 2rem; font-weight: 500;
+  letter-spacing: 0.22em; color: rgba(17, 17, 17, 0.5); text-transform: uppercase;
+}
 
 .info-col {
   overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px;
@@ -50,26 +55,37 @@ body { overflow: hidden; }
 }
 .info-card {
   position: relative; background: var(--shell-surface);
-  border: 1px solid var(--shell-line); padding: 14px 16px 12px;
-  box-shadow: 0 1px 3px rgba(17, 17, 17, 0.05), 0 8px 22px rgba(17, 17, 17, 0.07);
+  border: 1px solid var(--shell-line-strong); padding: 14px 16px 12px;
 }
 .info-card::before {
-  content: ''; display: block; height: 4px; background: var(--shell-ink);
+  content: ''; display: block; height: 4px;
+  background: linear-gradient(90deg, var(--shell-cyan), var(--shell-red));
   margin: -14px -16px 10px;
 }
-.info-card h1 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: var(--shell-tracking); }
-.info-card h3 {
-  font-size: 0.72rem; color: var(--shell-muted); margin: 10px 0 4px;
-  text-transform: uppercase; letter-spacing: var(--shell-tracking);
+.info-card h1 {
+  font-family: var(--shell-font-mix);
+  font-size: 1.6rem; font-weight: 500; line-height: 1.15;
+  text-transform: uppercase; letter-spacing: 0.02em;
 }
-.info-card h3:first-of-type { margin-top: 0; }
+/* 编辑感标签行：发丝线分隔的小号大写标签 */
+.info-card h3 {
+  font-size: 0.66rem; color: var(--shell-muted); margin: 12px 0 4px;
+  padding-top: 10px; border-top: 1px solid var(--shell-line);
+  text-transform: uppercase; letter-spacing: var(--shell-tracking-wide);
+}
+.info-card h3:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
 .info-card p, .info-card ul { font-size: 0.85rem; }
 .info-card ul { padding-left: 18px; }
 .info-card .tags { margin-top: 8px; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .actions .copy-btn { margin-bottom: 0; }
-.actions a { font-size: 0.8rem; color: var(--shell-muted); text-decoration: none; }
-.actions a:hover { color: var(--shell-text); }
+.actions a {
+  font-family: var(--shell-font-grot);
+  font-size: 0.74rem; letter-spacing: var(--shell-tracking-wide); text-transform: uppercase;
+  color: var(--shell-muted); text-decoration: none;
+  transition: color var(--shell-duration) var(--shell-easing);
+}
+.actions a:hover { color: var(--shell-cyan); }
 
 /* —— 右缘轮盘（左透明右不透明渐变遮罩提可读性） —— */
 .wheel {
@@ -86,33 +102,39 @@ body { overflow: hidden; }
 .wheel-card {
   position: absolute; right: 36px; top: 0;
   width: 190px; padding: 0; cursor: default; text-align: left;
-  border: 1px solid var(--shell-line); background: var(--shell-surface);
-  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.10), 0 18px 44px rgba(17, 17, 17, 0.16);
+  border: 1px solid var(--shell-line-strong); background: var(--shell-surface);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
   transition: transform 0.35s var(--shell-easing), opacity 0.35s var(--shell-easing), border-color 0.2s;
 }
-.wheel-card::before { content: ''; display: block; height: 4px; background: var(--shell-ink); }
+.wheel-card::before {
+  content: ''; display: block; height: 4px;
+  background: linear-gradient(90deg, var(--shell-cyan), var(--shell-red));
+}
 .wheel-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top center; }
 .wheel-slotcover {
   display: flex; align-items: center; justify-content: center;
   width: 100%; aspect-ratio: 16 / 10; background: var(--pc);
-  font-size: 0.72rem; letter-spacing: 0.16em; color: rgba(17, 17, 17, 0.45);
+  font-family: var(--shell-font-mix);
+  font-size: 0.78rem; letter-spacing: 0.16em; color: rgba(17, 17, 17, 0.5);
 }
 .wheel-name {
-  display: block; padding: 6px 10px; font-size: 0.72rem;
+  display: block; padding: 6px 10px; font-size: 0.74rem;
+  font-family: var(--shell-font-mix); font-weight: 500;
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--shell-muted);
 }
-.wheel-card.is-active { border-color: var(--shell-ink); }
+.wheel-card.is-active { border-color: var(--shell-cyan); box-shadow: 0 0 28px rgba(37, 244, 238, 0.16), 0 16px 40px -12px rgba(0, 0, 0, 0.6); }
 .wheel-card.is-active .wheel-name { color: var(--shell-text); }
 
 .wheel-expand {
   position: absolute; right: 252px; top: -16px;
   width: 46px; height: 46px; border-radius: 50%;
-  border: 1px solid var(--shell-ink); background: var(--shell-surface);
-  cursor: pointer; font-size: 1.15rem; line-height: 1;
-  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.12), 0 12px 30px rgba(17, 17, 17, 0.18);
-  transition: background var(--shell-duration) var(--shell-easing), color var(--shell-duration) var(--shell-easing);
+  border: 1px solid var(--shell-line-strong); background: var(--shell-surface);
+  cursor: pointer; font-size: 1.15rem; line-height: 1; color: var(--shell-text);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.55);
+  transition: background var(--shell-duration) var(--shell-easing), color var(--shell-duration) var(--shell-easing),
+              border-color var(--shell-duration) var(--shell-easing);
 }
-.wheel-expand:hover { background: var(--shell-ink); color: #FAFAF8; }
+.wheel-expand:hover { background: var(--shell-cyan); color: #0B0B0D; border-color: var(--shell-cyan); }
 .wheel-expand span {
   position: absolute; top: 50%; right: 54px; transform: translateY(-50%);
   font-size: 0.68rem; letter-spacing: 0.1em; color: var(--shell-muted); white-space: nowrap;
@@ -125,9 +147,22 @@ body { overflow: hidden; }
   padding: 40px 48px 72px;
 }
 .browse-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; }
-.browse-head h1 { font-size: 1.3rem; text-transform: uppercase; letter-spacing: var(--shell-tracking); }
+.browse-head h1 {
+  font-family: var(--shell-font-mix); font-weight: 500;
+  font-size: 2rem; text-transform: uppercase; letter-spacing: 0.02em;
+}
 .browse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; }
 .browse-grid .style-card { cursor: pointer; }
+/* 占位卡封面：与轮盘槽位同款粉彩底 + 大写槽位号 */
+.placeholder-cover {
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 16 / 10; background: var(--pc);
+}
+.slot-no {
+  font-family: var(--shell-font-mix); font-weight: 500;
+  font-size: 1.1rem; letter-spacing: 0.2em; color: rgba(17, 17, 17, 0.5);
+  text-transform: uppercase;
+}
 
 /* —— 窄屏：直接展示全览网格（恢复页面滚动） —— */
 @media (max-width: 900px) {

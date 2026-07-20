@@ -1,0 +1,238 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="审核管理台">
+  <div class="admin">
+    <div class="admin-head">
+      <div>
+        <h1 class="page-title">审核管理台</h1>
+        <p class="page-sub">REVIEW QUEUE · 投稿经邀请码与签名后在此待审</p>
+      </div>
+      <button class="copy-btn" data-logout hidden>退出</button>
+    </div>
+
+    <form class="panel login" data-login hidden>
+      <p class="login-tip">管理台已启用，请输入管理口令（STYLE_LAB_ADMIN_TOKEN）。</p>
+      <div class="login-row">
+        <input type="password" data-token placeholder="ADMIN TOKEN" autocomplete="current-password" />
+        <button class="copy-btn" type="submit">进入</button>
+      </div>
+      <p class="login-err" data-login-err hidden>口令无效，再试。</p>
+    </form>
+
+    <div data-app hidden>
+      <div class="queue-bar">
+        <span class="queue-count" data-count></span>
+        <button class="copy-btn" data-refresh>刷新</button>
+      </div>
+      <div data-items></div>
+      <p class="empty" data-empty hidden>队列为空，暂无待审投稿。</p>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  [hidden] { display: none !important; }
+  .admin-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .login { max-width: 520px; }
+  .login-tip { font-size: 0.88rem; color: var(--shell-muted); margin-bottom: 14px; }
+  .login-row { display: flex; gap: 16px; align-items: flex-end; }
+  .login-row input {
+    flex: 1; background: transparent; border: none; border-radius: 0;
+    border-bottom: 1px solid var(--shell-line-strong); color: var(--shell-text);
+    font-family: var(--shell-font-grot); font-size: 0.9rem; letter-spacing: 0.08em;
+    padding: 6px 2px; outline: none;
+  }
+  .login-row input:focus { border-bottom-color: var(--shell-cyan); }
+  .login-err { margin-top: 10px; font-size: 0.78rem; color: var(--shell-red); }
+  .queue-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--shell-line); padding-top: 12px; margin-bottom: 16px;
+  }
+  .queue-count { font-family: var(--shell-font-grot); font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shell-muted); }
+  .queue-item { margin-bottom: 20px; }
+  .item-slug { font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: 0.74rem; color: var(--shell-faint); }
+  .item-meta { font-size: 0.78rem; color: var(--shell-muted); margin-top: 2px; }
+  .item-summary { font-family: var(--shell-font-serif); font-style: italic; font-size: 0.88rem; color: var(--shell-muted); margin-top: 6px; }
+  .item-error { color: var(--shell-red); font-size: 0.8rem; margin-top: 6px; word-break: break-all; }
+  .item-actions { display: flex; gap: 16px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .item-actions .copy-btn { margin-bottom: 0; }
+  .copy-btn.danger:hover { color: var(--shell-red); border-bottom-color: var(--shell-red); }
+  .file-tabs { display: flex; gap: 12px; margin: 10px 0 6px; flex-wrap: wrap; }
+  .file-tabs button {
+    font: inherit; font-family: var(--shell-font-grot); font-size: 0.7rem; letter-spacing: 0.1em;
+    background: none; border: none; padding: 0 0 2px; cursor: pointer; color: var(--shell-muted);
+    border-bottom: 1px solid transparent; text-transform: lowercase;
+  }
+  .file-tabs button.is-on { color: var(--shell-cyan); border-bottom-color: var(--shell-cyan); }
+  .preview-frame {
+    display: block; width: 100%; height: 480px; margin-top: 6px;
+    border: 1px solid var(--shell-line-strong); background: #fff;
+  }
+  .skill-view { margin-top: 10px; }
+  .empty { color: var(--shell-muted); font-size: 0.88rem; padding: 24px 0; }
+</style>
+
+<script>
+  const $ = (s: string) => document.querySelector<HTMLElement>(s)!;
+  const loginEl = $('[data-login]');
+  const appEl = $('[data-app]');
+  const itemsEl = $('[data-items]');
+  const tokenInput = document.querySelector<HTMLInputElement>('[data-token]')!;
+  const detailCache = new Map<string, Promise<any>>();
+
+  const esc = (v: unknown) =>
+    String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  const show = (el: HTMLElement) => (el.hidden = false);
+  const hide = (el: HTMLElement) => (el.hidden = true);
+
+  function loadDetail(slug: string): Promise<any> {
+    if (!detailCache.has(slug)) {
+      detailCache.set(slug, fetch(`/api/admin/pending/${slug}.json`).then((r) => r.json()));
+    }
+    return detailCache.get(slug)!;
+  }
+
+  async function probe() {
+    const res = await fetch('/api/admin/pending.json');
+    if (res.status === 403) {
+      show(loginEl);
+      hide(appEl);
+      $('[data-logout]').hidden = true;
+      tokenInput.focus();
+      return;
+    }
+    hide(loginEl);
+    show(appEl);
+    $('[data-logout]').hidden = false;
+    render(await res.json());
+  }
+
+  function render(data: any) {
+    $('[data-count]').textContent = `共 ${data.count} 条待审`;
+    $('[data-empty]').hidden = data.count !== 0;
+    itemsEl.innerHTML = data.pending
+      .map((p: any) => {
+        if (p.error) {
+          return `<div class="panel queue-item" data-slug="${esc(p.slug)}">
+            <div><strong>${esc(p.slug)}</strong> <span class="item-slug">meta 损坏</span></div>
+            <p class="item-error">${esc(p.error)}</p>
+            <div class="item-actions">
+              <button class="copy-btn danger" data-act="reject">拒绝并清除</button>
+            </div>
+          </div>`;
+        }
+        return `<div class="panel queue-item" data-slug="${esc(p.slug)}">
+          <div>
+            <strong>${esc(p.name)}</strong>
+            <span class="ver">v${esc(p.version)}</span>
+            <span class="item-slug">${esc(p.slug)}</span>
+          </div>
+          <div class="tags">${(p.mood ?? []).map((m: string) => `<span class="tag">${esc(m)}</span>`).join('')}</div>
+          <p class="item-summary">${esc(p.summary)}</p>
+          <p class="item-meta">${esc(p.author)} · ${esc(p.createdAt)} · ${esc(p.useCase)}</p>
+          <div class="item-actions">
+            <button class="copy-btn" data-act="preview">预览</button>
+            <button class="copy-btn" data-act="skill">SKILL</button>
+            <button class="copy-btn" data-act="approve">通过</button>
+            <button class="copy-btn danger" data-act="reject">拒绝</button>
+          </div>
+          <div class="item-extra" hidden></div>
+        </div>`;
+      })
+      .join('');
+  }
+
+  async function togglePreview(item: HTMLElement, slug: string) {
+    const extra = item.querySelector<HTMLElement>('.item-extra')!;
+    if (!extra.hidden) {
+      extra.hidden = true;
+      extra.innerHTML = '';
+      return;
+    }
+    const d = await loadDetail(slug);
+    const htmlFiles = (d.files ?? [])
+      .filter((f: string) => f.startsWith('templates/') && f.endsWith('.html'))
+      .map((f: string) => f.replace('templates/', ''));
+    const first = htmlFiles[0] ?? 'page.html';
+    extra.innerHTML = `${htmlFiles.length > 1 ? `<div class="file-tabs">${htmlFiles
+      .map((f: string, i: number) => `<button data-file="${esc(f)}" class="${i === 0 ? 'is-on' : ''}">${esc(f)}</button>`)
+      .join('')}</div>` : ''}<iframe class="preview-frame" sandbox="" src="/pending/${esc(slug)}/template.html?file=${esc(first)}"></iframe>`;
+    extra.querySelectorAll<HTMLButtonElement>('[data-file]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        extra.querySelectorAll('[data-file]').forEach((b) => b.classList.remove('is-on'));
+        btn.classList.add('is-on');
+        extra.querySelector<HTMLIFrameElement>('.preview-frame')!.src =
+          `/pending/${slug}/template.html?file=${btn.dataset.file}`;
+      });
+    });
+    show(extra);
+  }
+
+  async function toggleSkill(item: HTMLElement, slug: string) {
+    const extra = item.querySelector<HTMLElement>('.item-extra')!;
+    if (!extra.hidden) {
+      extra.hidden = true;
+      extra.innerHTML = '';
+      return;
+    }
+    const d = await loadDetail(slug);
+    extra.innerHTML = `<pre class="code skill-view">${esc(d.skill)}</pre>`;
+    show(extra);
+  }
+
+  async function decide(slug: string, action: 'approve' | 'reject') {
+    const word = action === 'approve' ? '通过并上架' : '拒绝并清除';
+    if (!confirm(`确定${word}：${slug}？`)) return;
+    const res = await fetch(`/api/admin/pending/${slug}/${action}.json`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(`操作失败：${(d as any).error ?? res.status}`);
+    }
+    detailCache.clear();
+    probe();
+  }
+
+  itemsEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-act]');
+    if (!btn) return;
+    const item = btn.closest<HTMLElement>('.queue-item')!;
+    const slug = item.dataset.slug!;
+    const act = btn.dataset.act!;
+    if (act === 'preview') togglePreview(item, slug);
+    else if (act === 'skill') toggleSkill(item, slug);
+    else decide(slug, act as 'approve' | 'reject');
+  });
+
+  loginEl.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const res = await fetch('/api/admin/session.json', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: tokenInput.value }),
+    });
+    if (res.ok) {
+      tokenInput.value = '';
+      hide($('[data-login-err]'));
+      probe();
+    } else {
+      show($('[data-login-err]'));
+    }
+  });
+
+  $('[data-refresh]').addEventListener('click', () => {
+    detailCache.clear();
+    probe();
+  });
+  $('[data-logout]').addEventListener('click', async () => {
+    await fetch('/api/admin/session.json', { method: 'DELETE', headers: { 'content-type': 'application/json' } });
+    location.reload();
+  });
+
+  probe();
+</script>

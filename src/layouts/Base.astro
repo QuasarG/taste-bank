@@ -1,31 +1,74 @@
 ---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/oswald';
+import '@fontsource-variable/newsreader';
 import '../styles/shell.css';
 interface Props {
   title: string;
+  titleZh?: string;
   description?: string;
   wide?: boolean;
 }
-const { title, description = '个人前端风格库', wide = false } = Astro.props;
+const { title, titleZh = title, description = '面向 coding agent 的前端风格库', wide = false } = Astro.props;
+const pageTitle = title === 'Taste Bank' ? title : `${title} · Taste Bank`;
+const pageTitleZh = titleZh === 'Taste Bank' ? titleZh : `${titleZh} · Taste Bank`;
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <title>{title} · Style Lab</title>
+    <title>{pageTitle}</title>
+    <script is:inline>
+      try {
+        if (localStorage.getItem('taste-bank-language') === 'zh') document.documentElement.lang = 'zh-CN';
+      } catch {}
+    </script>
   </head>
-  <body>
+  <body data-title-en={pageTitle} data-title-zh={pageTitleZh}>
     <header class="site-header">
-      <a class="site-title" href="/">Style Lab</a>
-      <nav class="site-nav">
-        <a href="/">风格库</a>
+      <a class="site-title" href="/" aria-label="Taste Bank home">
+        <img src="/assets/logo.png" width="440" height="549" alt="" aria-hidden="true" />
+        <span>Taste Bank</span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <button class="nav-language" type="button" data-language-toggle aria-label="Switch language / 切换语言" aria-pressed="false"><span class="lang-en">EN</span><span aria-hidden="true">/</span><span class="lang-zh">中</span></button>
+        <a href="/about"><span data-ui-en>About</span><span data-ui-zh>关于</span></a>
+        <a href="/collections"><span data-ui-en>ALL Style Collections</span><span data-ui-zh>全部风格</span></a>
+        <a href="/contact"><span data-ui-en>Contact</span><span data-ui-zh>联系</span></a>
+        <a href="https://github.com/QuasarG" target="_blank" rel="noreferrer">Github <span data-github-stars>stars</span></a>
       </nav>
     </header>
-    <main class={wide ? '' : 'container'}>
-      <slot />
-    </main>
-    <footer class="site-footer">Style Lab · 每套风格 = 一份 agent 可直接使用的 skill</footer>
+    <main class={wide ? 'wide-shell' : 'container'}><slot /></main>
+    {!wide && <footer class="site-footer"><span data-ui-en>Taste Bank · Code-ready front-end styles for coding agents.</span><span data-ui-zh>Taste Bank · 面向 coding agent 的可执行前端风格。</span></footer>}
+    <script>
+      const languageButton = document.querySelector<HTMLButtonElement>('[data-language-toggle]');
+
+      function applyLanguage(language: 'en' | 'zh') {
+        const isChinese = language === 'zh';
+        document.documentElement.lang = isChinese ? 'zh-CN' : 'en';
+        document.title = isChinese ? document.body.dataset.titleZh ?? document.title : document.body.dataset.titleEn ?? document.title;
+        languageButton?.setAttribute('aria-pressed', String(isChinese));
+        try { localStorage.setItem('taste-bank-language', language); } catch {}
+        window.dispatchEvent(new CustomEvent('tastebank:languagechange', { detail: { language } }));
+      }
+
+      applyLanguage(document.documentElement.lang === 'zh-CN' ? 'zh' : 'en');
+      languageButton?.addEventListener('click', () => {
+        applyLanguage(document.documentElement.lang === 'zh-CN' ? 'en' : 'zh');
+      });
+
+      fetch('https://api.github.com/users/QuasarG/repos?per_page=100&sort=updated')
+        .then((response) => response.ok ? response.json() : [])
+        .then((repos: Array<{ stargazers_count?: number }>) => {
+          const total = repos.reduce((sum, repo) => sum + (repo.stargazers_count ?? 0), 0);
+          document.querySelectorAll<HTMLElement>('[data-github-stars]').forEach((el) => { el.textContent = `${total} stars`; });
+        })
+        .catch(() => {
+          document.querySelectorAll<HTMLElement>('[data-github-stars]').forEach((el) => { el.textContent = 'stars'; });
+        });
+    </script>
   </body>
 </html>

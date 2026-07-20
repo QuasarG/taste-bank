@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/pages.css';
+import { listStyles, loadStyle } from '../lib/store';
+
+const styles = listStyles().map((slug) => loadStyle(slug));
+---
+
+<Base title="All Style Collections" titleZh="全部风格" description="Browse every code-ready style pack in Taste Bank." wide>
+  <main class="subpage">
+    <div class="subpage-inner">
+      <header class="subpage-head">
+        <p class="eyebrow"><span data-ui-en>Taste Bank catalog</span><span data-ui-zh>Taste Bank 风格目录</span></p>
+        <h1><span data-ui-en>All style collections</span><span class="cn-page-title" data-ui-zh>全部风格合集</span></h1>
+        <p><span data-ui-en>Compare complete visual systems, then open a pack to inspect its rendered template, implementation rules, and design tokens.</span><span data-ui-zh>比较完整的视觉系统，打开风格包即可查看渲染模板、实现规则与设计 tokens。</span></p>
+      </header>
+
+      <div class="catalog-table-wrap">
+        <table class="catalog-table">
+          <thead><tr><th><span data-ui-en>Style</span><span data-ui-zh>风格</span></th><th><span data-ui-en>Use it for</span><span data-ui-zh>适用场景</span></th><th><span data-ui-en>Character</span><span data-ui-zh>风格特征</span></th><th><span data-ui-en>Version</span><span data-ui-zh>版本</span></th><th aria-label="Open"></th></tr></thead>
+          <tbody>
+            {
+              styles.length > 0 ? styles.map((style, index) => (
+                <tr class="catalog-row">
+                  <th scope="row"><span class="catalog-index">{String(index + 1).padStart(2, '0')}</span>{style.meta.name}</th>
+                  <td>{style.meta.useCase}</td>
+                  <td>{style.meta.mood.slice(0, 3).join(' / ')}</td>
+                  <td>v{style.meta.version}</td>
+                  <td><a class="catalog-link" href={`/styles/${style.slug}`}><span data-ui-en>Open</span><span data-ui-zh>打开</span> <span aria-hidden="true">↗</span></a></td>
+                </tr>
+              )) : (
+                <tr class="catalog-empty"><td colspan="5"><span data-ui-en>No style packs are published yet. The reference stream remains available on the home page.</span><span data-ui-zh>暂时还没有已发布的风格包，首页的参考样式流仍可正常浏览。</span></td></tr>
+              )
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="reference-shelf" aria-label="Current visual references">
+        <figure><img src="/assets/archive-console.png" alt="Monochrome archive console reference" /><figcaption>Archive Console</figcaption></figure>
+        <figure><img src="/assets/nodewatch-blueprint.png" alt="Technical blueprint interface reference" /><figcaption>Deep Blueprint</figcaption></figure>
+        <figure><img src="/assets/page-preview.png" alt="Dark kinetic typography reference" /><figcaption>Kinetic Type</figcaption></figure>
+      </div>
+
+      <footer class="subpage-foot"><span><span data-ui-en>{styles.length} published collections</span><span data-ui-zh>已发布 {styles.length} 个合集</span></span><span>Taste Bank</span></footer>
+    </div>
+  </main>
+</Base>

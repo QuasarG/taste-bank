@@ -14,7 +14,9 @@ export function apiError(e: unknown): Response {
   if (e instanceof StyleForbiddenError) return json({ error: e.message }, 403);
   if (e instanceof StyleRateLimitError) return json({ error: e.message }, 429);
   if (e instanceof StyleVersionError) return json({ error: e.message }, 400);
-  if (e instanceof Error && e.message.startsWith('风格不存在')) return json({ error: e.message }, 404);
+  if (e instanceof Error && (e.message.startsWith('风格不存在') || e.message.startsWith('审核队列中不存在'))) {
+    return json({ error: e.message }, 404);
+  }
   if (e instanceof Error && (e.message.startsWith('文件不存在') || e.message.startsWith('非法'))) {
     return json({ error: e.message }, 404);
   }
