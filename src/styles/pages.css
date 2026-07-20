@@ -73,6 +73,25 @@ html[lang="zh-CN"] .method-list p { font-weight: 450; line-height: 1.75; }
 .method-list p { color: #405b62; font-size: .86rem; max-width: 54ch; }
 .about-signoff { margin-top: 56px; color: #527077; font-size: .72rem; }
 
+.about-mcp { margin-top: 80px; border-top: 2px solid var(--ink); padding-top: 34px; }
+.about-mcp-title { font-family: var(--font-display); font-size: 2.6rem; text-transform: uppercase; font-weight: 560; line-height: .95; }
+.about-mcp-lead { margin-top: 18px; color: #405b62; font-size: .92rem; max-width: 56ch; }
+.about-mcp-config { margin-top: 22px; font-size: .8rem; overflow-x: auto; }
+.about-mcp-note { margin-top: 16px; color: #405b62; font-size: .8rem; max-width: 62ch; }
+.about-mcp-note code, .mcp-tools code { font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: .92em; color: var(--accent); }
+.mcp-tools { margin-top: 30px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 34px; }
+.mcp-tools article { border-top: 1px solid #a8bec3; padding-top: 14px; }
+.mcp-tools h3 { font-family: var(--font-display); font-size: 1.1rem; text-transform: uppercase; font-weight: 520; }
+.mcp-tools p { margin-top: 8px; color: #405b62; font-size: .78rem; line-height: 1.65; }
+html[lang="zh-CN"] .about-mcp-lead, html[lang="zh-CN"] .about-mcp-note, html[lang="zh-CN"] .mcp-tools p {
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.75;
+}
+html[lang="zh-CN"] .about-mcp-title, html[lang="zh-CN"] .mcp-tools h3 {
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  font-weight: 900; text-transform: none;
+}
+
 .contact-page { min-height: calc(100dvh - 66px); padding: 62px 3vw 24px; display: flex; flex-direction: column; }
 .contact-page-top { max-width: 760px; }
 .contact-page-top .eyebrow { margin-bottom: 22px; }
@@ -96,6 +115,7 @@ html[lang="zh-CN"] .contact-page-top h1 { font-size: 4.5rem; line-height: .98; t
   .about-layout { grid-template-columns: 1fr; gap: 46px; padding: 70px 18px 34px; }
   .about-intro h1 { font-size: 4.3rem; }
   .about-content { padding-top: 0; }
+  .mcp-tools { grid-template-columns: 1fr; }
   .contact-page { min-height: 760px; padding: 58px 18px 20px; }
   .contact-page-handle { font-size: 8rem; }
 }

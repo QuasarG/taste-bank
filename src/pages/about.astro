@@ -29,6 +29,38 @@ import '../styles/pages.css';
             <p><span data-ui-en>Give the complete skill, tokens, and templates to a coding agent so the visual intent survives implementation.</span><span data-ui-zh>将完整的 skill、tokens 和 templates 交给 coding agent，让视觉意图完整进入实现。</span></p>
           </article>
         </div>
+        <section class="about-mcp">
+          <h2 class="about-mcp-title"><span data-ui-en>Plug it into your agent</span><span data-ui-zh>接入你的 Agent</span></h2>
+          <p class="about-mcp-lead"><span data-ui-en>No clone, no local Node — one URL in your MCP client config and your agent can browse, fetch, and apply every style in the bank.</span><span data-ui-zh>无需克隆仓库、无需本地 Node——在 MCP 客户端配置里加一条 URL，agent 就能浏览、取用、应用库里的每一套风格。</span></p>
+          <pre class="code about-mcp-config">{`{
+  "mcpServers": {
+    "style-lab": {
+      "url": "http://182.92.129.1:3100/mcp",
+      "headers": { "x-invite-code": "sl_你的邀请码" }
+    }
+  }
+}`}</pre>
+          <p class="about-mcp-note"><span data-ui-en>Browsing is open; submitting requires an invite code (ask the maintainer). Then just talk: "Build a landing page with the mono-console style from style-lab" — the agent lists styles, fetches the skill, and implements within the tokens.</span><span data-ui-zh>浏览无需邀请码，投稿才需要（向库主索取）。配好后直接说人话："用 style-lab 里的 mono-console 风格做个落地页"——agent 会自行挑风格、取 skill、按 tokens 实现。</span></p>
+          <div class="mcp-tools">
+            <article>
+              <h3><span data-ui-en>Browse</span><span data-ui-zh>浏览</span></h3>
+              <p><code>list_styles</code> · <code>get_style</code> · <code>get_style_css</code> · <code>get_style_file</code><br /><span data-ui-en>Survey the bank, read exact tokens, export scoped CSS, inspect templates.</span><span data-ui-zh>浏览全库、读取精确设计参数、导出 scoped CSS、查看模板快照。</span></p>
+            </article>
+            <article>
+              <h3><span data-ui-en>Apply</span><span data-ui-zh>取用</span></h3>
+              <p><code>get_style_skill</code><br /><span data-ui-en>Returns the assembled SKILL.md — hand it to any coding agent and it implements strictly within the style's tokens.</span><span data-ui-zh>返回组装好的 SKILL.md——交给任意 coding agent，即可让它严格按 tokens 实现该风格。</span></p>
+            </article>
+            <article>
+              <h3><span data-ui-en>Publish</span><span data-ui-zh>投稿</span></h3>
+              <p><code>submit_style</code> · <code>generate_keypair</code><br /><span data-ui-en>Submit your own style pack (invite code + ed25519 signature). It enters the review queue and goes live on approval.</span><span data-ui-zh>提交你自己的风格包（邀请码 + ed25519 签名）。先进入审核队列，库主通过后上架。</span></p>
+            </article>
+            <article>
+              <h3><span data-ui-en>Own &amp; iterate</span><span data-ui-zh>管理与迭代</span></h3>
+              <p><code>update_style</code> · <code>delete_style</code><br /><span data-ui-en>Your private key is your ownership. Bump the version to iterate, sign to delete — no account, no password.</span><span data-ui-zh>私钥即所有权。升版本号即可迭代，签名即可下架——没有账号，没有密码。</span></p>
+            </article>
+          </div>
+          <p class="about-mcp-note"><span data-ui-en>Agents can also call <code>get_usage_guide</code> to fetch the full workflow themselves.</span><span data-ui-zh>agent 也可以随时调 <code>get_usage_guide</code> 自取完整工作流说明。</span></p>
+        </section>
         <p class="about-signoff"><span data-ui-en>Created and maintained by QuasarG.</span><span data-ui-zh>由 QuasarG 创建并维护。</span></p>
       </div>
     </div>
