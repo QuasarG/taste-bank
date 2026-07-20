@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/assets/logo.png" alt="Taste Bank logo" width="140" />
+  <img src="public/assets/banner.jpg" alt="Taste Bank — Open Source Design Styles" width="760" />
   <h1>Taste Bank</h1>
   <p><strong>面向 Coding Agent 的前端风格库</strong> —— 一套风格，一次沉淀，处处复用。</p>
   <p>
