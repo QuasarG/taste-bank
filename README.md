@@ -78,16 +78,6 @@ Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SK
 | 管理 | `update_style` / `delete_style` | 迭代或下架**自己**的风格（需私钥签名） |
 | 钥匙 | `generate_keypair` | 生成 ed25519 钥匙对（所有权凭证） |
 
-### 3. 本地开发（给库主）
-
-```bash
-npm install
-npm run dev       # 网站 + API：http://localhost:4321
-npm run mcp:http  # MCP server：http://127.0.0.1:3100/mcp
-npm test          # 全部测试（schema / store / assemble / API / MCP / admin / 限流）
-npm run build     # 构建 SSR 到 dist/
-```
-
 ## 安全承诺
 
 Taste Bank 允许任何人凭邀请码投稿、允许 agent 读取任意风格内容，因此从鉴权到内容安全做了全链路设计：
@@ -162,37 +152,4 @@ scripts/        keygen / sign / invite / review 四个管理脚本
 styles/         已上架风格（运行时由 STYLE_LAB_DIR 指定）
 data/           邀请码哈希、审核队列、截图缓存
 docs/SPEC.md    style pack 完整规格
-```
-
-## 环境变量
-
-| 变量 | 默认 | 用途 |
-|---|---|---|
-| `STYLE_LAB_DIR` | 项目根 | 指向包含 `styles/` 与 `data/` 的目录，测试/多实例隔离用 |
-| `STYLE_LAB_MCP_PORT` | 3100 | MCP HTTP 端口 |
-| `STYLE_LAB_MCP_HOST` | 127.0.0.1 | MCP 绑定地址，公网暴露设 `0.0.0.0` |
-| `CHROMIUM_PATH` | /usr/bin/chromium | 截图用 Chromium 路径 |
-| `STYLE_LAB_ADMIN_TOKEN` | 空（管理台关闭） | 审核管理台口令，设置后 `/admin` 可用 |
-
-## 审核管理台（库主）
-
-设置 `STYLE_LAB_ADMIN_TOKEN` 后访问 `/admin`，口令登录（Cookie 7 天），可查看待审列表、沙箱预览模板、阅读 SKILL.md，并 approve / reject。未设置该变量时管理台整体关闭（所有 admin 端点 403）。命令行等价物：`npm run review -- list / approve <slug> / reject <slug>`；邀请码管理：`npm run invite -- create [备注] / list / revoke <前缀>`。
-
-## 生产部署
-
-两个进程共享同一个 `STYLE_LAB_DIR`（应指向代码树外目录，如 `/srv/style-lab`，重装代码不丢数据）：
-
-```bash
-npm ci --omit=dev && npm run build
-HOST=0.0.0.0 PORT=4321 STYLE_LAB_DIR=/srv/style-lab npm start          # 网站
-STYLE_LAB_MCP_HOST=0.0.0.0 STYLE_LAB_DIR=/srv/style-lab npm run mcp:http  # MCP
-```
-
-- 截图端点运行时需要系统 Chromium（`apt install chromium`），缺失时仅截图不可用
-- MCP 裸 HTTP 暴露时邀请码明文传输，有域名后应套 HTTPS 反代（届时 admin Cookie 可补 `Secure` 标志）
-
-## 测试
-
-```bash
-npm test   # node:test + tsx，覆盖 schema / store / assemble / API / MCP / admin / 限流 / 截图
 ```
