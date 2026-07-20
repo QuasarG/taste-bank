@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="public/assets/logo.png" alt="Style Lab logo" width="140" />
-  <h1>Style Lab</h1>
+  <img src="public/assets/logo.png" alt="Taste Bank logo" width="140" />
+  <h1>Taste Bank</h1>
   <p><strong>面向 Coding Agent 的前端风格库</strong> —— 一套风格，一次沉淀，处处复用。</p>
   <p>
     <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white" alt="Astro" /></a>
@@ -13,7 +13,7 @@
 
 ---
 
-## 初心：为什么做 Style Lab
+## 初心：为什么做 Taste Bank
 
 让 coding agent 写出"有设计感"的前端，社区里并不缺尝试——各种前端 skill、prompt 片段、设计指南五花八门。但真正用起来，问题一个比一个扎心：
 
@@ -23,7 +23,7 @@
 - **跨项目迁移困难**：在 A 项目调教好的风格，到了 B 项目要重新描述一遍，视觉意图在转述中损耗殆尽。
 - **没有归属与迭代**：风格被谁改了、改坏了没有版本可言，更谈不上"我的风格只有我能维护"。
 
-Style Lab 的回答是：把一套风格沉淀为**结构化 style pack**（`SKILL.md` 使用说明 + `design tokens` 精确参数 + `templates/` 模板快照），通过 **zod schema** 强校验，再提供三条共用同一套核心逻辑的通路——**Web 画廊**给人看，**HTTP API** 给脚本用，**MCP server** 把风格直接递到任何 coding agent 手里。风格一经入库，随处可取，版本可控，归属清晰。
+Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SKILL.md` 使用说明 + `design tokens` 精确参数 + `templates/` 模板快照），通过 **zod schema** 强校验，再提供三条共用同一套核心逻辑的通路——**Web 画廊**给人看，**HTTP API** 给脚本用，**MCP server** 把风格直接递到任何 coding agent 手里。风格一经入库，随处可取，版本可控，归属清晰。
 
 ## 功能一览
 
@@ -56,7 +56,7 @@ Style Lab 的回答是：把一套风格沉淀为**结构化 style pack**（`SKI
 ```json
 {
   "mcpServers": {
-    "style-lab": {
+    "taste-bank": {
       "url": "http://<host>:3100/mcp",
       "headers": { "x-invite-code": "sl_你的邀请码" }
     }
@@ -66,7 +66,7 @@ Style Lab 的回答是：把一套风格沉淀为**结构化 style pack**（`SKI
 
 > 只读浏览（`list_styles` 等）不需要邀请码；投稿（`submit_style`）必须携带。邀请码向库主索取。
 
-然后直接对 agent 说人话，比如"用 style-lab 里的某套风格给我做个落地页"。agent 会自行完成：调 `list_styles` 挑风格 → `get_style_skill` 取完整使用说明 → 严格按 tokens 实现。
+然后直接对 agent 说人话，比如"用 taste-bank 里的某套风格给我做个落地页"。agent 会自行完成：调 `list_styles` 挑风格 → `get_style_skill` 取完整使用说明 → 严格按 tokens 实现。
 
 工具速查（完整用法见站点 `/about` 页，agent 也可调 `get_usage_guide` 自取）：
 
@@ -90,7 +90,7 @@ npm run build     # 构建 SSR 到 dist/
 
 ## 安全承诺
 
-Style Lab 允许任何人凭邀请码投稿、允许 agent 读取任意风格内容，因此从鉴权到内容安全做了全链路设计：
+Taste Bank 允许任何人凭邀请码投稿、允许 agent 读取任意风格内容，因此从鉴权到内容安全做了全链路设计：
 
 **鉴权与归属**
 
