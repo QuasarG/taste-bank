@@ -40,7 +40,7 @@ const pageTitleZh = titleZh === 'Taste Bank' ? titleZh : `${titleZh} · Taste Ba
         <a href="/about"><span data-ui-en>About</span><span data-ui-zh>关于</span></a>
         <a href="/collections"><span data-ui-en>ALL Style Collections</span><span data-ui-zh>全部风格</span></a>
         <a href="/contact"><span data-ui-en>Contact</span><span data-ui-zh>联系</span></a>
-        <a href="https://github.com/QuasarG" target="_blank" rel="noreferrer">Github <span data-github-stars>stars</span></a>
+        <a href="https://github.com/QuasarG/taste-bank" target="_blank" rel="noreferrer">Github <span data-github-stars>stars</span></a>
       </nav>
     </header>
     <main class={wide ? 'wide-shell' : 'container'}><slot /></main>
@@ -62,10 +62,10 @@ const pageTitleZh = titleZh === 'Taste Bank' ? titleZh : `${titleZh} · Taste Ba
         applyLanguage(document.documentElement.lang === 'zh-CN' ? 'en' : 'zh');
       });
 
-      fetch('https://api.github.com/users/QuasarG/repos?per_page=100&sort=updated')
-        .then((response) => response.ok ? response.json() : [])
-        .then((repos: Array<{ stargazers_count?: number }>) => {
-          const total = repos.reduce((sum, repo) => sum + (repo.stargazers_count ?? 0), 0);
+      fetch('https://api.github.com/repos/QuasarG/taste-bank')
+        .then((response) => response.ok ? response.json() : null)
+        .then((repo: { stargazers_count?: number } | null) => {
+          const total = repo?.stargazers_count ?? 0;
           document.querySelectorAll<HTMLElement>('[data-github-stars]').forEach((el) => { el.textContent = `${total} stars`; });
         })
         .catch(() => {
