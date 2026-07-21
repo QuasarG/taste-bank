@@ -45,6 +45,49 @@ const flowColumnB = [...reversedItems, ...reversedItems];
         <p class="eyebrow"><span data-ui-en>Visual systems for coding agents</span><span data-ui-zh>面向 coding agent 的视觉系统</span></p>
         <h1 id="hero-title"><span data-ui-en>Front-end taste,<br /><em>ready to build.</em></span><span class="cn-home-title" data-ui-zh>前端品味，<br /><em>即刻构建。</em></span></h1>
         <p class="hero-intro"><span data-ui-en>Browse reusable visual systems, choose one, and hand its code-ready rules to your agent.</span><span data-ui-zh>浏览可复用的视觉系统，选定一种，将可执行的设计规则交给你的 agent。</span></p>
+
+        {
+          topStyles.length > 0 && (
+            <div class="top-picks" aria-label="Most referenced styles and authors">
+              <div class="top-block">
+                <p class="eyebrow"><span data-ui-en>Most referenced</span><span data-ui-zh>风格引用榜</span></p>
+                <ol class="top-list">
+                  {topStyles.map((style, i) => (
+                    <li>
+                      <a class="top-row" href={`/styles/${style.slug}`}>
+                        <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                        <span class="top-name">{style.meta.name}</span>
+                        <span class="top-refs">{usageMap[style.slug] ?? 0} refs</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div class="top-block">
+                <p class="eyebrow"><span data-ui-en>Top authors</span><span data-ui-zh>作者榜</span></p>
+                <ol class="top-list">
+                  {topAuthors.map((author, i) => (
+                    <li>
+                      {author.url ? (
+                        <a class="top-row" href={author.url} target="_blank" rel="noreferrer">
+                          <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                          <span class="top-name">{author.name}</span>
+                          <span class="top-refs">{author.refs} refs ↗</span>
+                        </a>
+                      ) : (
+                        <span class="top-row top-row-static">
+                          <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                          <span class="top-name">{author.name}</span>
+                          <span class="top-refs">{author.refs} refs</span>
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )
+        }
       </div>
 
       <div class="hero-flow" aria-label="A continuously moving stream of style previews">
@@ -75,52 +118,6 @@ const flowColumnB = [...reversedItems, ...reversedItems];
 
       <a class="hero-arrow" href="#wheel-mode" aria-label="Enter style wheel mode">↓</a>
     </section>
-
-    {
-      topStyles.length > 0 && (
-        <section class="top-picks" aria-label="Most referenced styles and authors">
-          <div class="top-block">
-            <p class="eyebrow"><span data-ui-en>Most referenced styles</span><span data-ui-zh>风格引用榜</span></p>
-            <ol class="top-list">
-              {topStyles.map((style, i) => (
-                <li>
-                  <a class="top-row" href={`/styles/${style.slug}`}>
-                    <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
-                    <span class="top-name">{style.meta.name}</span>
-                    <span class="top-use">{style.meta.useCase}</span>
-                    <span class="top-refs">{usageMap[style.slug] ?? 0} refs</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <div class="top-block">
-            <p class="eyebrow"><span data-ui-en>Top authors</span><span data-ui-zh>作者榜</span></p>
-            <ol class="top-list">
-              {topAuthors.map((author, i) => (
-                <li>
-                  {author.url ? (
-                    <a class="top-row" href={author.url} target="_blank" rel="noreferrer">
-                      <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
-                      <span class="top-name">{author.name}</span>
-                      <span class="top-use">{author.styles} styles</span>
-                      <span class="top-refs">{author.refs} refs ↗</span>
-                    </a>
-                  ) : (
-                    <span class="top-row top-row-static">
-                      <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
-                      <span class="top-name">{author.name}</span>
-                      <span class="top-use">{author.styles} styles</span>
-                      <span class="top-refs">{author.refs} refs</span>
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-      )
-    }
 
     <section class:list={['wheel-mode', { 'is-empty': !initialItem }]} id="wheel-mode" aria-labelledby="wheel-mode-title" data-wheel-mode>
       <div class="wheel-preview" data-wheel-preview>

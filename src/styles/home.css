@@ -42,22 +42,21 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
 .flow-empty p { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
 @keyframes card-flow-up { from { transform: translateY(0); } to { transform: translateY(calc(-50% - 12px)); } }
 
-/* —— 引用榜 / 作者榜 —— */
-.top-picks { display: grid; grid-template-columns: 1.2fr 1fr; gap: 4vw; padding: 54px 3vw 46px; border-bottom: 1px solid var(--ink); background: var(--paper); }
-.top-block .eyebrow { margin-bottom: 18px; }
+/* —— 引用榜 / 作者榜（hero 左侧底部） —— */
+.top-picks { margin-top: auto; display: grid; grid-template-columns: 1.15fr 1fr; gap: 30px; padding-top: 30px; }
+.top-block .eyebrow { margin-bottom: 12px; }
 .top-list { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
 .top-row {
-  display: grid; grid-template-columns: 44px minmax(0, 1.1fr) minmax(0, 1.6fr) auto;
-  align-items: baseline; gap: 18px; padding: 15px 6px; border-bottom: 1px solid var(--line);
+  display: grid; grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: baseline; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line);
   color: var(--ink); text-decoration: none; transition: color .18s var(--ease), background .18s var(--ease);
 }
 .top-row:hover { color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
 .top-row-static { cursor: default; }
 .top-row-static:hover { color: var(--ink); background: none; }
-.top-rank { font-size: .62rem; color: var(--accent); }
-.top-name { font-family: var(--font-display); font-size: 1.2rem; text-transform: uppercase; font-weight: 520; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.top-use { font-size: .74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.top-refs { font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent); white-space: nowrap; }
+.top-rank { font-size: .6rem; color: var(--accent); }
+.top-name { font-family: var(--font-display); font-size: .98rem; text-transform: uppercase; font-weight: 520; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-refs { font-size: .68rem; font-variant-numeric: tabular-nums; color: var(--accent); white-space: nowrap; }
 
 .wheel-mode { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(360px, .65fr); background: var(--surface); border-bottom: 1px solid var(--ink); }
 .wheel-preview { height: 100%; min-height: 0; padding: 28px 3vw 30px; display: grid; grid-template-rows: auto minmax(0, 1fr); transition: opacity .17s var(--ease), transform .17s var(--ease); }
@@ -133,7 +132,7 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
   .hero-copy { min-height: calc(82dvh - 62px); padding: 60px 18px 90px; }
   .hero-copy .eyebrow { margin-bottom: 34px; }
   .hero h1 { font-size: 4.2rem; }
-  .top-picks { grid-template-columns: 1fr; gap: 34px; padding: 44px 18px 36px; }
+  .top-picks { grid-template-columns: 1fr; gap: 30px; padding-top: 26px; }
   .hero-intro { margin-top: 34px; }
   .hero-flow { min-height: 620px; padding: 22px 18px; border-left: 0; border-top: 1px solid var(--ink); }
   .flow-card img { height: 170px; }
@@ -152,7 +151,7 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
   .hero h1 { font-size: 3.8rem; }
   .hero-flow { min-height: 540px; }
   .flow-viewport { gap: 12px; padding-right: 8px; }
-  .top-picks { grid-template-columns: 1fr; gap: 34px; padding: 44px 18px 36px; }
+  .top-picks { grid-template-columns: 1fr; gap: 30px; padding-top: 26px; }
   .flow-track { gap: 16px; }
   .flow-column-offset .flow-track { margin-top: -58px; }
   .flow-card { box-shadow: 7px 10px 20px rgba(25, 66, 77, .2), 3px 4px 0 rgba(18, 105, 132, .14); }
