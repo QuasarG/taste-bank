@@ -92,6 +92,10 @@ Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SK
 | 管理 | `update_style` / `delete_style` | 迭代或下架**自己**的风格（需私钥签名） |
 | 钥匙 | `generate_keypair` | 生成 ed25519 钥匙对（所有权凭证） |
 
+### 3. 投稿你的风格
+
+在任意支持 MCP 协议工具调用的 agent 工具中（Kimi Code / Claude Code / Cursor 等），打开任意一个包含前端风格的项目，然后直接说："把这个项目的风格投递到 taste-bank"。agent 会自行采样真实样式、脱敏业务痕迹、打包风格包并提交审核——全程不用你动手。库主 approve 后，你的风格就正式入库了。
+
 ## 安全承诺
 
 Taste Bank 允许任何人凭邀请码投稿、允许 agent 读取任意风格内容，因此从鉴权到内容安全做了全链路设计：

@@ -90,6 +90,10 @@ Tool cheat sheet (full guide on the site's `/about` page; agents can also call `
 | Manage | `update_style` / `delete_style` | Iterate or unpublish **your own** styles (private-key signature) |
 | Keys | `generate_keypair` | Generate an ed25519 keypair (ownership credential) |
 
+### 3. Submit your own style
+
+In any agent tool that supports MCP tool calls (Kimi Code / Claude Code / Cursor, etc.), open any project with a front-end style worth keeping, and simply say: *"submit this project's style to taste-bank."* The agent samples the real stylesheets, sanitizes anything business-identifying, packages the style pack, and submits it for review — all on its own. Once the maintainer approves, your style is in the bank.
+
 ## Security
 
 Taste Bank lets anyone submit with an invite code, and lets agents read arbitrary style content — so authentication and content safety are designed end to end:
