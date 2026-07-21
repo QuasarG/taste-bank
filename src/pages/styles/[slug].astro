@@ -57,11 +57,7 @@ const templateFile = (() => {
             <dl class="detail-facts">
               <dt>作者</dt>
               <dd>
-                {pack.meta.authorUrl ? (
-                  <a class="detail-author" href={pack.meta.authorUrl} target="_blank" rel="noreferrer">{pack.meta.author} ↗</a>
-                ) : (
-                  pack.meta.author
-                )}
+                <a class="detail-author" href={`/authors/${encodeURIComponent(pack.meta.author)}`}>{pack.meta.author}</a>
               </dd>
               <dt>风格特征</dt><dd>{pack.meta.signature}</dd>
               <dt>本风格引用量</dt><dd>{refs}</dd>

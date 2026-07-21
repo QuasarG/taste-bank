@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/pages.css';
+import StyleCatalog from '../../components/StyleCatalog.astro';
+import { listStyles, loadStyle } from '../../lib/store';
+import { getAllCategories } from '../../lib/categories';
+import { getAllUsage } from '../../lib/usage';
+
+const PAGE_SIZE = 8;
+const name = decodeURIComponent(Astro.params.name!);
+const all = listStyles().map((slug) => loadStyle(slug));
+const mine = all.filter((s) => s.meta.author === name);
+if (mine.length === 0) Astro.response.status = 404;
+
+const usageMap = getAllUsage();
+const totalRefs = mine.reduce((sum, s) => sum + (usageMap[s.slug] ?? 0), 0);
+const authorUrl = mine.find((s) => s.meta.authorUrl)?.meta.authorUrl ?? null;
+
+const catMap = getAllCategories();
+// 分类只取该作者风格实际涉及的
+const cats = [...new Set(mine.map((s) => catMap[s.slug]).filter((c): c is string => Boolean(c)))].sort();
+
+const activeCat = Astro.url.searchParams.get('cat') ?? '';
+const filtered = activeCat ? mine.filter((s) => catMap[s.slug] === activeCat) : mine;
+const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+const page = Math.min(Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1), pageCount);
+const items = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+const base = `/authors/${encodeURIComponent(name)}`;
+const pageHref = (p: number) => `${base}?${new URLSearchParams({ ...(activeCat ? { cat: activeCat } : {}), page: String(p) })}`;
+const catHref = (c: string) => (c ? `${base}?cat=${encodeURIComponent(c)}` : base);
+---
+
+<Base title={mine.length > 0 ? `${name} · Styles` : '作者不存在'} titleZh={mine.length > 0 ? `${name} 的风格` : '作者不存在'} description={`Style packs published by ${name} on Taste Bank.`} wide>
+  <main class="subpage">
+    <div class="subpage-inner">
+      {
+        mine.length === 0 ? (
+          <h1 class="page-title">作者不存在：{name}</h1>
+        ) : (
+          <>
+            <header class="subpage-head">
+              <p class="eyebrow"><span data-ui-en>Author</span><span data-ui-zh>作者</span></p>
+              <h1>{name}</h1>
+              <p>
+                <span data-ui-en>{`${mine.length} styles · ${totalRefs} total references`}</span>
+                <span data-ui-zh>{`${mine.length} 套风格 · 总引用 ${totalRefs} 次`}</span>
+                {authorUrl && (
+                  <>
+                    {' · '}
+                    <a class="catalog-link" href={authorUrl} target="_blank" rel="noreferrer"><span data-ui-en>Homepage</span><span data-ui-zh>作者主页</span> ↗</a>
+                  </>
+                )}
+              </p>
+            </header>
+
+            <StyleCatalog {items} {catMap} {cats} {activeCat} {page} {pageCount} {pageHref} {catHref} />
+
+            <footer class="subpage-foot"><span><a class="catalog-link" href="/collections">← <span data-ui-en>All collections</span><span data-ui-zh>全部风格</span></a></span><span>Taste Bank</span></footer>
+          </>
+        )
+      }
+    </div>
+  </main>
+</Base>

@@ -1,0 +1,50 @@
+---
+// 风格目录区块：分类筛选 + 截图网格 + 分页（collections 与作者页共用）
+import type { StylePack } from '../lib/store';
+
+interface Props {
+  items: StylePack[];
+  catMap: Record<string, string>;
+  cats: string[];
+  activeCat: string;
+  page: number;
+  pageCount: number;
+  pageHref: (p: number) => string;
+  catHref: (c: string) => string;
+}
+const { items, catMap, cats, activeCat, page, pageCount, pageHref, catHref } = Astro.props;
+---
+
+<nav class="cat-tabs" aria-label="Style categories">
+  <a class:list={['cat-tab', { 'is-on': !activeCat }]} href={catHref('')}><span data-ui-en>All</span><span data-ui-zh>全部</span></a>
+  {cats.map((c) => <a class:list={['cat-tab', { 'is-on': activeCat === c }]} href={catHref(c)}>{c}</a>)}
+</nav>
+
+{
+  items.length > 0 ? (
+    <div class="style-grid">
+      {items.map((style) => (
+        <a class="style-card" href={`/styles/${style.slug}`}>
+          <img src={`/api/styles/${style.slug}/screenshot.png`} alt={`${style.meta.name} preview`} loading="lazy" />
+          <span class="style-card-name">{style.meta.name}</span>
+          <span class="style-card-meta">
+            {catMap[style.slug] && <span class="style-card-cat">{catMap[style.slug]}</span>}
+            <span>v{style.meta.version}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <p class="catalog-empty"><span data-ui-en>No style packs in this category yet.</span><span data-ui-zh>该分类下暂时没有已发布的风格包。</span></p>
+  )
+}
+
+{
+  pageCount > 1 && (
+    <nav class="pager" aria-label="Pagination">
+      {page > 1 ? <a class="pager-btn" href={pageHref(page - 1)}>← <span data-ui-en>Prev</span><span data-ui-zh>上一页</span></a> : <span class="pager-btn is-disabled" />}
+      <span class="pager-info">{page} / {pageCount}</span>
+      {page < pageCount ? <a class="pager-btn" href={pageHref(page + 1)}><span data-ui-en>Next</span><span data-ui-zh>下一页</span> →</a> : <span class="pager-btn is-disabled" />}
+    </nav>
+  )
+}
