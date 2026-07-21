@@ -37,6 +37,11 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
 
 > **What makes us different from other front-end communities**: they collect beautiful styles; we make styles *instantly callable*. Other galleries are growing, but their styles live in long prose descriptions you must read, interpret, and hand-feed to your tools. Here you never wrestle a description — you just tell your agent in plain language, *"I want that blueprint style"*, and the MCP server delivers it machine-readable, ready to execute.
 
+<div align="center">
+  <img src="public/assets/gallery.png" alt="Taste Bank homepage — infinite style stream and leaderboards" width="900" />
+  <p><em>The homepage gallery: swipe through live-rendered styles like a feed, with most-referenced styles and top authors at a glance.</em></p>
+</div>
+
 ## Features
 
 - **TikTok-style gallery**: the homepage is an infinite stream of live-rendered style previews — keep scrolling until one catches your eye, then flip into the wheel mode to inspect it. Swipe, pause, pick. Collections page offers a full grid with categories and pagination
