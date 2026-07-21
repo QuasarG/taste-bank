@@ -29,7 +29,76 @@ html[lang="zh-CN"] .cn-page-title[data-ui-zh] { display: inline-block !important
 .catalog-index { font-family: var(--font-body); font-size: .62rem; color: var(--accent); margin-right: 20px; vertical-align: top; }
 .catalog-link { color: var(--ink); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 3px; white-space: nowrap; }
 .catalog-link:hover { color: var(--accent); }
+.catalog-empty { padding: 44px 0; color: var(--muted); font-size: .88rem; }
 .catalog-empty td { padding: 44px 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
+
+/* —— 风格详情页（严格单页） —— */
+.style-detail {
+  height: calc(100dvh - 66px); min-height: 560px; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(340px, .85fr);
+  gap: 3vw; padding: 34px 3vw 28px; box-sizing: border-box;
+}
+.detail-preview { display: grid; align-items: center; min-height: 0; }
+.detail-frame {
+  display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 100%;
+  border: 1px solid var(--ink); background: #fff;
+  box-shadow: 14px 16px 0 rgba(18, 105, 132, .14);
+}
+.detail-side { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.detail-card { margin-bottom: 0; padding: 20px; }
+.detail-name { font-family: var(--font-display); font-size: 1.9rem; line-height: .95; text-transform: uppercase; font-weight: 560; margin: 0 0 10px; }
+.detail-summary { color: var(--muted); font-size: .84rem; margin: 0 0 12px; }
+.detail-card .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.detail-card .tag { font-size: .64rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent-soft); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); padding: 3px 8px; }
+.detail-facts { display: grid; grid-template-columns: auto 1fr; gap: 7px 18px; margin: 0; font-size: .8rem; }
+.detail-facts dt { color: var(--muted); white-space: nowrap; }
+.detail-facts dd { margin: 0; }
+.detail-author { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+.detail-author:hover { color: var(--ink); }
+.detail-guides { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.guide-card {
+  display: flex; flex-direction: column; gap: 6px; padding: 16px; margin: 0;
+  color: var(--ink); text-decoration: none; font: inherit; text-align: left; cursor: pointer;
+  transition: color .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+}
+.guide-card strong { font-size: .82rem; }
+.guide-card span { color: var(--muted); font-size: .72rem; }
+.guide-card:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+.guide-card:hover span { color: var(--accent); }
+.detail-prompt { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.detail-prompt pre.code { flex: 1; overflow-y: auto; margin: 0; font-size: .76rem; line-height: 1.7; white-space: pre-wrap; }
+
+@media (max-width: 900px) {
+  .style-detail { height: auto; overflow: visible; grid-template-columns: 1fr; padding: 24px 18px 34px; }
+  .detail-side { overflow: visible; }
+}
+
+/* —— 分类筛选 —— */
+.cat-tabs { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-bottom: 40px; border-top: 2px solid var(--ink); padding-top: 18px; }
+.cat-tab { color: var(--muted); text-decoration: none; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid transparent; padding-bottom: 3px; transition: color .18s var(--ease), border-color .18s var(--ease); }
+.cat-tab:hover { color: var(--accent); }
+.cat-tab.is-on { color: var(--ink); font-weight: 700; border-bottom-color: var(--accent); }
+
+/* —— 风格网格（悬浮 + 整卡可点） —— */
+.style-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 34px; align-items: start; }
+.style-card { display: block; color: var(--ink); text-decoration: none; }
+.style-card img {
+  display: block; width: 100%; min-height: 360px; aspect-ratio: 16 / 10; object-fit: cover; object-position: top;
+  border: 1px solid var(--ink); box-shadow: 11px 14px 0 rgba(18, 105, 132, .16);
+  transition: transform .22s var(--ease), box-shadow .22s var(--ease), border-color .22s var(--ease);
+}
+.style-card:hover img { transform: translate(-3px, -4px); border-color: var(--accent); box-shadow: 15px 19px 0 rgba(18, 105, 132, .3); }
+.style-card-name { display: block; margin-top: 14px; font-family: var(--font-display); font-size: 1.3rem; text-transform: uppercase; font-weight: 520; transition: color .18s var(--ease); }
+.style-card:hover .style-card-name { color: var(--accent); }
+.style-card-meta { display: flex; gap: 14px; margin-top: 4px; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+.style-card-cat { color: var(--accent); }
+
+/* —— 分页 —— */
+.pager { margin-top: 54px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.pager-btn { color: var(--ink); text-decoration: none; font-size: .8rem; letter-spacing: .06em; transition: color .18s var(--ease); }
+.pager-btn:hover { color: var(--accent); }
+.pager-btn.is-disabled { visibility: hidden; }
+.pager-info { color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
 .reference-shelf { margin-top: 80px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 34px; align-items: start; }
 .reference-shelf figure { min-width: 0; }
 .reference-shelf img { display: block; width: 100%; min-height: 360px; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border: 1px solid var(--ink); box-shadow: 11px 14px 0 rgba(18, 105, 132, .16); }
@@ -116,6 +185,8 @@ html[lang="zh-CN"] .contact-page-top h1 { font-size: 4.5rem; line-height: .98; t
   .about-intro h1 { font-size: 4.3rem; }
   .about-content { padding-top: 0; }
   .mcp-tools { grid-template-columns: 1fr; }
+  .style-grid { grid-template-columns: 1fr; gap: 38px; }
+  .style-card img { min-height: 300px; }
   .contact-page { min-height: 760px; padding: 58px 18px 20px; }
   .contact-page-handle { font-size: 8rem; }
 }

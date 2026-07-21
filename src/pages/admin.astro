@@ -1,5 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
+import { listCategories } from '../lib/categories';
+
+const cats = listCategories();
 ---
 
 <Base title="审核管理台">
@@ -26,6 +29,7 @@ import Base from '../layouts/Base.astro';
         <span class="queue-count" data-count></span>
         <button class="copy-btn" data-refresh>刷新</button>
       </div>
+      <datalist id="cat-list">{cats.map((c) => <option value={c} />)}</datalist>
       <div data-items></div>
       <p class="empty" data-empty hidden>队列为空，暂无待审投稿。</p>
     </div>
@@ -57,6 +61,12 @@ import Base from '../layouts/Base.astro';
   .item-summary { font-family: var(--shell-font-serif); font-style: italic; font-size: 0.88rem; color: var(--shell-muted); margin-top: 6px; }
   .item-error { color: var(--shell-red); font-size: 0.8rem; margin-top: 6px; word-break: break-all; }
   .item-actions { display: flex; gap: 16px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .cat-input {
+    background: transparent; border: none; border-bottom: 1px solid var(--shell-line-strong);
+    color: var(--shell-text); font-family: var(--shell-font-grot); font-size: 0.8rem;
+    letter-spacing: 0.06em; padding: 4px 2px; outline: none; width: 140px;
+  }
+  .cat-input:focus { border-bottom-color: var(--shell-cyan); }
   .item-actions .copy-btn { margin-bottom: 0; }
   .copy-btn.danger:hover { color: var(--shell-red); border-bottom-color: var(--shell-red); }
   .file-tabs { display: flex; gap: 12px; margin: 10px 0 6px; flex-wrap: wrap; }
@@ -134,6 +144,7 @@ import Base from '../layouts/Base.astro';
           <p class="item-summary">${esc(p.summary)}</p>
           <p class="item-meta">${esc(p.author)} · ${esc(p.createdAt)} · ${esc(p.useCase)}</p>
           <div class="item-actions">
+            <input class="cat-input" data-cat type="text" list="cat-list" placeholder="分类（可选）" />
             <button class="copy-btn" data-act="preview">预览</button>
             <button class="copy-btn" data-act="skill">SKILL</button>
             <button class="copy-btn" data-act="approve">通过</button>
@@ -183,12 +194,14 @@ import Base from '../layouts/Base.astro';
     show(extra);
   }
 
-  async function decide(slug: string, action: 'approve' | 'reject') {
+  async function decide(item: HTMLElement, slug: string, action: 'approve' | 'reject') {
     const word = action === 'approve' ? '通过并上架' : '拒绝并清除';
     if (!confirm(`确定${word}：${slug}？`)) return;
+    const category = item.querySelector<HTMLInputElement>('[data-cat]')?.value ?? '';
     const res = await fetch(`/api/admin/pending/${slug}/${action}.json`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(action === 'approve' ? { category } : {}),
     });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -206,7 +219,7 @@ import Base from '../layouts/Base.astro';
     const act = btn.dataset.act!;
     if (act === 'preview') togglePreview(item, slug);
     else if (act === 'skill') toggleSkill(item, slug);
-    else decide(slug, act as 'approve' | 'reject');
+    else decide(item, slug, act as 'approve' | 'reject');
   });
 
   loginEl.addEventListener('submit', async (e) => {

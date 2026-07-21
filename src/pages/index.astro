@@ -2,8 +2,21 @@
 import Base from '../layouts/Base.astro';
 import '../styles/home.css';
 import { listStyles, loadStyle } from '../lib/store';
+import { getAllUsage, getTopSlugs } from '../lib/usage';
 
 const styles = listStyles().map((slug) => loadStyle(slug));
+const usageMap = getAllUsage();
+const topStyles = getTopSlugs(5).map((slug) => loadStyle(slug));
+// 作者榜：按作者聚合全部风格引用量，取前 5
+const authorMap = new Map<string, { name: string; url?: string; styles: number; refs: number }>();
+for (const style of styles) {
+  const entry = authorMap.get(style.meta.author) ?? { name: style.meta.author, url: style.meta.authorUrl, styles: 0, refs: 0 };
+  entry.styles += 1;
+  entry.refs += usageMap[style.slug] ?? 0;
+  if (style.meta.authorUrl) entry.url = style.meta.authorUrl;
+  authorMap.set(style.meta.author, entry);
+}
+const topAuthors = [...authorMap.values()].sort((a, b) => b.refs - a.refs || a.name.localeCompare(b.name)).slice(0, 5);
 const wheelItems = styles.map((style) => ({
       name: style.meta.name,
       image: `/api/styles/${style.slug}/screenshot.png`,
@@ -62,6 +75,52 @@ const flowColumnB = [...reversedItems, ...reversedItems];
 
       <a class="hero-arrow" href="#wheel-mode" aria-label="Enter style wheel mode">↓</a>
     </section>
+
+    {
+      topStyles.length > 0 && (
+        <section class="top-picks" aria-label="Most referenced styles and authors">
+          <div class="top-block">
+            <p class="eyebrow"><span data-ui-en>Most referenced styles</span><span data-ui-zh>风格引用榜</span></p>
+            <ol class="top-list">
+              {topStyles.map((style, i) => (
+                <li>
+                  <a class="top-row" href={`/styles/${style.slug}`}>
+                    <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                    <span class="top-name">{style.meta.name}</span>
+                    <span class="top-use">{style.meta.useCase}</span>
+                    <span class="top-refs">{usageMap[style.slug] ?? 0} refs</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="top-block">
+            <p class="eyebrow"><span data-ui-en>Top authors</span><span data-ui-zh>作者榜</span></p>
+            <ol class="top-list">
+              {topAuthors.map((author, i) => (
+                <li>
+                  {author.url ? (
+                    <a class="top-row" href={author.url} target="_blank" rel="noreferrer">
+                      <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                      <span class="top-name">{author.name}</span>
+                      <span class="top-use">{author.styles} styles</span>
+                      <span class="top-refs">{author.refs} refs ↗</span>
+                    </a>
+                  ) : (
+                    <span class="top-row top-row-static">
+                      <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
+                      <span class="top-name">{author.name}</span>
+                      <span class="top-use">{author.styles} styles</span>
+                      <span class="top-refs">{author.refs} refs</span>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
 
     <section class:list={['wheel-mode', { 'is-empty': !initialItem }]} id="wheel-mode" aria-labelledby="wheel-mode-title" data-wheel-mode>
       <div class="wheel-preview" data-wheel-preview>

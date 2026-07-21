@@ -84,6 +84,8 @@ export const metaSchema = z.object({
     voice: z.string().max(500).default(''),
   }),
   author: z.string().max(60).default('anonymous'),
+  // 作者主页（如 GitHub），投稿方须征得作者本人同意后填写
+  authorUrl: z.string().max(200).regex(/^https:\/\/[^\s]+$/, 'authorUrl 必须是 https 链接').optional(),
   createdAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期必须是 YYYY-MM-DD'),
 });
 
