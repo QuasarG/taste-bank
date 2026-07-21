@@ -25,11 +25,13 @@
 
 Getting coding agents to produce *well-designed* front-ends is a solved problem nobody can actually use. The community is **full of front-end skills, prompt snippets, and design guides** — but in practice:
 
-- **No unified invocation**: one style is a Markdown file you copy by hand, another is prompt folklore, another hides in some project's `.agents/` folder. Switch tools or agents, and you relearn everything.
+- **No unified invocation**: some styles ship as a skill, some as a Codex or Claude Code plugin, and some ship nothing at all — just style images or web templates. Whatever the form, actually using them is a chore.
 - **No quality bar**: without a shared schema, a "style" can be three adjectives in a trench coat — nothing an agent can actually execute.
 - **Hard to reuse**: great styles die in chat histories instead of being distilled into an asset.
 - **Hard to migrate across projects**: the style you tuned in project A must be re-described in project B, losing visual intent in every retelling.
 - **No ownership or iteration**: no versions, no way to say "only I maintain my styles."
+
+> **More importantly**: the web spawns new styles, UI/UX patterns and layouts every single day — but not every style is mainstream enough, not every style is *your* taste, and no one can ride every new wave. So we want to build a community where people share the front-end taste they actually use — and vote with their feet. Only what truly gets used is truly usable.
 
 Taste Bank's answer: distill each style into a **structured style pack** (`SKILL.md` usage guide + precise `design tokens` + `templates/` snapshots), enforced by a **zod schema**, and serve it through three channels that share one core — a **web gallery** for humans, an **HTTP API** for scripts, and an **MCP server** that hands styles directly to any coding agent. Once a style is in the bank, it's reachable anywhere, versioned, and owned.
 
