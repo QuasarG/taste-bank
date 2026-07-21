@@ -1,6 +1,5 @@
 <div align="center">
   <img src="public/assets/banner.jpg" alt="Taste Bank — Open Source Design Styles" width="760" />
-  <h1>Taste Bank</h1>
   <p><strong>面向 Coding Agent 的前端风格库</strong> —— 一套风格，一次沉淀，处处复用。</p>
   <p>
     <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white" alt="Astro" /></a>
