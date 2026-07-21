@@ -83,15 +83,32 @@ const templateFile = (() => {
         </aside>
 
         <script>
-          document.querySelector<HTMLButtonElement>('[data-copy-prompt]')?.addEventListener('click', async (btn) => {
+          // HTTP 站点没有 navigator.clipboard（仅安全上下文可用），降级用 execCommand
+          async function copyText(text: string): Promise<void> {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(text);
+              return;
+            }
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          document.querySelector<HTMLButtonElement>('[data-copy-prompt]')?.addEventListener('click', async () => {
             const el = document.getElementById('agent-prompt');
-            if (!el) return;
-            await navigator.clipboard.writeText(el.textContent ?? '');
             const label = document.querySelector<HTMLElement>('[data-copy-label]');
-            if (!label) return;
-            const old = label.textContent;
-            label.textContent = '已复制 ✓';
-            setTimeout(() => { label.textContent = old; }, 1500);
+            if (!el || !label) return;
+            try {
+              await copyText(el.textContent ?? '');
+              const old = label.textContent;
+              label.textContent = '已复制 ✓';
+              setTimeout(() => { label.textContent = old; }, 1500);
+            } catch {
+              label.textContent = '复制失败，请手动选择文本';
+            }
           });
         </script>
       </main>
