@@ -26,6 +26,8 @@
 
 Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SKILL.md` 使用说明 + `design tokens` 精确参数 + `templates/` 模板快照），通过 **zod schema** 强校验，再提供三条共用同一套核心逻辑的通路——**Web 画廊**给人看，**HTTP API** 给脚本用，**MCP server** 把风格直接递到任何 coding agent 手里。风格一经入库，随处可取，版本可控，归属清晰。
 
+> **和市面上其他前端社群的不同**：他们收藏好看的风格，我们让风格**即刻可调**。别的画廊虽然在逐渐壮大，但风格躺在长篇散文式的描述里，你得自己读、自己翻译、自己喂给工具。在这里你不用跟描述搏斗——只要用自然语言告诉 agent"我想要那套蓝图风格"，MCP server 就会把机器可读、可直接执行的风格包交到它手上。
+
 ## 功能一览
 
 - **抖音式风格画廊**：首页是无限下落的实时渲染风格流——像刷短视频一样往下刷，刷到心动的那套就翻进轮盘模式细看；Collections 页提供带分类与分页的全览网格
@@ -67,6 +69,8 @@ Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SK
 ```
 
 > 只读浏览（`list_styles` 等）不需要邀请码；投稿（`submit_style`）必须携带。**邀请码请联系仓库所有者获取**（见 [GitHub](https://github.com/QuasarG/taste-bank)）。
+>
+> 不知道怎么配 MCP？把上面这段 JSON 直接复制丢给你的 agent，说一句"帮我配置这个 MCP server"，它会自己装好的。
 
 然后直接对 agent 说人话，比如"用 taste-bank 里的某套风格给我做个落地页"。agent 会自行完成：调 `list_styles` 挑风格 → `get_style_skill` 取完整使用说明 → 严格按 tokens 实现。
 

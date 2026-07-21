@@ -26,6 +26,8 @@ Getting coding agents to produce *well-designed* front-ends is a solved problem 
 
 Taste Bank's answer: distill each style into a **structured style pack** (`SKILL.md` usage guide + precise `design tokens` + `templates/` snapshots), enforced by a **zod schema**, and serve it through three channels that share one core — a **web gallery** for humans, an **HTTP API** for scripts, and an **MCP server** that hands styles directly to any coding agent. Once a style is in the bank, it's reachable anywhere, versioned, and owned.
 
+> **What makes us different from other front-end communities**: they collect beautiful styles; we make styles *instantly callable*. Other galleries are growing, but their styles live in long prose descriptions you must read, interpret, and hand-feed to your tools. Here you never wrestle a description — you just tell your agent in plain language, *"I want that blueprint style"*, and the MCP server delivers it machine-readable, ready to execute.
+
 ## Features
 
 - **TikTok-style gallery**: the homepage is an infinite stream of live-rendered style previews — keep scrolling until one catches your eye, then flip into the wheel mode to inspect it. Swipe, pause, pick. Collections page offers a full grid with categories and pagination
@@ -65,6 +67,8 @@ No clone, no local Node — one URL in your MCP client (Kimi Code / Claude Code 
 ```
 
 > Browsing (`list_styles`, etc.) needs no invite code; submitting (`submit_style`) does. **Contact the repo owner to get one** (see [GitHub](https://github.com/QuasarG/taste-bank)).
+>
+> Don't know how to configure MCP? Just paste this JSON to your agent and say *"set up this MCP server for me"* — it will wire itself up.
 
 Then just talk: *"Build me a landing page with one of the styles in taste-bank."* The agent will call `list_styles` to pick one, `get_style_skill` to fetch the full usage guide, and implement strictly within its tokens.
 

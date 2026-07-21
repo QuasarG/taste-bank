@@ -52,3 +52,25 @@ test('meta.authorUrl 校验：https 可选，非法拒绝', async () => {
   assert.ok(!metaSchema.safeParse({ ...base, authorUrl: 'http://github.com/x' }).success);
   assert.ok(!metaSchema.safeParse({ ...base, authorUrl: 'not-a-url' }).success);
 });
+
+test('作者名-公钥绑定：登记、放行、拒收、兜底播种', async () => {
+  const { assertAuthorForPubkey, getBoundAuthor } = await import('../src/lib/authors');
+  const keyA = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+  const keyB = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=';
+
+  // 首次投稿登记
+  assertAuthorForPubkey(keyA, 'QuasarG');
+  assert.equal(getBoundAuthor(keyA), 'QuasarG');
+  // 同名放行
+  assertAuthorForPubkey(keyA, 'QuasarG');
+  // 冒名拒收
+  assert.throws(() => assertAuthorForPubkey(keyA, 'impostor'), /已绑定作者名「QuasarG」/);
+
+  // 绑定机制上线前的旧 pack：从 owner.key 反查播种
+  const packDir = path.join(tmp, 'styles', 'legacy-pack');
+  fs.mkdirSync(packDir, { recursive: true });
+  fs.writeFileSync(path.join(packDir, 'owner.key'), keyB + '\n');
+  fs.writeFileSync(path.join(packDir, 'meta.json'), JSON.stringify({ author: 'LegacyAuthor' }));
+  assert.equal(getBoundAuthor(keyB), 'LegacyAuthor');
+  assert.throws(() => assertAuthorForPubkey(keyB, 'other'), /已绑定作者名「LegacyAuthor」/);
+});

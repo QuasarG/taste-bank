@@ -7,6 +7,7 @@ import { canonicalMessage, isValidPubkey, timestampInWindow, verifyMessage } fro
 import { checkInvite } from './invites';
 import { checkRate, rateKey } from './ratelimit';
 import { pendingPath } from './review';
+import { assertAuthorForPubkey } from './authors';
 import { StyleConflictError, StyleForbiddenError, StyleVersionError } from './errors';
 
 export { StyleConflictError, StyleForbiddenError, StyleVersionError };
@@ -83,6 +84,7 @@ export function createStylePack(input: unknown, opts: SubmitOptions = {}): Submi
   checkInvite(opts.inviteCode, data.ownerPubkey);
   const raw = opts.rawPayload ?? JSON.stringify(input);
   assertSubmitAuth(data, opts, raw);
+  assertAuthorForPubkey(data.ownerPubkey, data.meta.author);
   const dir = path.join(STYLES_DIR, data.meta.slug);
   if (fs.existsSync(dir) || fs.existsSync(pendingPath(data.meta.slug))) {
     throw new StyleConflictError(`风格已存在或在审核队列中: ${data.meta.slug}，更新请走 PUT /api/styles/:slug.json 或 update_style`);
@@ -117,6 +119,7 @@ export function updateStylePack(input: unknown, auth: unknown, rawPayload: strin
   }
   // 所有权跨更新保留，除非显式换新公钥
   data.ownerPubkey ??= fs.readFileSync(path.join(STYLES_DIR, slug, 'owner.key'), 'utf8').trim();
+  assertAuthorForPubkey(data.ownerPubkey, data.meta.author);
   const names = validateTemplates(data.templates ?? {});
   const files = writePack(path.join(STYLES_DIR, slug), data, names);
   return { slug, files, status: 'pending' as const };
