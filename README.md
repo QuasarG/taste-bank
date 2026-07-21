@@ -1,6 +1,7 @@
 <div align="center">
   <img src="public/assets/banner.jpg" alt="Taste Bank — Open Source Design Styles" width="760" />
-  <p><strong>面向 Coding Agent 的前端风格库</strong> —— 一套风格，一次沉淀，处处复用。</p>
+  <p><strong>The front-end style library for coding agents</strong> — distill a style once, reuse it everywhere.</p>
+  <p><em>Swipe styles like you're scrolling TikTok — find the one that catches your eye, then hand it to your agent.</em></p>
   <p>
     <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white" alt="Astro" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript" /></a>
@@ -8,147 +9,151 @@
     <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-111516" alt="MCP" /></a>
     <a href="https://zod.dev"><img src="https://img.shields.io/badge/Zod-4-3E67B1?logo=zod&logoColor=white" alt="Zod" /></a>
   </p>
+  <p>English | <a href="README.zh-CN.md">中文文档</a></p>
 </div>
 
 ---
 
-## 初心：为什么做 Taste Bank
+## Why Taste Bank
 
-让 coding agent 写出"有设计感"的前端，社区里并不缺尝试——各种前端 skill、prompt 片段、设计指南五花八门。但真正用起来，问题一个比一个扎心：
+Getting coding agents to produce *well-designed* front-ends is a solved problem nobody can actually use. The community is full of front-end skills, prompt snippets, and design guides — but in practice:
 
-- **调用方式不统一**：有的是一段要手动复制的 Markdown，有的是口耳相传的 prompt 技巧，有的藏在某个项目的 `.agents/` 里。换个工具、换个 agent，用法全得重学一遍。
-- **质量与结构没保障**：没有统一的 schema，一份"风格"可能只是几句形容词堆砌，agent 拿到手根本落不了地。
-- **复用困难**：好风格沉淀不下来，散落在各个项目的 prompt 历史里，用一次就丢。
-- **跨项目迁移困难**：在 A 项目调教好的风格，到了 B 项目要重新描述一遍，视觉意图在转述中损耗殆尽。
-- **没有归属与迭代**：风格被谁改了、改坏了没有版本可言，更谈不上"我的风格只有我能维护"。
+- **No unified invocation**: one style is a Markdown file you copy by hand, another is prompt folklore, another hides in some project's `.agents/` folder. Switch tools or agents, and you relearn everything.
+- **No quality bar**: without a shared schema, a "style" can be three adjectives in a trench coat — nothing an agent can actually execute.
+- **Hard to reuse**: great styles die in chat histories instead of being distilled into an asset.
+- **Hard to migrate across projects**: the style you tuned in project A must be re-described in project B, losing visual intent in every retelling.
+- **No ownership or iteration**: no versions, no way to say "only I maintain my styles."
 
-Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SKILL.md` 使用说明 + `design tokens` 精确参数 + `templates/` 模板快照），通过 **zod schema** 强校验，再提供三条共用同一套核心逻辑的通路——**Web 画廊**给人看，**HTTP API** 给脚本用，**MCP server** 把风格直接递到任何 coding agent 手里。风格一经入库，随处可取，版本可控，归属清晰。
+Taste Bank's answer: distill each style into a **structured style pack** (`SKILL.md` usage guide + precise `design tokens` + `templates/` snapshots), enforced by a **zod schema**, and serve it through three channels that share one core — a **web gallery** for humans, an **HTTP API** for scripts, and an **MCP server** that hands styles directly to any coding agent. Once a style is in the bank, it's reachable anywhere, versioned, and owned.
 
-## 功能一览
+## Features
 
-- 沉浸式风格画廊：首页实时渲染预览 + 滚轮翻页，Collections 页全览网格，模板截图由服务端 Chromium 真实渲染
-- 结构化 style pack：meta / tokens / SKILL.md / overrides / templates，zod 全量校验，版本号管理
-- MCP server（Streamable HTTP）：10 个工具覆盖浏览、取用、投稿、更新、删除、钥匙生成
-- HTTP API：列表 / 详情 / SKILL 组装 / scoped CSS / 截图 / 投稿 / 更新 / 删除
-- 邀请制投稿 + ed25519 签名所有权 + 审核队列 + Web 审核管理台（`/admin`）
-- 私钥即身份：无账号体系，谁持有私钥谁管理对应风格
+- **TikTok-style gallery**: the homepage is an infinite stream of live-rendered style previews — keep scrolling until one catches your eye, then flip into the wheel mode to inspect it. Swipe, pause, pick. Collections page offers a full grid with categories and pagination
+- **Leaderboards**: most-referenced styles and top authors, counted every time an agent pulls a style
+- **Structured style packs**: meta / tokens / SKILL.md / overrides / templates, fully validated, versioned
+- **MCP server (Streamable HTTP)**: 10 tools covering browse, fetch, submit, update, delete, key generation
+- **HTTP API**: list / detail / SKILL assembly / scoped CSS / screenshots / submit / update / delete
+- **Invite-only submissions + ed25519-signed ownership + review queue + web admin console (`/admin`)**
+- **Private key as identity**: no accounts — whoever holds the key manages the style
 
 ## Quick Start
 
-### 1. 浏览主页（给人看）
+### 1. Browse the gallery (for humans)
 
-部署后的站点入口：
-
-| 页面 | 内容 |
+| Page | What's there |
 |---|---|
-| `/` | 沉浸式翻阅：左侧实时渲染风格模板，右缘滚轮召唤轮盘，停滚自动切换 |
-| `/collections` | 全览网格：所有已上架风格的目录与参考图 |
-| `/about` | 项目理念 + **MCP 工具完整使用指南** |
-| `/admin` | 审核管理台（仅库主，见下文） |
+| `/` | Immersive browsing: live-rendered previews in an endless stream, wheel-summon to switch styles |
+| `/collections` | Full grid of published styles, with category filters and pagination |
+| `/about` | Project philosophy + **complete MCP usage guide** |
+| `/admin` | Review console (maintainer only) |
 
-每套风格卡片可以复制 SKILL.md 或 scoped CSS，但推荐姿势是把风格直接送进 agent——
+Every style page offers a copy-ready agent prompt — but the recommended move is to let your agent fetch the style itself:
 
-### 2. 接入 MCP（给 agent 用）
+### 2. Plug into MCP (for agents)
 
-无需克隆仓库、无需本地 Node，只要一条 URL。在你的 MCP 客户端（Kimi Code / Claude Code / Cursor 等）配置中加入：
+No clone, no local Node — one URL in your MCP client (Kimi Code / Claude Code / Cursor, etc.):
 
 ```json
 {
   "mcpServers": {
     "taste-bank": {
       "url": "http://<host>:3100/mcp",
-      "headers": { "x-invite-code": "sl_你的邀请码" }
+      "headers": { "x-invite-code": "sl_your_invite_code" }
     }
   }
 }
 ```
 
-> 只读浏览（`list_styles` 等）不需要邀请码；投稿（`submit_style`）必须携带。**邀请码请联系仓库所有者获取**（见 [GitHub](https://github.com/QuasarG/taste-bank)）。
+> Browsing (`list_styles`, etc.) needs no invite code; submitting (`submit_style`) does. **Contact the repo owner to get one** (see [GitHub](https://github.com/QuasarG/taste-bank)).
 
-然后直接对 agent 说人话，比如"用 taste-bank 里的某套风格给我做个落地页"。agent 会自行完成：调 `list_styles` 挑风格 → `get_style_skill` 取完整使用说明 → 严格按 tokens 实现。
+Then just talk: *"Build me a landing page with one of the styles in taste-bank."* The agent will call `list_styles` to pick one, `get_style_skill` to fetch the full usage guide, and implement strictly within its tokens.
 
-工具速查（完整用法见站点 `/about` 页，agent 也可调 `get_usage_guide` 自取）：
+Tool cheat sheet (full guide on the site's `/about` page; agents can also call `get_usage_guide`):
 
-| 分组 | 工具 | 用途 |
+| Group | Tools | Purpose |
 |---|---|---|
-| 浏览 | `list_styles` / `get_style` / `get_style_css` / `get_style_file` | 挑风格、读参数、取 CSS、看模板 |
-| 取用 | `get_style_skill` | 取组装好的 SKILL.md，粘贴给任意 coding agent 即可按风格实现 |
-| 投稿 | `submit_style` | 提交新风格（需邀请码 + 签名，进审核队列） |
-| 管理 | `update_style` / `delete_style` | 迭代或下架**自己**的风格（需私钥签名） |
-| 钥匙 | `generate_keypair` | 生成 ed25519 钥匙对（所有权凭证） |
+| Browse | `list_styles` / `get_style` / `get_style_css` / `get_style_file` | Survey the bank, read exact tokens, export CSS, inspect templates |
+| Apply | `get_style_skill` | Fetch the assembled SKILL.md — hand it to any coding agent to implement the style |
+| Submit | `submit_style` | Submit a new style pack (invite code + signature, enters review queue) |
+| Manage | `update_style` / `delete_style` | Iterate or unpublish **your own** styles (private-key signature) |
+| Keys | `generate_keypair` | Generate an ed25519 keypair (ownership credential) |
 
-## 安全承诺
+## Security
 
-Taste Bank 允许任何人凭邀请码投稿、允许 agent 读取任意风格内容，因此从鉴权到内容安全做了全链路设计：
+Taste Bank lets anyone submit with an invite code, and lets agents read arbitrary style content — so authentication and content safety are designed end to end:
 
-**鉴权与归属**
+**Authentication & ownership**
 
-- **邀请码入场**：投稿必须携带 `x-invite-code`，一码一身份——首次使用即与投稿者公钥绑定，此后仅该公钥可复用此码；服务端只存邀请码哈希
-- **ed25519 签名**：投稿 / 更新 / 删除全部要求私钥签名（消息 = `style-lab:<action>:<slug>:<timestamp>:<sha256(payload)>`，5 分钟时间窗），私钥即身份，无密码可泄露
-- **审核队列**：投稿先入 `data/pending/`，库主在 `/admin` 管理台 approve 后才上架；reject 即焚毁
-- **限流**：投稿按公钥 20 次/分，更新删除按 slug 30 次/分，MCP 按来源 IP 120 次/分
+- **Invite codes**: submissions require `x-invite-code`; a code binds to the submitter's public key on first use — one code, one identity; only hashes are stored server-side
+- **ed25519 signatures**: submit / update / delete all require a private-key signature (message = `style-lab:<action>:<slug>:<timestamp>:<sha256(payload)>`, 5-minute window) — your key is your identity, no password to leak
+- **Review queue**: submissions land in `data/pending/` and go live only after maintainer approval in `/admin`; rejection incinerates
+- **Rate limits**: submits 20/min per pubkey, updates & deletes 30/min per slug, MCP 120/min per IP
 
-**内容安全**
+**Content safety**
 
-- **模板沙箱**：所有模板预览经 `sandbox=""` iframe 渲染，CSP 禁脚本、禁外链，模板不可能跳出画布做任何事
-- **HTML 黑名单校验**：投稿模板过扩展属性黑名单，危险标记直接拒收
-- **prompt 注入缓解**：风格内容在工具描述中被明确标记为"数据非指令"，防止恶意风格劫持 agent 行为
-- **路径逃逸防护**：所有文件读取经路径归一化校验，`../` 类逃逸一律拒绝
-- **密钥模式扫描**：投稿内容命中高置信度密钥模式（API key 等）直接服务端拒收
+- **Template sandbox**: every template preview renders in a `sandbox=""` iframe with a CSP that forbids scripts and external loads — templates can't escape the canvas
+- **HTML blocklist validation**: submission templates are screened against an extended attribute blocklist
+- **Prompt-injection mitigation**: style content is explicitly labeled "data, not instructions" in tool descriptions, so malicious styles can't hijack agents
+- **Path-escape protection**: all file reads are normalized; `../` escapes are rejected
+- **Secret-pattern scanning**: submissions matching high-confidence secret patterns (API keys, etc.) are rejected server-side
 
-## 用 MCP 管理自己的风格
+## Manage your styles via MCP
 
-你投稿的每一套风格都归你所有，可以随意增删改查、持续迭代版本，全程不需要账号密码——**私钥就是所有权**。
+Every style you submit is yours — create, read, update, delete, and iterate versions at will. No accounts, no passwords: **your private key is your ownership**.
 
-**第一次：领钥匙**
+**First time: get your keys**
 
-让 agent 调 `generate_keypair`（或本地 `npm run keygen`），得到一对 ed25519 钥匙：
+Ask your agent to call `generate_keypair` (or run `npm run keygen` locally) for an ed25519 keypair:
 
-- 公钥 `ownerPubkey`：投稿时随包提交，用于登记所有权
-- 私钥：**立即持久化到** `~/.style-lab/private.key`（Windows 为 `C:\Users\<用户名>\.style-lab\`），并自行备份。私钥只存在于当前会话，丢失即永久失去对该风格的管理权，无法找回。agent 每次会话应先查该文件，存在则复用，绝不重复生成
+- Public key `ownerPubkey`: submitted with your pack to register ownership
+- Private key: **persist immediately** to `~/.style-lab/private.key` (Windows: `C:\Users\<you>\.style-lab\`) and back it up. It exists only in the current session — lose it and you permanently lose control of the style. Agents should check for this file first and never regenerate blindly
 
-**投稿**：调 `submit_style`，payload 含 meta / tokens / skill / templates / ownerPubkey，附签名。过审前对外不可见，库主 approve 后上架。
+**Submit**: call `submit_style` with a payload of meta / tokens / skill / templates / ownerPubkey, signed. Invisible until approved by the maintainer.
 
-**迭代**：调 `update_style`，`version` 必须大于现有版本（如 `1.0.0` → `1.1.0`），所有权跨更新自动保留。
+**Iterate**: call `update_style`; `version` must be strictly newer (e.g. `1.0.0` → `1.1.0`). Ownership carries over.
 
-**下架**：调 `delete_style`，签名验证通过后即刻移除，不可恢复。
+**Unpublish**: call `delete_style`; once the signature verifies, it's gone for good.
 
-> 没有本地仓库时，签名可用 SKILL.md 内附的自包含脚本完成；有仓库时 `npm run sign -- <私钥> <action> <slug> [payload文件]` 会直接打印可执行的 curl 示例。
+> Without a local checkout, sign with the self-contained script embedded in SKILL.md; with one, `npm run sign -- <key> <action> <slug> [payload file]` prints a ready-to-run curl example.
 
 ## HTTP API
 
-| 端点 | 说明 |
+| Endpoint | Description |
 |---|---|
-| `GET /api/styles.json` | 风格列表，`?q=关键词` 过滤 |
-| `GET /api/styles/:slug.json` | meta + tokens + 文件清单 |
-| `GET /api/styles/:slug/skill.md` | 组装好的 SKILL.md（text/markdown） |
-| `GET /api/styles/:slug/tokens.css` | tokens 生成的 scoped CSS（含 overrides） |
-| `GET /api/styles/:slug/screenshot.png` | 模板截图（Chromium 渲染，内容哈希缓存） |
-| `POST /api/styles.json` | 投稿（头 `x-invite-code` 必填 + 签名头）；201 / 409 / 400 / 403 |
-| `PUT /api/styles/:slug.json` | 更新（需签名，version 必须递增） |
-| `DELETE /api/styles/:slug.json` | 删除（需签名） |
+| `GET /api/styles.json` | Style list, `?q=keyword` filter |
+| `GET /api/styles/:slug.json` | meta + tokens + file list |
+| `GET /api/styles/:slug/skill.md` | Assembled SKILL.md (text/markdown) |
+| `GET /api/styles/:slug/tokens.css` | Scoped CSS from tokens (incl. overrides) |
+| `GET /api/styles/:slug/screenshot.png` | Template screenshot (Chromium-rendered, content-hash cached) |
+| `POST /api/styles.json` | Submit (`x-invite-code` header required + signature headers); 201 / 409 / 400 / 403 |
+| `PUT /api/styles/:slug.json` | Update (signed, version must bump) |
+| `DELETE /api/styles/:slug.json` | Delete (signed) |
 
-POST body 结构：
+POST body:
 
 ```jsonc
 {
-  "meta": { "slug": "...", "name": "...", "...": "见 docs/SPEC.md" },
+  "meta": { "slug": "...", "name": "...", "...": "see docs/SPEC.md" },
   "tokens": { "color": { "bg": "#...", "...": "..." }, "...": "..." },
-  "skill": "# SKILL.md 全文（≥50 字）",
-  "overrides": "可选 css",
+  "skill": "# Full SKILL.md (≥50 chars)",
+  "overrides": "optional css",
   "templates": { "page.html": "<!DOCTYPE html>..." },
-  "ownerPubkey": "ed25519 公钥 base64，登记所有权（邀请制下必填）"
+  "ownerPubkey": "base64 ed25519 public key, registers ownership (required under invites)"
 }
 ```
 
-## 项目结构
+## Project structure
 
 ```
-src/lib/        唯一核心：schema 校验 / store 读取 / create 投稿 / assemble 组装 / review 审核
-src/pages/      Astro 页面与 HTTP API 端点（含 /api/admin 审核端点）
-mcp/            MCP server（Streamable HTTP），只是 src/lib 的薄壳
-scripts/        keygen / sign / invite / review 四个管理脚本
-styles/         已上架风格（运行时由 STYLE_LAB_DIR 指定）
-data/           邀请码哈希、审核队列、截图缓存
-docs/SPEC.md    style pack 完整规格
+src/lib/        the single core: schema validation / store / create / assemble / review
+src/pages/      Astro pages & HTTP API endpoints (incl. /api/admin review endpoints)
+mcp/            MCP server (Streamable HTTP) — a thin shell over src/lib
+scripts/        keygen / sign / invite / review admin scripts
+styles/         published styles (pointed to by STYLE_LAB_DIR at runtime)
+data/           invite-code hashes, review queue, screenshot cache
+docs/SPEC.md    full style pack specification
 ```
+
+---
+
+<div align="center"><sub>English | <a href="README.zh-CN.md">中文文档</a></sub></div>
