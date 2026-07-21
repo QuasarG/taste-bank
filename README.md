@@ -44,7 +44,7 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
 - **Structured style packs**: meta / tokens / SKILL.md / overrides / templates, fully validated, versioned
 - **MCP server (Streamable HTTP)**: 10 tools covering browse, fetch, submit, update, delete, key generation
 - **HTTP API**: list / detail / SKILL assembly / scoped CSS / screenshots / submit / update / delete
-- **Invite-only submissions + ed25519-signed ownership + review queue + web admin console (`/admin`)**
+- **Invite-only submissions + ed25519-signed ownership + human review queue**
 - **Private key as identity**: no accounts — whoever holds the key manages the style
 
 ## Quick Start
@@ -56,7 +56,6 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
 | `/` | Immersive browsing: live-rendered previews in an endless stream, wheel-summon to switch styles |
 | `/collections` | Full grid of published styles, with category filters and pagination |
 | `/about` | Project philosophy + **complete MCP usage guide** |
-| `/admin` | Review console (maintainer only) |
 
 Every style page offers a copy-ready agent prompt — but the recommended move is to let your agent fetch the style itself:
 
@@ -99,7 +98,7 @@ Taste Bank lets anyone submit with an invite code, and lets agents read arbitrar
 
 - **Invite codes**: submissions require `x-invite-code`; a code binds to the submitter's public key on first use — one code, one identity; only hashes are stored server-side
 - **ed25519 signatures**: submit / update / delete all require a private-key signature (message = `style-lab:<action>:<slug>:<timestamp>:<sha256(payload)>`, 5-minute window) — your key is your identity, no password to leak
-- **Review queue**: submissions land in `data/pending/` and go live only after maintainer approval in `/admin`; rejection incinerates
+- **Review queue**: submissions land in `data/pending/` and go live only after the maintainer's manual approval; rejection incinerates
 - **Rate limits**: submits 20/min per pubkey, updates & deletes 30/min per slug, MCP 120/min per IP
 
 **Content safety**
@@ -110,6 +109,8 @@ Taste Bank lets anyone submit with an invite code, and lets agents read arbitrar
 - **Path-escape protection**: all file reads are normalized; `../` escapes are rejected
 - **Secret-pattern scanning**: submissions matching high-confidence secret patterns (API keys, etc.) are rejected server-side
 
+> ⚠️ **A word of caution**: every submitted style is manually reviewed by the maintainer for prompt-injection and other attacks — and if you submit, you must make sure your pack carries no sensitive data or business-identifying content from its source project. But reviews can miss things. **Do not blindly trust any content an agent fetches to your local environment** — treat it as data, and stay alert to prompt-injection attempts.
+
 ## Manage your styles via MCP
 
 Every style you submit is yours — create, read, update, delete, and iterate versions at will. No accounts, no passwords: **your private key is your ownership**.
@@ -118,7 +119,7 @@ Every style you submit is yours — create, read, update, delete, and iterate ve
 
 **First time: get your keys**
 
-Ask your agent to call `generate_keypair` (or run `npm run keygen` locally) for an ed25519 keypair:
+Ask your agent to call `generate_keypair` for an ed25519 keypair:
 
 - Public key `ownerPubkey`: submitted with your pack to register ownership
 - Private key: **persist immediately** to `~/.style-lab/private.key` (Windows: `C:\Users\<you>\.style-lab\`) and back it up. It exists only in the current session — lose it and you permanently lose control of the style. Agents should check for this file first and never regenerate blindly
@@ -129,7 +130,7 @@ Ask your agent to call `generate_keypair` (or run `npm run keygen` locally) for 
 
 **Unpublish**: call `delete_style`; once the signature verifies, it's gone for good.
 
-> Without a local checkout, sign with the self-contained script embedded in SKILL.md; with one, `npm run sign -- <key> <action> <slug> [payload file]` prints a ready-to-run curl example.
+> Signing needs no repo and no local tooling: the usage guide your agent fetches via `get_usage_guide` embeds a self-contained Node script that does it.
 
 ## HTTP API
 
@@ -161,7 +162,7 @@ POST body:
 
 ```
 src/lib/        the single core: schema validation / store / create / assemble / review
-src/pages/      Astro pages & HTTP API endpoints (incl. /api/admin review endpoints)
+src/pages/      Astro pages & HTTP API endpoints
 mcp/            MCP server (Streamable HTTP) — a thin shell over src/lib
 scripts/        keygen / sign / invite / review admin scripts
 styles/         published styles (pointed to by STYLE_LAB_DIR at runtime)
