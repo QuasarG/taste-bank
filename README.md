@@ -101,6 +101,8 @@ Taste Bank lets anyone submit with an invite code, and lets agents read arbitrar
 
 Every style you submit is yours — create, read, update, delete, and iterate versions at will. No accounts, no passwords: **your private key is your ownership**.
 
+> **Why keys instead of accounts?** Deliberate design. To protect submitters' privacy as much as possible — and to keep the server's storage footprint minimal — Taste Bank identifies and authenticates you with a public/private keypair rather than an account system. No emails, no passwords, no user table: nothing personal to store, and nothing personal to leak. The one trade-off: **guard your private key with your life** — it is the sole proof that a style belongs to you.
+
 **First time: get your keys**
 
 Ask your agent to call `generate_keypair` (or run `npm run keygen` locally) for an ed25519 keypair:
