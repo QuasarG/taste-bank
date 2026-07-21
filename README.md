@@ -64,7 +64,7 @@ Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SK
 }
 ```
 
-> 只读浏览（`list_styles` 等）不需要邀请码；投稿（`submit_style`）必须携带。邀请码向库主索取。
+> 只读浏览（`list_styles` 等）不需要邀请码；投稿（`submit_style`）必须携带。**邀请码请联系仓库所有者获取**（见 [GitHub](https://github.com/QuasarG/taste-bank)）。
 
 然后直接对 agent 说人话，比如"用 taste-bank 里的某套风格给我做个落地页"。agent 会自行完成：调 `list_styles` 挑风格 → `get_style_skill` 取完整使用说明 → 严格按 tokens 实现。
 
