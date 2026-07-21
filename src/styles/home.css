@@ -30,7 +30,7 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
 .flow-foot { padding-top: 16px; gap: 18px; justify-content: flex-start; }
 .flow-viewport { height: 100%; min-height: 0; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 2px 12px 2px 2px; }
 .flow-column { height: 100%; min-width: 0; min-height: 0; overflow: hidden; }
-.flow-column-offset { transform: translateY(-84px); }
+.flow-column-offset .flow-track { margin-top: -84px; }
 .flow-track { display: grid; gap: 24px; will-change: transform; }
 .flow-track-a { animation: card-flow-up 23s linear infinite; }
 .flow-track-b { animation: card-flow-up 27s -9s linear infinite reverse; }
@@ -135,7 +135,7 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
   .hero-flow { min-height: 540px; }
   .flow-viewport { gap: 12px; padding-right: 8px; }
   .flow-track { gap: 16px; }
-  .flow-column-offset { transform: translateY(-58px); }
+  .flow-column-offset .flow-track { margin-top: -58px; }
   .flow-card { box-shadow: 7px 10px 20px rgba(25, 66, 77, .2), 3px 4px 0 rgba(18, 105, 132, .14); }
   .flow-card img { height: 125px; }
   .flow-card figcaption { font-size: .68rem; }
