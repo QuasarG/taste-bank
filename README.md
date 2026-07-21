@@ -23,7 +23,7 @@
 > - A hoard of "beautiful designs" you can never actually summon when you need one?
 > - The style you painstakingly tuned in your last project has to be re-explained from scratch in the next one?
 
-Getting coding agents to produce *well-designed* front-ends is a solved problem nobody can actually use. The community is full of front-end skills, prompt snippets, and design guides — but in practice:
+Getting coding agents to produce *well-designed* front-ends is a solved problem nobody can actually use. The community is **full of front-end skills, prompt snippets, and design guides** — but in practice:
 
 - **No unified invocation**: one style is a Markdown file you copy by hand, another is prompt folklore, another hides in some project's `.agents/` folder. Switch tools or agents, and you relearn everything.
 - **No quality bar**: without a shared schema, a "style" can be three adjectives in a trench coat — nothing an agent can actually execute.
