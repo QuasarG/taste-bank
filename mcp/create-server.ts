@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
 import { assembleSkill, fullCss } from '../src/lib/assemble';
-import { createStylePack, updateStylePack, deleteStylePack } from '../src/lib/create';
+import { createStylePack, updateStylePack, deleteStylePack, validateStylePack } from '../src/lib/create';
 import { generateKeypair } from '../src/lib/auth';
 import { incrementUsage } from '../src/lib/usage';
+import { whoami } from '../src/lib/whoami';
 
 const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
 
@@ -132,6 +133,43 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
   );
 
   server.registerTool(
+    'whoami',
+    {
+      title: '查询我的身份',
+      description:
+        '凭配置注入的邀请码查询你的身份：绑定的作者名、名下全部风格（含审核队列中的投稿）。投稿前先查一次，确认 author 该用什么名字，避免与历史投稿不一致。',
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        return text(JSON.stringify(whoami(opts.inviteCode), null, 2));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    'validate_style',
+    {
+      title: '干跑校验（不提交）',
+      description:
+        '只校验不提交、无需签名与邀请码：payload 为与 submit_style 同构的 JSON 字符串。投稿前先调它把 schema 问题一次清完，再签名、再 submit_style——签名要留在最后一步做，避免浪费时间窗。',
+      inputSchema: {
+        payload: z.string().describe('pack JSON 字符串（同 submit_style 的 payload）'),
+      },
+    },
+    async ({ payload }) => {
+      try {
+        const body = JSON.parse(payload);
+        return text(JSON.stringify({ valid: true, ...validateStylePack(body) }, null, 2));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
     'submit_style',
     {
       title: '投稿新风格（需签名）',
@@ -139,7 +177,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
         '提交一套新风格 pack：payload 为 JSON 字符串（含 meta/tokens/skill/可选 overrides/templates/ownerPubkey），签名消息格式 style-lab:submit:<slug>:<timestamp>:<sha256(payload)>，用 ownerPubkey 对应私钥 ed25519 签名。推荐文件式流程：先用文件写入工具把 pack JSON 写到系统临时目录（勿写进项目目录），签名脚本以文件路径读入生成签名，payload 参数直接传文件内容，成功后删除临时文件——不要构造 echo/heredoc 长嵌套命令，详见 get_usage_guide。邀请码由 x-invite-code 请求头注入，不在参数内。校验通过后进入审核队列，库主 approve 后才上架。若是从现有项目提炼风格，先通过 get_usage_guide 阅读「提炼并投稿 SOP」并严格按 Phase 0→4 执行，禁止自由发挥、禁止全项目漫游采样（最多读 2 个文件），并按要求完成脱敏：模板快照要保留原页面的布局与风格（换词不换骨），但可见文案、代码命名、组件组合的领域暗示三层业务痕迹都要换成中性词，以旁观者猜不出原业务为准；高置信度密钥模式会被服务端直接拒收。模板页必须在一屏 16:9 内完整呈现、禁止页内滚动，放不下可拆多页（page.html、page2.html……）。校验失败会报错并说明原因，修正后重试，不要绕过校验。身份认钥匙不认名字：meta.author 先查 ~/.style-lab/author 复用，没有再询问用户并写入；持同一私钥用新名字提交即全量改名，占用他人已用的作者名则拒收。meta.authorUrl 为可选的作者主页（https 链接）：填写前必须先征得用户明确同意并询问具体链接，用户拒绝或未提供则省略该字段，严禁编造。',
       inputSchema: {
         payload: z.string().describe('pack JSON 字符串（同 POST /api/styles.json 的 body，ownerPubkey 必填）'),
-        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        timestamp: z.string().describe('毫秒时间戳，30 分钟窗口内'),
         signature: z.string().describe('base64 ed25519 签名'),
       },
     },
@@ -162,7 +200,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
       inputSchema: {
         slug: z.string().describe('风格 slug'),
         payload: z.string().describe('pack JSON 字符串（同 POST /api/styles.json 的 body）'),
-        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        timestamp: z.string().describe('毫秒时间戳，30 分钟窗口内'),
         signature: z.string().describe('base64 ed25519 签名'),
       },
     },
@@ -185,7 +223,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
         '删除已登记所有者的风格，不可恢复。签名消息格式 style-lab:delete:<slug>:<timestamp>:<sha256(空串)>，用私钥 ed25519 签名，可用 scripts/sign.mjs 生成。',
       inputSchema: {
         slug: z.string().describe('风格 slug'),
-        timestamp: z.string().describe('毫秒时间戳，5 分钟窗口内'),
+        timestamp: z.string().describe('毫秒时间戳，30 分钟窗口内'),
         signature: z.string().describe('base64 ed25519 签名'),
       },
     },

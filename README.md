@@ -94,6 +94,7 @@ Tool cheat sheet (full guide on the site's `/about` page; agents can also call `
 | Submit | `submit_style` | Submit a new style pack (invite code + signature, enters review queue) |
 | Manage | `update_style` / `delete_style` | Iterate or unpublish **your own** styles (private-key signature) |
 | Keys | `generate_keypair` | Generate an ed25519 keypair (ownership credential) |
+| Identity | `whoami` / `validate_style` | Check your bound author & owned styles / dry-run validate a payload before signing |
 
 ### 3. Submit your own style
 
@@ -106,7 +107,7 @@ Taste Bank lets anyone submit with an invite code, and lets agents read arbitrar
 **Authentication & ownership**
 
 - **Invite codes**: submissions require `x-invite-code`; a code binds to the submitter's public key on first use — one code, one identity; only hashes are stored server-side
-- **ed25519 signatures**: submit / update / delete all require a private-key signature (message = `style-lab:<action>:<slug>:<timestamp>:<sha256(payload)>`, 5-minute window) — your key is your identity, no password to leak
+- **ed25519 signatures**: submit / update / delete all require a private-key signature (message = `style-lab:<action>:<slug>:<timestamp>:<sha256(payload)>`, 30-minute window) — your key is your identity, no password to leak
 - **Review queue**: submissions land in `data/pending/` and go live only after the maintainer's manual approval; rejection incinerates
 - **Rate limits**: submits 20/min per pubkey, updates & deletes 30/min per slug, MCP 120/min per IP
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { metaSchema, tokensSchema, safeText } from './schema';
 import { STYLES_DIR, loadStyle } from './store';
-import { canonicalMessage, isValidPubkey, timestampInWindow, verifyMessage } from './auth';
+import { canonicalMessage, isValidPubkey, payloadHash, timestampInWindow, verifyMessage } from './auth';
 import { checkInvite } from './invites';
 import { checkRate, rateKey } from './ratelimit';
 import { pendingPath } from './review';
@@ -33,6 +33,8 @@ export interface SubmitResult {
   slug: string;
   files: string[];
   status: 'pending';
+  // 服务端收到的 payload 原文 sha256，投稿方用它核对传输是否一致
+  payloadHash: string;
 }
 
 export interface SubmitOptions {
@@ -43,11 +45,21 @@ export interface SubmitOptions {
 }
 
 // 投稿验签：邀请码管门票，签名管「这次操作确实是持钥人本人」
+function assertTimestamp(timestamp: string): void {
+  if (!timestampInWindow(timestamp)) {
+    const serverNow = Date.now();
+    const delta = Math.round((serverNow - Number(timestamp)) / 1000);
+    throw new StyleForbiddenError(`timestamp 超出 30 分钟窗口（服务器时间 ${serverNow}，相差 ${delta}s）。正确顺序：一切就绪后最后签名、立即提交`);
+  }
+}
+
 function assertSubmitAuth(data: z.infer<typeof submitSchema>, opts: SubmitOptions, raw: string): void {
   const { timestamp, signature } = authSchema.parse({ timestamp: opts.timestamp ?? '', signature: opts.signature ?? '' });
-  if (!timestampInWindow(timestamp)) throw new StyleForbiddenError('timestamp 超出 5 分钟窗口');
+  assertTimestamp(timestamp);
   const msg = canonicalMessage('submit', data.meta.slug, timestamp, raw);
-  if (!verifyMessage(msg, signature, data.ownerPubkey!)) throw new StyleForbiddenError('投稿签名验证失败');
+  if (!verifyMessage(msg, signature, data.ownerPubkey!)) {
+    throw new StyleForbiddenError('签名验证失败：payload 原文与签名时不一致（哪怕差一个字符），或私钥与 ownerPubkey 不匹配');
+  }
 }
 
 function validateTemplates(templates: Record<string, string>): string[] {
@@ -78,6 +90,13 @@ function writePack(dir: string, data: z.infer<typeof submitSchema>, names: strin
 }
 
 // 邀请码由 HTTP 请求头注入；签名证明持钥人；投稿统一进审核队列
+// 干跑校验（validate_style）：只校验不提交、无需签名邀请码，schema 问题在烧签名窗口前清完
+export function validateStylePack(input: unknown): { slug: string; templateFiles: string[] } {
+  const data = submitSchema.parse(input);
+  const names = validateTemplates(data.templates ?? {});
+  return { slug: data.meta.slug, templateFiles: names };
+}
+
 export function createStylePack(input: unknown, opts: SubmitOptions = {}): SubmitResult {
   const data = submitSchema.parse(input);
   checkRate(rateKey('submit', data.ownerPubkey), 20, 60_000);
@@ -91,7 +110,7 @@ export function createStylePack(input: unknown, opts: SubmitOptions = {}): Submi
   }
   const names = validateTemplates(data.templates ?? {});
   const files = writePack(pendingPath(data.meta.slug), data, names);
-  return { slug: data.meta.slug, files, status: 'pending' };
+  return { slug: data.meta.slug, files, status: 'pending', payloadHash: payloadHash(raw) };
 }
 
 // 验明正身：仅登记过 owner.key 的风格可管理，签名证明持有对应私钥
@@ -101,10 +120,10 @@ function assertOwnership(slug: string, action: string, payload: string, auth: un
   const ownerPath = path.join(dir, 'owner.key');
   if (!fs.existsSync(ownerPath)) throw new StyleForbiddenError(`风格 ${slug} 未登记所有者，不可管理`);
   const { timestamp, signature } = authSchema.parse(auth);
-  if (!timestampInWindow(timestamp)) throw new StyleForbiddenError('timestamp 超出 5 分钟窗口');
+  assertTimestamp(timestamp);
   const owner = fs.readFileSync(ownerPath, 'utf8').trim();
   if (!verifyMessage(canonicalMessage(action, slug, timestamp, payload), signature, owner)) {
-    throw new StyleForbiddenError('签名验证失败');
+    throw new StyleForbiddenError('签名验证失败：payload 原文与签名时不一致（哪怕差一个字符），或私钥与该风格的 owner.key 不匹配');
   }
 }
 
@@ -122,7 +141,7 @@ export function updateStylePack(input: unknown, auth: unknown, rawPayload: strin
   assertAuthorForPubkey(data.ownerPubkey, data.meta.author);
   const names = validateTemplates(data.templates ?? {});
   const files = writePack(path.join(STYLES_DIR, slug), data, names);
-  return { slug, files, status: 'pending' as const };
+  return { slug, files, status: 'pending' as const, payloadHash: payloadHash(rawPayload) };
 }
 
 export function deleteStylePack(slug: string, auth: unknown): { slug: string; deleted: true } {

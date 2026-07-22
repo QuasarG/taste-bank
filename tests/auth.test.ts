@@ -27,7 +27,8 @@ test('错私钥 / 错消息 / 错公钥全部验不过', () => {
 
 test('时间窗校验', () => {
   assert.ok(timestampInWindow(String(Date.now())));
-  assert.ok(!timestampInWindow(String(Date.now() - 10 * 60 * 1000)));
+  assert.ok(timestampInWindow(String(Date.now() - 10 * 60 * 1000))); // 10 分钟内在 30 分钟窗口内
+  assert.ok(!timestampInWindow(String(Date.now() - 40 * 60 * 1000))); // 40 分钟前超出
   assert.ok(!timestampInWindow('not-a-number'));
 });
 

@@ -1,8 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
-import { listCategories } from '../lib/categories';
+import { listCategories, getAllCategories } from '../lib/categories';
+import { listStyles, loadStyle } from '../lib/store';
 
 const cats = listCategories();
+const catMap = getAllCategories();
+const liveStyles = listStyles().map((slug) => {
+  const pack = loadStyle(slug);
+  return { slug, name: pack.meta.name, version: pack.meta.version, category: catMap[slug] ?? '' };
+});
 ---
 
 <Base title="审核管理台">
@@ -32,6 +38,21 @@ const cats = listCategories();
       <datalist id="cat-list">{cats.map((c) => <option value={c} />)}</datalist>
       <div data-items></div>
       <p class="empty" data-empty hidden>队列为空，暂无待审投稿。</p>
+
+      <h2 class="live-head">已上架风格（调整分类）</h2>
+      <div class="live-list">
+        {liveStyles.map((s) => (
+          <div class="panel live-item" data-slug={s.slug}>
+            <strong>{s.name}</strong>
+            <span class="item-slug">{s.slug} · v{s.version}</span>
+            <span class="live-actions">
+              <input class="cat-input" data-live-cat type="text" list="cat-list" value={s.category} placeholder="（未分类）" />
+              <button class="copy-btn" data-live-save>保存</button>
+              <span class="live-msg" data-live-msg hidden></span>
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </Base>
@@ -67,6 +88,10 @@ const cats = listCategories();
     letter-spacing: 0.06em; padding: 4px 2px; outline: none; width: 140px;
   }
   .cat-input:focus { border-bottom-color: var(--shell-cyan); }
+  .live-head { margin-top: 36px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.13em; color: var(--shell-muted); }
+  .live-item { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .live-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; }
+  .live-msg { font-size: 0.74rem; color: var(--shell-cyan); }
   .item-actions .copy-btn { margin-bottom: 0; }
   .copy-btn.danger:hover { color: var(--shell-red); border-bottom-color: var(--shell-red); }
   .file-tabs { display: flex; gap: 12px; margin: 10px 0 6px; flex-wrap: wrap; }
@@ -241,6 +266,21 @@ const cats = listCategories();
   $('[data-refresh]').addEventListener('click', () => {
     detailCache.clear();
     probe();
+  });
+
+  // 已上架风格：调整分类
+  document.querySelectorAll<HTMLElement>('.live-item').forEach((item) => {
+    item.querySelector<HTMLButtonElement>('[data-live-save]')!.addEventListener('click', async () => {
+      const msg = item.querySelector<HTMLElement>('[data-live-msg]')!;
+      const res = await fetch('/api/admin/category.json', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug: item.dataset.slug, category: item.querySelector<HTMLInputElement>('[data-live-cat]')!.value }),
+      });
+      msg.hidden = false;
+      msg.textContent = res.ok ? '已保存 ✓' : '保存失败';
+      setTimeout(() => { msg.hidden = true; }, 1500);
+    });
   });
   $('[data-logout]').addEventListener('click', async () => {
     await fetch('/api/admin/session.json', { method: 'DELETE', headers: { 'content-type': 'application/json' } });

@@ -36,9 +36,13 @@ export const safeText = z
   .refine((v) => !FORBIDDEN.some((r) => r.test(v)), '包含危险片段')
   .refine((v) => !SECRETS.some((r) => r.test(v)), '疑似包含密钥或隐私信息，请先脱敏');
 
+// 颜色：hex（含 hex8 透明度）或 rgb()/rgba()
 export const hexColor = z
   .string()
-  .regex(/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, '必须是合法 hex 颜色');
+  .regex(
+    /^(#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\))$/,
+    '必须是合法颜色（hex / hex8 / rgb() / rgba()）',
+  );
 
 export const length = z
   .string()

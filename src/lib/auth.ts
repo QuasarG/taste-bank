@@ -5,7 +5,7 @@ export interface Keypair {
   privateKey: string;
 }
 
-export const TIMESTAMP_WINDOW_MS = 5 * 60 * 1000;
+export const TIMESTAMP_WINDOW_MS = 30 * 60 * 1000;
 
 export function generateKeypair(): Keypair {
   const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');

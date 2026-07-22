@@ -42,6 +42,11 @@ export function listInvites(): Array<{ hashPrefix: string; note: string; boundPu
   return readInvites().map((e) => ({ hashPrefix: e.hash.slice(0, 8), note: e.note, boundPubkey: e.boundPubkey, createdAt: e.createdAt }));
 }
 
+// 按明文码查条目（whoami 用），找不到返回 null
+export function findInvite(code: string): InviteEntry | null {
+  return readInvites().find((e) => e.hash === hashCode(code)) ?? null;
+}
+
 export function revokeInvite(hashPrefix: string): boolean {
   const entries = readInvites();
   const idx = entries.findIndex((e) => e.hash.startsWith(hashPrefix));

@@ -103,8 +103,8 @@ test('所有权管理全链路', { timeout: 120_000 }, async () => {
   const after1 = await (await fetch(`${BASE}/api/styles/owned.json`)).json();
   assert.equal(after1.meta.version, '1.1.0');
 
-  // 4. 过期时间戳 → 403
-  const staleTs = String(Date.now() - 10 * 60 * 1000);
+  // 4. 过期时间戳（40 分钟前，超出 30 分钟窗口） → 403
+  const staleTs = String(Date.now() - 40 * 60 * 1000);
   assert.equal((await del('owned', signedHeaders('delete', 'owned', '', keys.privateKey, staleTs))).status, 403);
 
   // 5. 邀请码门禁：无码 / 错码 → 403
