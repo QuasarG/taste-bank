@@ -36,6 +36,9 @@ const initialItem = wheelItems[0] ?? null;
 const flowColumnA = [...wheelItems, ...wheelItems];
 const reversedItems = [...wheelItems].reverse();
 const flowColumnB = [...reversedItems, ...reversedItems];
+// 匀速滚动：轨道高度随风格数变化，时长与数量成正比（约 22px/s 的缓慢速度）
+const flowDurationA = Math.max(20, Math.round((wheelItems.length * 250) / 22));
+const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
 ---
 
 <Base title="Taste Bank" titleZh="Taste Bank" description="Code-ready front-end styles for coding agents." wide>
@@ -88,12 +91,12 @@ const flowColumnB = [...reversedItems, ...reversedItems];
           wheelItems.length > 0 ? (
             <div class="flow-viewport">
               <div class="flow-column">
-                <div class="flow-track flow-track-a">
+                <div class="flow-track flow-track-a" style={`animation-duration: ${flowDurationA}s`}>
                   {flowColumnA.map((item) => <figure class="flow-card"><img src={item.image} alt={item.alt} /><figcaption>{item.name}</figcaption></figure>)}
                 </div>
               </div>
               <div class="flow-column flow-column-offset">
-                <div class="flow-track flow-track-b">
+                <div class="flow-track flow-track-b" style={`animation-duration: ${flowDurationB}s`}>
                   {flowColumnB.map((item) => <figure class="flow-card"><img src={item.image} alt={item.alt} /><figcaption>{item.name}</figcaption></figure>)}
                 </div>
               </div>
