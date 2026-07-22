@@ -38,6 +38,21 @@ export function rejectStyle(slug: string): void {
   fs.rmSync(from, { recursive: true, force: true });
 }
 
+// 一键通过全部待审：逐个 approve，单个失败不拖垮整批，返回明细
+export function approveAllStyles(): { approved: string[]; failed: Array<{ slug: string; error: string }> } {
+  const approved: string[] = [];
+  const failed: Array<{ slug: string; error: string }> = [];
+  for (const slug of listPending()) {
+    try {
+      approveStyle(slug);
+      approved.push(slug);
+    } catch (e) {
+      failed.push({ slug, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  return { approved, failed };
+}
+
 // 下架：已上架风格移入 data/archived/（可恢复），并清除其分类
 export function archiveStyle(slug: string): void {
   const from = path.join(STYLES_DIR, slug);

@@ -33,7 +33,10 @@ const liveStyles = listStyles().map((slug) => {
     <div data-app hidden>
       <div class="queue-bar">
         <span class="queue-count" data-count></span>
-        <button class="copy-btn" data-refresh>刷新</button>
+        <span class="queue-actions">
+          <button class="copy-btn" data-approve-all>全部通过</button>
+          <button class="copy-btn" data-refresh>刷新</button>
+        </span>
       </div>
       <datalist id="cat-list">{cats.map((c) => <option value={c} />)}</datalist>
       <div data-items></div>
@@ -76,6 +79,7 @@ const liveStyles = listStyles().map((slug) => {
     display: flex; justify-content: space-between; align-items: center;
     border-top: 1px solid var(--shell-line); padding-top: 12px; margin-bottom: 16px;
   }
+  .queue-actions { display: inline-flex; gap: 16px; }
   .queue-count { font-family: var(--shell-font-grot); font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shell-muted); }
   .queue-item { margin-bottom: 20px; }
   .item-slug { font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: 0.74rem; color: var(--shell-faint); }
@@ -265,6 +269,22 @@ const liveStyles = listStyles().map((slug) => {
   });
 
   $('[data-refresh]').addEventListener('click', () => {
+    detailCache.clear();
+    probe();
+  });
+
+  $('[data-approve-all]').addEventListener('click', async () => {
+    if (!confirm('确定一键通过全部待审投稿？')) return;
+    const res = await fetch('/api/admin/pending/approve-all.json', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    });
+    if (!res.ok) {
+      alert('操作失败');
+      return;
+    }
+    const d = await res.json();
+    alert(`已通过 ${d.approved.length} 条${d.failed.length ? `，失败 ${d.failed.length} 条：${d.failed.map((f: any) => f.slug).join('、')}` : ''}`);
     detailCache.clear();
     probe();
   });

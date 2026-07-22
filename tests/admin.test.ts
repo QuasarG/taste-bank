@@ -119,6 +119,30 @@ test('下架：archive 后公开不可见，归入 data/archived，无口令 403
   assert.ok(!fs.existsSync(path.join(TMP, 'styles', 'alpha')));
 });
 
+test('一键全部通过：批量 approve 并返回明细', async () => {
+  // 播种两条新待审
+  for (const slug of ['gamma', 'delta']) {
+    const dir = path.join(TMP, 'data', 'pending', slug);
+    fs.cpSync(FIXTURE, dir, { recursive: true });
+    const metaPath = path.join(dir, 'meta.json');
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    meta.slug = slug;
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n', 'utf8');
+  }
+  const auth = { headers: { cookie: await login(), 'content-type': 'application/json' } };
+
+  const res = await fetch(`${BASE}/api/admin/pending/approve-all.json`, { method: 'POST', ...auth });
+  assert.equal(res.status, 200);
+  const d = await res.json();
+  assert.deepEqual(d.approved.sort(), ['delta', 'gamma']);
+  assert.equal(d.failed.length, 0);
+
+  const left = await (await fetch(`${BASE}/api/admin/pending.json`, auth)).json();
+  assert.equal(left.count, 0);
+  assert.equal((await fetch(`${BASE}/api/styles/gamma.json`)).status, 200);
+  assert.equal((await fetch(`${BASE}/api/styles/delta.json`)).status, 200);
+});
+
 test('assertAdmin 单元：未配置 / 错口令 / header / cookie', async () => {
   const { assertAdmin } = await import('../src/lib/admin');
   const saved = process.env.STYLE_LAB_ADMIN_TOKEN;
