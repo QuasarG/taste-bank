@@ -53,24 +53,34 @@ test('meta.authorUrl 校验：https 可选，非法拒绝', async () => {
   assert.ok(!metaSchema.safeParse({ ...base, authorUrl: 'not-a-url' }).success);
 });
 
-test('作者名-公钥绑定：登记、放行、拒收、兜底播种', async () => {
+test('作者名-公钥绑定：登记、改名回写、占用拒收、兜底播种', async () => {
   const { assertAuthorForPubkey, getBoundAuthor } = await import('../src/lib/authors');
   const keyA = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
   const keyB = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=';
+  const keyC = 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=';
 
   // 首次投稿登记
   assertAuthorForPubkey(keyA, 'QuasarG');
   assert.equal(getBoundAuthor(keyA), 'QuasarG');
   // 同名放行
   assertAuthorForPubkey(keyA, 'QuasarG');
-  // 冒名拒收
-  assert.throws(() => assertAuthorForPubkey(keyA, 'impostor'), /已绑定作者名「QuasarG」/);
+
+  // keyA 名下有一套房，改名后应全量回写
+  const packDir = path.join(tmp, 'styles', 'owned-pack');
+  fs.mkdirSync(packDir, { recursive: true });
+  fs.writeFileSync(path.join(packDir, 'owner.key'), keyA + '\n');
+  fs.writeFileSync(path.join(packDir, 'meta.json'), JSON.stringify({ author: 'QuasarG' }));
+  assertAuthorForPubkey(keyA, 'NewName'); // 身份认钥匙：换名即改名，不再 403
+  assert.equal(getBoundAuthor(keyA), 'NewName');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(packDir, 'meta.json'), 'utf8')).author, 'NewName');
+
+  // 冒名：名字已被 keyA 占用，keyC 使用即拒收
+  assert.throws(() => assertAuthorForPubkey(keyC, 'NewName'), /已被其他身份占用/);
 
   // 绑定机制上线前的旧 pack：从 owner.key 反查播种
-  const packDir = path.join(tmp, 'styles', 'legacy-pack');
-  fs.mkdirSync(packDir, { recursive: true });
-  fs.writeFileSync(path.join(packDir, 'owner.key'), keyB + '\n');
-  fs.writeFileSync(path.join(packDir, 'meta.json'), JSON.stringify({ author: 'LegacyAuthor' }));
+  const legacyDir = path.join(tmp, 'styles', 'legacy-pack');
+  fs.mkdirSync(legacyDir, { recursive: true });
+  fs.writeFileSync(path.join(legacyDir, 'owner.key'), keyB + '\n');
+  fs.writeFileSync(path.join(legacyDir, 'meta.json'), JSON.stringify({ author: 'LegacyAuthor' }));
   assert.equal(getBoundAuthor(keyB), 'LegacyAuthor');
-  assert.throws(() => assertAuthorForPubkey(keyB, 'other'), /已绑定作者名「LegacyAuthor」/);
 });
