@@ -99,42 +99,121 @@ console.log(JSON.stringify({ timestamp, signature }));
 `GET /api/styles/:slug/tokens.css`、`POST /api/styles.json`（投稿，body 同 submit_style 参数，
 头 `x-invite-code` 必填）。不支持 MCP 的 agent 直接 curl 即可。
 
-## 提炼并投稿（agent 工作流）
+## 提炼并投稿（标准作业流程 SOP · 强制执行）
 
-当用户在自己的项目中要求「把本项目的风格入库」时，严格按以下步骤执行：
+投稿是**流水线，不是创作**。按 Phase 0 → 4 顺序执行，禁止跳步、禁止自由发挥、
+禁止反复重写。正常应在一轮对话内完成；如果你发现自己在来回修改同一文件，
+就是偏离了 SOP——停下来对照本流程。
 
-1. **采样**：通读项目的主样式文件与 1~2 个代表性页面/组件，提取实际使用的
-   颜色、字体、字号层级、间距、圆角、阴影、动效。**只允许用项目里真实出现的值，
-   禁止凭空发明**——每个 token 都要能指回出处。
-2. **归纳角色**：颜色映射到 `bg / surface / text / muted / line / accent` 六个角色，
-   功能色（warn/success 等）作扩展键；字体映射到 display/body/mono。
-3. **找 signature**：这套界面最独特的视觉特征是什么（一种边框处理、一种排版习惯、
-   一个交互动效）？写进 `meta.signature`；变量表达不了的部分用 `overrides.css` 实现，
-   并 scoped 在 `[data-style="<slug>"]` 下。
-4. **写规则**：`do / dont` 从项目实际模式推导——`dont` 尤其重要
-   （例：全站无圆角 → 「禁止圆角」）。`voice` 总结按钮与报错的措辞习惯。
-5. **做模板快照**：取一个代表性页面，**尽量原样保留它的布局结构、组件丰富度
-   与视觉细节**——快照的价值就在于「长得就像原页面」，让看到的人立刻认出这套风格。
-   整理为自包含 HTML（内联 CSS、无 script、无外部依赖）作为 `templates/page.html`。
-   **不要重写成简化版演示页**，那等于把风格的神韵也一起删了。
-   **单页约束**：每个模板页必须在一屏 16:9（如 1600×900）内完整呈现，禁止页内滚动；
-   放不下拆多页（`page.html`、`page2.html`……），展示端有翻页按钮。
-6. **脱敏自查**：脱敏 = **换词不换骨**，但「词」有三层，一层都不能漏：
-   - **可见文案**：产品名、公司名、人名、业务术语、域名/IP、路径中的用户名，
-     全部换成中性等价词
-   - **代码命名**：class / id / 变量名里的业务痕迹（如 `candidate`、`talent`、
-     `evaluate`）同样要换成 `item`、`entry`、`review` 这类中性词
-   - **领域暗示**：组件的组合方式不能暴露业务——「评分带 + 候选人列表」一眼
-     人才评估，要改成「数值带 + 条目列表」这种认不出原业务的组合
-   布局、间距、配色、字体、组件类型保持原样。完成后做**旁观者测试**：
-   只看快照问自己「能猜出这是什么业务吗」——能，就继续中性化，直到猜不出为止。
-   密钥、token、cookie 不得出现；服务端会对高置信度密钥模式直接拒收，
-   但语义层面的隐私只有你把得住，漏了就是事故。
-7. **投稿**：按「管理自己的风格」第 4 步的**文件式流程**准备 payload 与签名
-   （临时文件写系统临时目录、用完即删），调用 `submit_style`（或 `POST /api/styles.json`）。
-   校验失败时按错误信息修正重试，**不要绕过校验**。
+### Phase 0 前置检查（缺一止步，先补齐再继续）
 
-SKILL.md 正文章节要求见 `docs/SPEC.md`（概述/使用场景/设计要点/Do & Don't/文案语气/文件清单）。
+1. **钥匙**：读 `~/.style-lab/private.key` 与 `public.key`——存在即用；
+   不存在才调 `generate_keypair` 并立即持久化 + 提醒用户备份
+2. **名字**：读 `~/.style-lab/author`——存在即用作 `meta.author`；不存在先问用户显示名
+   （顺带按同意规则问 `authorUrl`），本次投稿成功后写入该文件
+3. **slug**：小写字母数字连字符；先调 `list_styles` 确认不重名
+4. **邀请码**：由用户配置注入，你无需也不能获取；403 报邀请码问题时让用户检查 MCP 配置
+
+### Phase 1 采样（上限 2 个文件，禁止全项目漫游）
+
+只读 **1 个主样式文件**（CSS / Tailwind 配置 / token 文件）+ **1 个代表性页面或组件**，
+提取实际使用的：颜色、字体、字号层级、间距、圆角、阴影、动效。
+**只允许用项目里真实出现的值，每个 token 都要能指回出处，禁止凭空发明。**
+
+### Phase 2 打包（按模板填空，不要发明结构）
+
+**meta 逐字段规则**：
+
+| 字段 | 规则 |
+|---|---|
+| slug | 小写字母数字连字符，如 `paper-ledger` |
+| name | 显示名 ≤60 字，可中英双语 |
+| version | `1.0.0` 起步；更新必须递增 |
+| summary | ≤200 字，一句话说清气质与适用面 |
+| mood | ≤8 个短词，如 `["克制","编辑感","纸面"]` |
+| useCase | 具体到产品类型，如"数据密集的监控后台" |
+| signature | 这套界面最独特的一个视觉特征（一种边框处理/排版习惯/动效） |
+| rules.do / dont | 从项目实际模式推导各 3 条以内；dont 尤其重要（全站无圆角 → 「禁止圆角」） |
+| rules.voice | 按钮与报错的措辞习惯 |
+| author / authorUrl | 见 Phase 0；authorUrl 必须征得用户同意，https 开头 |
+| createdAt | 当天日期 YYYY-MM-DD |
+
+**tokens 六色角色映射**：`bg` = 页面底色；`surface` = 卡片/面板底色；`text` = 正文；
+`muted` = 次要文字；`line` = 分隔线；`accent` = 强调色。功能色（warn/success 等）作扩展键。
+字体映射 display / body /（可选 mono、utility）。
+**skill 正文只用这六个章节**（禁止手写 tokens 附录或变量值清单，库会自动生成）：
+概述 / 使用场景 / 设计要点 / Do & Don't / 文案语气 / 文件清单。
+
+**模板快照**：取代表性页面，**尽量原样保留布局结构、组件丰富度与视觉细节**——
+快照的价值在于「长得像原页面」，不要重写成简化演示页。自包含 HTML（内联 CSS、
+无 script、无外部依赖）。**单页约束**：一屏 16:9（如 1600×900）内完整呈现、禁止页内滚动；
+放不下拆 `page.html`、`page2.html`……
+
+**脱敏自查（换词不换骨，三层都要换）**：①可见文案（产品名/人名/业务术语/域名 IP）
+②代码命名（class/id/变量名里的业务痕迹，如 `candidate` → `item`）③领域暗示
+（组件组合不能暴露业务，「评分带+候选人列表」→「数值带+条目列表」）。
+布局间距配色保持原样。完成后做旁观者测试：只看快照能猜出原业务吗？能，就继续中性化。
+密钥、token、cookie 一律不得出现。
+
+### Phase 3 提交（固定命令序列，禁止变体）
+
+1. 用**文件写入工具**把 payload JSON 写到系统临时目录
+   （`/tmp/style-lab-<slug>.json` 或 `%TEMP%`），禁止写进项目目录
+2. 用「管理自己的风格」第 4 步的自包含脚本签名：
+   `node sign.mjs <私钥base64> submit <slug> /tmp/style-lab-<slug>.json`
+3. 调 `submit_style`：`payload` 传临时文件完整内容，`timestamp` / `signature` 传脚本输出
+4. 成功后**删除临时文件**，并告诉用户"已进入审核队列，等库主 approve 后上架"
+
+### Phase 4 失败处理（不许死磕）
+
+校验报错 → **只改报错指出的字段**，其余原样重试，**最多 2 次**；仍失败就把错误原文
+报告用户并停止，禁止绕过校验、禁止重构整个 payload。
+
+| 常见错误 | 处理 |
+|---|---|
+| 包含危险片段 | 删 `url(`、`@import`、`<script`、`on*=` 属性 |
+| 疑似密钥 | 删除命中的密钥样式字符串 |
+| 风格已存在/队列中 | 换 slug，或改走 `update_style` |
+| 作者名已被占用 | 读 `~/.style-lab/author` 用回本名，或换名 |
+| version 必须递增 | `get_style` 查现有版本，+0.0.1 |
+
+### 附录 A：最小完整 payload 示例（照此结构填空）
+
+```json
+{
+  "meta": {
+    "slug": "paper-ledger",
+    "name": "Paper Ledger 纸面台账",
+    "version": "1.0.0",
+    "summary": "报纸式编辑排版：大标题、细分割线、无圆角无阴影。适合内容与文档型产品。",
+    "mood": ["克制", "编辑感", "纸面"],
+    "useCase": "内容站、文档站、数据型工具首页",
+    "signature": "全站零圆角 + 1px 发丝线分隔 + 硬偏移投影",
+    "rules": {
+      "do": ["标题超窄无衬线大写", "1px 发丝线分隔", "靠留白分组"],
+      "dont": ["禁止圆角", "禁止模糊阴影", "禁止大面积色块"],
+      "voice": "标题短促大写；按钮用动词"
+    },
+    "author": "your-name",
+    "authorUrl": "https://github.com/your-name",
+    "createdAt": "2026-01-01"
+  },
+  "tokens": {
+    "color": { "bg": "#f4f5f5", "surface": "#fbfcfb", "text": "#111516", "muted": "#667073", "line": "#cbd1d0", "accent": "#126984" },
+    "font": { "display": "Oswald, sans-serif", "body": "Space Grotesk, sans-serif" },
+    "size": { "display": "4.8rem", "h1": "3rem", "h2": "1.45rem", "body": "0.92rem", "small": "0.72rem" },
+    "space": { "sm": "10px", "md": "24px", "lg": "48px" },
+    "radius": { "sm": "0px", "md": "0px" },
+    "shadow": { "card": "11px 14px 0 rgba(18,105,132,.16)" },
+    "motion": { "duration": "180ms", "easing": "cubic-bezier(.2,.75,.2,1)" }
+  },
+  "skill": "# Paper Ledger\n\n## 概述\n报纸式编辑排版风格……（≥50 字，六章节齐全）",
+  "templates": { "page.html": "<!DOCTYPE html><html>…自包含快照…</html>" },
+  "ownerPubkey": "<~/.style-lab/public.key 的内容>"
+}
+```
+
+SKILL.md 正文章节要求即上述六章节（概述/使用场景/设计要点/Do & Don't/文案语气/文件清单）。
 **正文里禁止手写 Tokens 附录或变量值清单**——库会在投递时从 tokens.json 自动生成，
 手写一份只会变成漂移源。
 
