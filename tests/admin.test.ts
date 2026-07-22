@@ -105,6 +105,20 @@ test('approve 后公开可见，reject 后消失', async () => {
   assert.equal((await fetch(`${BASE}/api/admin/pending/ghost/approve.json`, { method: 'POST', ...auth })).status, 404);
 });
 
+test('下架：archive 后公开不可见，归入 data/archived，无口令 403', async () => {
+  const auth = { headers: { cookie: await login(), 'content-type': 'application/json' } };
+
+  // 无口令 → 403
+  assert.equal((await fetch(`${BASE}/api/admin/styles/alpha/archive.json`, { method: 'POST', headers: { 'content-type': 'application/json' } })).status, 403);
+  // 不存在的风格 → 404
+  assert.equal((await fetch(`${BASE}/api/admin/styles/ghost/archive.json`, { method: 'POST', ...auth })).status, 404);
+  // alpha（上个用例已 approve 上架）→ 下架 200，公开 404，归档可见
+  assert.equal((await fetch(`${BASE}/api/admin/styles/alpha/archive.json`, { method: 'POST', ...auth })).status, 200);
+  assert.equal((await fetch(`${BASE}/api/styles/alpha.json`)).status, 404);
+  assert.ok(fs.existsSync(path.join(TMP, 'data', 'archived', 'alpha', 'meta.json')));
+  assert.ok(!fs.existsSync(path.join(TMP, 'styles', 'alpha')));
+});
+
 test('assertAdmin 单元：未配置 / 错口令 / header / cookie', async () => {
   const { assertAdmin } = await import('../src/lib/admin');
   const saved = process.env.STYLE_LAB_ADMIN_TOKEN;

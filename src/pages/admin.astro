@@ -48,6 +48,7 @@ const liveStyles = listStyles().map((slug) => {
             <span class="live-actions">
               <input class="cat-input" data-live-cat type="text" list="cat-list" value={s.category} placeholder="（未分类）" />
               <button class="copy-btn" data-live-save>保存</button>
+              <button class="copy-btn danger" data-live-archive>下架</button>
               <span class="live-msg" data-live-msg hidden></span>
             </span>
           </div>
@@ -280,6 +281,16 @@ const liveStyles = listStyles().map((slug) => {
       msg.hidden = false;
       msg.textContent = res.ok ? '已保存 ✓' : '保存失败';
       setTimeout(() => { msg.hidden = true; }, 1500);
+    });
+    item.querySelector<HTMLButtonElement>('[data-live-archive]')!.addEventListener('click', async () => {
+      const slug = item.dataset.slug!;
+      if (!confirm(`确定下架：${slug}？\n（移入归档，不再对外展示，可在服务器上恢复）`)) return;
+      const res = await fetch(`/api/admin/styles/${slug}/archive.json`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      });
+      if (res.ok) item.remove();
+      else alert('下架失败');
     });
   });
   $('[data-logout]').addEventListener('click', async () => {

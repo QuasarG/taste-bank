@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { STYLES_DIR } from './store';
 import { metaSchema, type Meta } from './schema';
+import { setCategory } from './categories';
 
 // 审核队列：投稿先落 data/pending/，approve 后才进 styles/ 对外可见
 function pendingDir(): string {
@@ -35,6 +36,17 @@ export function rejectStyle(slug: string): void {
   const from = pendingPath(slug);
   if (!fs.existsSync(from)) throw new Error(`审核队列中不存在: ${slug}`);
   fs.rmSync(from, { recursive: true, force: true });
+}
+
+// 下架：已上架风格移入 data/archived/（可恢复），并清除其分类
+export function archiveStyle(slug: string): void {
+  const from = path.join(STYLES_DIR, slug);
+  if (!fs.existsSync(from)) throw new Error(`风格不存在: ${slug}`);
+  const to = path.join(path.dirname(STYLES_DIR), 'data', 'archived', slug);
+  fs.rmSync(to, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.renameSync(from, to);
+  setCategory(slug, '');
 }
 
 // —— 管理台读取：单条损坏不拖垮全列表 ——
