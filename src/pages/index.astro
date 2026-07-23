@@ -123,11 +123,37 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
         </div>
         {
           initialItem ? (
-            <div class="wheel-preview-stage">
-              <div class="wheel-preview-frame">
-                <iframe src={initialItem.previewUrl} title={`${initialItem.name} interactive preview`} data-wheel-main loading="eager" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+            <>
+              <div class="card-rail" data-card-rail>
+                {wheelItems.map((item, index) => (
+                  <button
+                    class="rail-card"
+                    type="button"
+                    data-rail-card
+                    data-index={index}
+                    data-preview={item.previewUrl}
+                    data-name={item.name}
+                    data-summary={item.summary}
+                    data-use={item.useCase}
+                    data-mood={item.mood}
+                    data-signature={item.signature}
+                    data-author={item.author}
+                    data-version={item.version}
+                    data-date={item.createdAt}
+                    data-renderer={item.renderer}
+                    data-href={item.href}
+                  >
+                    <img src={item.image} alt="" loading={index === 0 ? 'eager' : 'lazy'} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
               </div>
-            </div>
+              <div class="wheel-preview-stage">
+                <div class="wheel-preview-frame">
+                  <iframe src={initialItem.previewUrl} title={`${initialItem.name} interactive preview`} data-wheel-main loading="eager" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+                </div>
+              </div>
+            </>
           ) : (
             <div class="wheel-preview-stage">
               <div class="wheel-preview-frame wheel-preview-empty"><span>1440 × 810</span><b>16:9</b></div>
@@ -170,39 +196,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
       </aside>
 
       <a class="wheel-back" href="#top" aria-label="Return to the showcase">↑</a>
-      {initialItem && <button class="wheel-trigger" type="button" data-wheel-trigger aria-label="Open the style wheel" aria-controls="taste-wheel" aria-expanded="false" title="Turn the style wheel"><span aria-hidden="true">↕</span></button>}
     </section>
-
-    {initialItem && <div class="taste-wheel" id="taste-wheel" data-taste-wheel aria-hidden="true">
-      <a class="wheel-all" href="/collections"><span data-ui-en>All styles</span><span data-ui-zh>全部风格</span> <span aria-hidden="true">↗</span></a>
-      {
-        wheelItems.map((item, index) => (
-          <button
-            class="taste-wheel-card"
-            type="button"
-            data-wheel-card
-            data-index={index}
-            data-image={item.image}
-            data-preview={item.previewUrl}
-            data-name={item.name}
-            data-alt={item.alt}
-            data-summary={item.summary}
-            data-use={item.useCase}
-            data-mood={item.mood}
-            data-signature={item.signature}
-            data-author={item.author}
-            data-version={item.version}
-            data-date={item.createdAt}
-            data-renderer={item.renderer}
-            data-href={item.href}
-            tabindex="-1"
-          >
-            <img src={item.image} alt="" loading={index === 0 ? 'eager' : 'lazy'} />
-            <span>{item.name}</span>
-          </button>
-        ))
-      }
-    </div>}
   </div>
 </Base>
 
@@ -211,9 +205,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
   if (!prefersReduced) document.documentElement.classList.add('motion-ready');
 
   const wheelMode = document.querySelector<HTMLElement>('[data-wheel-mode]');
-  const wheel = document.querySelector<HTMLElement>('[data-taste-wheel]');
-  const wheelTrigger = document.querySelector<HTMLButtonElement>('[data-wheel-trigger]');
-  const wheelCards = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-wheel-card]'));
+  const railCards = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-rail-card]'));
   const wheelPreview = document.querySelector<HTMLElement>('[data-wheel-preview]');
   const previewFrame = document.querySelector<HTMLElement>('.wheel-preview-frame');
   const wheelMain = document.querySelector<HTMLIFrameElement>('[data-wheel-main]');
@@ -231,9 +223,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
   const previewOpen = document.querySelector<HTMLAnchorElement>('[data-preview-open]');
   const narrow = window.matchMedia('(max-width: 900px)');
   let active = 0;
-  let wheelOpen = false;
-  let wheelLock = 0;
-  let settleTimer = 0;
+  let railLock = 0;
 
   if (previewFrame) {
     const previewObserver = new ResizeObserver(([entry]) => {
@@ -242,35 +232,30 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
     previewObserver.observe(previewFrame);
   }
 
-  function layoutWheel() {
-    wheelCards.forEach((card, index) => {
+  // 横向卡片轨：中间最大，两侧渐进缩小渐隐
+  function layoutRail() {
+    const gap = railCards[0] ? railCards[0].offsetWidth * 0.78 : 160;
+    railCards.forEach((card, index) => {
       const offset = index - active;
-      const distance = Math.abs(offset);
-      card.style.transform = `translate(${distance * 12 + distance * distance * 6}px, ${offset * 92}px) rotate(${offset * 5}deg) scale(${offset === 0 ? 1.06 : .9})`;
-      card.style.opacity = String(Math.max(.2, 1 - distance * .22));
-      card.style.zIndex = String(30 - distance);
+      const d = Math.abs(offset);
+      const scale = offset === 0 ? 1 : Math.max(0.52, 1 - d * 0.17);
+      card.style.transform = `translate(calc(-50% + ${offset * gap}px), -50%) scale(${scale})`;
+      card.style.opacity = String(Math.max(0, 1 - d * 0.32));
+      card.style.zIndex = String(20 - d);
+      card.style.pointerEvents = d > 3 ? 'none' : 'auto';
       card.classList.toggle('is-active', offset === 0);
     });
   }
 
-  function setWheelOpen(open: boolean) {
-    if (!wheel) return;
-    wheelOpen = open;
-    wheel.classList.toggle('is-open', open);
-    wheel.setAttribute('aria-hidden', String(!open));
-    wheelCards.forEach((card) => { card.tabIndex = open ? 0 : -1; });
-    wheelTrigger?.setAttribute('aria-expanded', String(open));
-  }
-
   function applyActive() {
-    const selected = wheelCards[active];
+    const selected = railCards[active];
     if (!selected || !wheelMain || !wheelPreview) return;
     wheelPreview.classList.add('is-switching');
     window.setTimeout(() => {
       wheelMain.src = selected.dataset.preview ?? wheelMain.src;
       wheelMain.title = `${selected.dataset.name ?? 'Style'} interactive preview`;
       if (activeName) activeName.textContent = selected.dataset.name ?? '';
-      if (activeCount) activeCount.textContent = `${String(active + 1).padStart(2, '0')} / ${String(wheelCards.length).padStart(2, '0')}`;
+      if (activeCount) activeCount.textContent = `${String(active + 1).padStart(2, '0')} / ${String(railCards.length).padStart(2, '0')}`;
       if (activeSummary) activeSummary.textContent = selected.dataset.summary ?? '';
       if (activeUse) activeUse.textContent = selected.dataset.use ?? '';
       if (activeMood) activeMood.textContent = selected.dataset.mood ?? '';
@@ -285,44 +270,34 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
     }, prefersReduced ? 0 : 170);
   }
 
-  function turnWheel(direction: 1 | -1) {
-    if (wheelCards.length < 2) return;
-    active = (active + direction + wheelCards.length) % wheelCards.length;
-    layoutWheel();
+  function shiftRail(direction: 1 | -1) {
+    if (railCards.length < 2) return;
+    active = (active + direction + railCards.length) % railCards.length;
+    layoutRail();
+    applyActive();
   }
 
   wheelMode?.addEventListener('wheel', (event) => {
-    if (narrow.matches || wheelCards.length < 2) return;
+    if (narrow.matches || railCards.length < 2) return;
     const bounds = wheelMode.getBoundingClientRect();
     if (Math.abs(bounds.top - 66) > 18) return;
     event.preventDefault();
-    setWheelOpen(true);
     const now = performance.now();
-    if (now - wheelLock > 170) {
-      wheelLock = now;
-      turnWheel(event.deltaY >= 0 ? 1 : -1);
-      applyActive();
+    if (now - railLock > 170) {
+      railLock = now;
+      shiftRail(Math.abs(event.deltaX) > Math.abs(event.deltaY) ? (event.deltaX >= 0 ? 1 : -1) : (event.deltaY >= 0 ? 1 : -1));
     }
-    window.clearTimeout(settleTimer);
-    settleTimer = window.setTimeout(() => setWheelOpen(false), 1200);
   }, { passive: false });
 
-  wheelTrigger?.addEventListener('click', () => setWheelOpen(!wheelOpen));
-  wheelCards.forEach((card, index) => {
+  railCards.forEach((card, index) => {
     card.addEventListener('click', () => {
+      if (index === active) return;
       active = index;
-      layoutWheel();
+      layoutRail();
       applyActive();
-      window.setTimeout(() => setWheelOpen(false), 260);
     });
   });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && wheelOpen) setWheelOpen(false);
-  });
-  const modeObserver = new IntersectionObserver((entries) => {
-    if (!entries[0]?.isIntersecting) setWheelOpen(false);
-  }, { threshold: .5 });
-  if (wheelMode) modeObserver.observe(wheelMode);
-  layoutWheel();
+  window.addEventListener('resize', layoutRail);
+  layoutRail();
   applyActive();
 </script>
