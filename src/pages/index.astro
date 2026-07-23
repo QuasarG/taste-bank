@@ -234,7 +234,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
 
   // 横向卡片轨：中间最大，两侧渐进缩小渐隐
   function layoutRail() {
-    const gap = railCards[0] ? railCards[0].offsetWidth * 0.78 : 160;
+    const gap = railCards[0] ? railCards[0].offsetWidth * 1.08 : 220;
     railCards.forEach((card, index) => {
       const offset = index - active;
       const d = Math.abs(offset);
