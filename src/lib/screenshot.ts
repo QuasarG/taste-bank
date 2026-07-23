@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { chromium, type Browser } from 'playwright-core';
-import { readStyleFile } from './store';
+import { readStyleFile, STYLES_DIR } from './store';
 
-// 缓存目录：<slug>-<内容哈希>.png，模板变了哈希就变，自然失效
-const CACHE_DIR = path.resolve(process.cwd(), 'data', 'screenshots');
+// 缓存目录：STYLE_LAB_DIR/data/screenshots，<slug>-<内容哈希>.png，模板变了哈希就变，自然失效
+const CACHE_DIR = path.join(path.dirname(STYLES_DIR), 'data', 'screenshots');
 
 let browserPromise: Promise<Browser> | null = null;
 
