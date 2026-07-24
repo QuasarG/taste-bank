@@ -9,6 +9,10 @@
     <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-111516" alt="MCP" /></a>
     <a href="https://zod.dev"><img src="https://img.shields.io/badge/Zod-4-3E67B1?logo=zod&logoColor=white" alt="Zod" /></a>
   </p>
+  <p>
+    <a href="https://tastebank.cloud"><img src="https://img.shields.io/badge/Live-tastebank.cloud-126984?logo=cloudflare&logoColor=white" alt="Live" /></a>
+    <a href="https://github.com/QuasarG/taste-bank"><img src="https://img.shields.io/badge/GitHub-QuasarG%2Ftaste--bank-181717?logo=github" alt="GitHub" /></a>
+  </p>
   <p>English | <a href="README.zh-CN.md">中文文档</a></p>
 </div>
 
@@ -39,15 +43,15 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
 
 <div align="center">
   <img src="public/assets/gallery.png" alt="Taste Bank homepage — infinite style stream and leaderboards" width="900" />
-  <p><em>The homepage gallery: swipe through live-rendered styles like a feed, with most-referenced styles and top authors at a glance.</em></p>
+  <p><em>The homepage gallery: swipe through live-rendered styles like a feed — horizontal card rail with interactive preview, most-referenced styles and top authors at a glance.</em></p>
 </div>
 
 ## Features
 
-- **TikTok-style gallery**: the homepage is an infinite stream of live-rendered style previews — keep scrolling until one catches your eye, then flip into the wheel mode to inspect it. Swipe, pause, pick. Collections page offers a full grid with categories and pagination
+- **TikTok-style gallery**: the homepage is an endless stream of live-rendered style previews — keep scrolling until one catches your eye, then flip into the horizontal card rail mode to inspect it. Scroll to switch cards, click to jump directly. Swipe, pause, pick. Collections page offers a full grid with categories and pagination
 - **Leaderboards**: most-referenced styles and top authors, counted every time an agent pulls a style
 - **Structured style packs**: meta / tokens / SKILL.md / overrides / templates, fully validated, versioned
-- **MCP server (Streamable HTTP)**: 10 tools covering browse, fetch, submit, update, delete, key generation
+- **MCP server (Streamable HTTP)**: 12 tools covering browse, fetch, submit, update, delete, key generation, identity lookup, and pre-flight validation
 - **HTTP API**: list / detail / SKILL assembly / scoped CSS / screenshots / submit / update / delete
 - **Invite-only submissions + ed25519-signed ownership + human review queue**
 - **Private key as identity**: no accounts — whoever holds the key manages the style
@@ -56,9 +60,11 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
 
 ### 1. Browse the gallery (for humans)
 
+**Live site: [https://tastebank.cloud](https://tastebank.cloud)**
+
 | Page | What's there |
 |---|---|
-| `/` | Immersive browsing: live-rendered previews in an endless stream, wheel-summon to switch styles |
+| `/` | Immersive browsing: live-rendered previews in an endless stream, horizontal card rail with interactive preview, leaderboards |
 | `/collections` | Full grid of published styles, with category filters and pagination |
 | `/about` | Project philosophy + **complete MCP usage guide** |
 
@@ -72,7 +78,7 @@ No clone, no local Node — one URL in your MCP client (Kimi Code / Claude Code 
 {
   "mcpServers": {
     "taste-bank": {
-      "url": "http://<host>:3100/mcp",
+      "url": "https://tastebank.cloud/mcp",
       "headers": { "x-invite-code": "sl_your_invite_code" }
     }
   }
