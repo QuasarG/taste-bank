@@ -46,6 +46,7 @@ const pageTitleZh = titleZh === 'Taste Bank' ? titleZh : `${titleZh} · Taste Ba
     </header>
     <main class={wide ? 'wide-shell' : 'container'}><slot /></main>
     {!wide && <footer class="site-footer"><span data-ui-en>Taste Bank · Code-ready front-end styles for coding agents.</span><span data-ui-zh>Taste Bank · 面向 coding agent 的可执行前端风格。</span></footer>}
+    <script is:inline>fetch('/api/ping')</script>
     <script>
       const languageButton = document.querySelector<HTMLButtonElement>('[data-language-toggle]');
 

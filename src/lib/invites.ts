@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { STYLES_DIR } from './store';
 import { StyleForbiddenError } from './errors';
+import { trackNewUser } from './stats';
 
 export interface InviteEntry {
   hash: string;
@@ -67,5 +68,6 @@ export function checkInvite(code: string | undefined, pubkey: string | undefined
   if (!entry.boundPubkey) {
     entry.boundPubkey = pubkey;
     writeInvites(entries);
+    trackNewUser();
   }
 }

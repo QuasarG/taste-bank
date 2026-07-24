@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { STYLES_DIR, listStyles } from './store';
+import { trackUsage } from './stats';
 
 // 引用计数：agent 每取一次某风格的 SKILL（MCP 或 HTTP），计数 +1
 // 落盘在 STYLE_LAB_DIR/data/usage.json，{ slug: count }
@@ -26,6 +27,7 @@ export function incrementUsage(slug: string): number {
   all[slug] = (all[slug] ?? 0) + 1;
   fs.mkdirSync(path.dirname(usageFile()), { recursive: true });
   fs.writeFileSync(usageFile(), JSON.stringify(all, null, 2));
+  trackUsage();
   return all[slug];
 }
 

@@ -31,6 +31,20 @@ const liveStyles = listStyles().map((slug) => {
     </form>
 
     <div data-app hidden>
+      <div class="stats-row">
+        <div class="panel stat-card">
+          <span class="stat-value" data-stat-visits>—</span>
+          <span class="stat-label">今日访问</span>
+        </div>
+        <div class="panel stat-card">
+          <span class="stat-value" data-stat-usage>—</span>
+          <span class="stat-label">今日引用</span>
+        </div>
+        <div class="panel stat-card">
+          <span class="stat-value" data-stat-users>—</span>
+          <span class="stat-label">今日新增用户</span>
+        </div>
+      </div>
       <div class="queue-bar">
         <span class="queue-count" data-count></span>
         <span class="queue-actions">
@@ -64,6 +78,10 @@ const liveStyles = listStyles().map((slug) => {
 <style is:global>
   [hidden] { display: none !important; }
   .admin-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card { text-align: center; padding: 20px 16px; }
+  .stat-value { display: block; font-family: var(--shell-font-grot); font-size: 2.6rem; font-weight: 600; color: var(--shell-cyan); line-height: 1.1; }
+  .stat-label { display: block; margin-top: 6px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--shell-muted); }
   .login { max-width: 520px; }
   .login-tip { font-size: 0.88rem; color: var(--shell-muted); margin-bottom: 14px; }
   .login-row { display: flex; gap: 16px; align-items: flex-end; }
@@ -135,6 +153,17 @@ const liveStyles = listStyles().map((slug) => {
     return detailCache.get(slug)!;
   }
 
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/admin/stats.json');
+      if (!res.ok) return;
+      const s = await res.json();
+      $('[data-stat-visits]').textContent = String(s.visits ?? 0);
+      $('[data-stat-usage]').textContent = String(s.usage ?? 0);
+      $('[data-stat-users]').textContent = String(s.newUsers ?? 0);
+    } catch {}
+  }
+
   async function probe() {
     const res = await fetch('/api/admin/pending.json');
     if (res.status === 403) {
@@ -148,6 +177,7 @@ const liveStyles = listStyles().map((slug) => {
     show(appEl);
     $('[data-logout]').hidden = false;
     render(await res.json());
+    loadStats();
   }
 
   function render(data: any) {
