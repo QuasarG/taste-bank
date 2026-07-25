@@ -27,8 +27,26 @@ export function approveStyle(slug: string): void {
   const from = pendingPath(slug);
   if (!fs.existsSync(from)) throw new Error(`审核队列中不存在: ${slug}`);
   const to = path.join(STYLES_DIR, slug);
-  if (fs.existsSync(to)) throw new Error(`风格已存在，无法上架: ${slug}`);
-  fs.mkdirSync(STYLES_DIR, { recursive: true });
+  // 更新场景：live 已存在。先把旧版快照归档（带版本号+时间戳，可回滚），再覆盖。
+  // 新建场景：live 不存在，走原 mkdir + rename 逻辑。
+  if (fs.existsSync(to)) snapshotLegacy(slug);
+  else fs.mkdirSync(STYLES_DIR, { recursive: true });
+  fs.renameSync(from, to);
+}
+
+// 更新 approve 时归档旧 live：移到 data/archived/<slug>-v<旧版本>-<时间戳>/。
+// 路径含版本号 + 时间戳，保留多代历史不互相覆盖。
+// 注意：不复用 archiveStyle——它的路径不带版本号会覆盖历史，且会清分类。
+function snapshotLegacy(slug: string): void {
+  const from = path.join(STYLES_DIR, slug);
+  let version = '0';
+  try {
+    const meta = JSON.parse(fs.readFileSync(path.join(from, 'meta.json'), 'utf8'));
+    if (typeof meta.version === 'string') version = meta.version;
+  } catch {}
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const to = path.join(path.dirname(STYLES_DIR), 'data', 'archived', `${slug}-v${version}-${stamp}`);
+  fs.mkdirSync(path.dirname(to), { recursive: true });
   fs.renameSync(from, to);
 }
 
@@ -69,13 +87,24 @@ export interface PendingEntry {
   slug: string;
   meta?: Meta;
   error?: string;
+  isUpdate?: boolean; // live 已存在该 slug，本次是更新而非新投
+  liveVersion?: string; // 若 isUpdate，当前 live 版本号（供 admin 显示 v旧→v新）
 }
 
 export function listPendingMeta(): PendingEntry[] {
   return listPending().map((slug) => {
     try {
       const meta = metaSchema.parse(JSON.parse(fs.readFileSync(path.join(pendingPath(slug), 'meta.json'), 'utf8')));
-      return { slug, meta };
+      const liveDir = path.join(STYLES_DIR, slug);
+      const isUpdate = fs.existsSync(liveDir);
+      let liveVersion: string | undefined;
+      if (isUpdate) {
+        try {
+          const liveMeta = JSON.parse(fs.readFileSync(path.join(liveDir, 'meta.json'), 'utf8'));
+          if (typeof liveMeta.version === 'string') liveVersion = liveMeta.version;
+        } catch {}
+      }
+      return { slug, meta, isUpdate, liveVersion };
     } catch (e) {
       return { slug, error: e instanceof Error ? e.message : String(e) };
     }

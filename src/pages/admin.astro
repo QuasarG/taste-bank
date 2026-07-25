@@ -130,6 +130,22 @@ const liveStyles = listStyles().map((slug) => {
   }
   .skill-view { margin-top: 10px; }
   .empty { color: var(--shell-muted); font-size: 0.88rem; padding: 24px 0; }
+  .update-badge {
+    display: inline-block; margin-left: 8px; padding: 2px 8px;
+    font-family: var(--shell-font-grot); font-size: 0.68rem; letter-spacing: 0.06em;
+    color: var(--shell-yellow, #f59e0b); border: 1px solid var(--shell-yellow, #f59e0b);
+    border-radius: 2px; text-transform: uppercase; vertical-align: middle;
+  }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  .diff-col { min-width: 0; }
+  .diff-head {
+    font-family: var(--shell-font-grot); font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--shell-muted); margin-bottom: 6px;
+    border-bottom: 1px solid var(--shell-line); padding-bottom: 4px;
+  }
+  .diff-summary { font-family: var(--shell-font-serif); font-style: italic; font-size: 0.82rem; color: var(--shell-muted); margin-bottom: 8px; }
+  .diff-skill { max-height: 320px; overflow: auto; font-size: 0.72rem; }
+  .diff-frame { height: 320px; }
 </style>
 
 <script>
@@ -199,6 +215,7 @@ const liveStyles = listStyles().map((slug) => {
             <strong>${esc(p.name)}</strong>
             <span class="ver">v${esc(p.version)}</span>
             <span class="item-slug">${esc(p.slug)}</span>
+            ${p.isUpdate ? `<span class="update-badge">更新 v${esc(p.liveVersion)} → v${esc(p.version)}</span>` : ''}
           </div>
           <div class="tags">${(p.mood ?? []).map((m: string) => `<span class="tag">${esc(m)}</span>`).join('')}</div>
           <p class="item-summary">${esc(p.summary)}</p>
@@ -207,7 +224,8 @@ const liveStyles = listStyles().map((slug) => {
             <input class="cat-input" data-cat type="text" list="cat-list" placeholder="分类（可选）" />
             <button class="copy-btn" data-act="preview">预览</button>
             <button class="copy-btn" data-act="skill">SKILL</button>
-            <button class="copy-btn" data-act="approve">通过</button>
+            ${p.isUpdate ? '<button class="copy-btn" data-act="diff">对比旧版</button>' : ''}
+            <button class="copy-btn" data-act="approve">${p.isUpdate ? '通过并替换' : '通过'}</button>
             <button class="copy-btn danger" data-act="reject">拒绝</button>
           </div>
           <div class="item-extra" hidden></div>
@@ -254,6 +272,45 @@ const liveStyles = listStyles().map((slug) => {
     show(extra);
   }
 
+  async function toggleDiff(item: HTMLElement, slug: string) {
+    const extra = item.querySelector<HTMLElement>('.item-extra')!;
+    if (!extra.hidden) {
+      extra.hidden = true;
+      extra.innerHTML = '';
+      return;
+    }
+    // 并排展示：左旧（live）右新（pending）。靠肉眼对比发现"正常内容被换成恶意内容"。
+    const [legacy, pending] = await Promise.all([
+      fetch(`/api/admin/pending/${slug}/legacy.json`).then((r) => r.json()),
+      loadDetail(slug),
+    ]);
+    if (legacy.error) {
+      extra.innerHTML = `<p class="item-error">无法读取旧版：${esc(legacy.error)}</p>`;
+      show(extra);
+      return;
+    }
+    const htmlFiles = (pending.files ?? [])
+      .filter((f: string) => f.startsWith('templates/') && f.endsWith('.html'))
+      .map((f: string) => f.replace('templates/', ''));
+    const first = htmlFiles[0] ?? 'page.html';
+    extra.innerHTML = `
+      <div class="diff-grid">
+        <div class="diff-col">
+          <div class="diff-head">旧版 v${esc(legacy.meta.version)}（live）</div>
+          <p class="diff-summary">${esc(legacy.meta.summary)}</p>
+          <pre class="code diff-skill">${esc(legacy.skill)}</pre>
+          <iframe class="preview-frame diff-frame" sandbox="" src="/styles/${esc(slug)}/template.html?file=${esc(first)}"></iframe>
+        </div>
+        <div class="diff-col">
+          <div class="diff-head">新版 v${esc(pending.meta?.version ?? '')}（待审）</div>
+          <p class="diff-summary">${esc(pending.meta?.summary ?? '')}</p>
+          <pre class="code diff-skill">${esc(pending.skill)}</pre>
+          <iframe class="preview-frame diff-frame" sandbox="" src="/pending/${esc(slug)}/template.html?file=${esc(first)}"></iframe>
+        </div>
+      </div>`;
+    show(extra);
+  }
+
   async function decide(item: HTMLElement, slug: string, action: 'approve' | 'reject') {
     const word = action === 'approve' ? '通过并上架' : '拒绝并清除';
     if (!confirm(`确定${word}：${slug}？`)) return;
@@ -279,6 +336,7 @@ const liveStyles = listStyles().map((slug) => {
     const act = btn.dataset.act!;
     if (act === 'preview') togglePreview(item, slug);
     else if (act === 'skill') toggleSkill(item, slug);
+    else if (act === 'diff') toggleDiff(item, slug);
     else decide(item, slug, act as 'approve' | 'reject');
   });
 

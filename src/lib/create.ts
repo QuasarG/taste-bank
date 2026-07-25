@@ -140,8 +140,10 @@ export function updateStylePack(input: unknown, auth: unknown, rawPayload: strin
   data.ownerPubkey ??= fs.readFileSync(path.join(STYLES_DIR, slug, 'owner.key'), 'utf8').trim();
   assertAuthorForPubkey(data.ownerPubkey, data.meta.author);
   const names = validateTemplates(data.templates ?? {});
-  const files = writePack(path.join(STYLES_DIR, slug), data, names);
-  return { slug, files, status: 'pending' as const, payloadHash: payloadHash(rawPayload) };
+  // 与 create 一致：更新写入 data/pending/，经 maintainer approve 后才覆盖 live。
+  // 直接写 STYLES_DIR 会让恶意作者先投正常版过审、再 update 成恶意内容绕过审核。
+  const files = writePack(pendingPath(slug), data, names);
+  return { slug, files, status: 'pending', payloadHash: payloadHash(rawPayload) };
 }
 
 export function deleteStylePack(slug: string, auth: unknown): { slug: string; deleted: true } {

@@ -196,7 +196,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
     {
       title: '更新自己的风格',
       description:
-        '更新已登记所有者的风格：payload 为与 submit_style 同构的 JSON 字符串（version 必须大于现有版本）。签名消息格式 style-lab:update:<slug>:<timestamp>:<sha256(payload)>，用私钥 ed25519 签名，可用 scripts/sign.mjs 生成。',
+        '更新已登记所有者的风格：payload 为与 submit_style 同构的 JSON 字符串（version 必须大于现有版本）。更新同样进入审核队列，需 maintainer 通过后才覆盖 live 版本（旧版自动归档可回滚）。签名消息格式 style-lab:update:<slug>:<timestamp>:<sha256(payload)>，用私钥 ed25519 签名，可用 scripts/sign.mjs 生成。',
       inputSchema: {
         slug: z.string().describe('风格 slug'),
         payload: z.string().describe('pack JSON 字符串（同 POST /api/styles.json 的 body）'),

@@ -20,6 +20,8 @@ export const GET: APIRoute = ({ request }) => {
               summary: e.meta.summary,
               author: e.meta.author,
               createdAt: e.meta.createdAt,
+              isUpdate: e.isUpdate ?? false,
+              liveVersion: e.liveVersion,
             }
           : { slug: e.slug, error: e.error },
       ),
