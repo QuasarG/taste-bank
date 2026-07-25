@@ -40,9 +40,17 @@ html[lang="zh-CN"] .cn-page-title[data-ui-zh] { display: inline-block !important
 }
 .detail-preview { display: grid; align-items: center; min-height: 0; }
 .detail-frame {
-  display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 100%;
+  /* 容器：响应式宽度，锁死 16:9。iframe 内部的 1600×900 内容靠 transform scale 等比缩放进这里 */
+  position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 100%;
+  overflow: hidden;
   border: 1px solid var(--ink); background: #fff;
   box-shadow: 14px 16px 0 rgba(18, 105, 132, .14);
+}
+.detail-frame > iframe {
+  /* 固定 1600×900（SPEC 规定的模板画布尺寸），由 JS 设 --detail-scale 等比缩放到容器宽度 */
+  position: absolute; inset: 0 auto auto 0; display: block;
+  width: 1600px; height: 900px; border: 0; background: #fff;
+  transform: scale(var(--detail-scale, 1)); transform-origin: left top;
 }
 .detail-side { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding-right: 4px; }
 .detail-card { margin-bottom: 0; padding: 20px; }

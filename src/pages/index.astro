@@ -156,7 +156,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
             </>
           ) : (
             <div class="wheel-preview-stage">
-              <div class="wheel-preview-frame wheel-preview-empty"><span>1440 × 810</span><b>16:9</b></div>
+              <div class="wheel-preview-frame wheel-preview-empty"><span>1600 × 900</span><b>16:9</b></div>
             </div>
           )
         }
@@ -227,7 +227,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
 
   if (previewFrame) {
     const previewObserver = new ResizeObserver(([entry]) => {
-      if (entry) previewFrame.style.setProperty('--preview-scale', String(entry.contentRect.width / 1440));
+      if (entry) previewFrame.style.setProperty('--preview-scale', String(entry.contentRect.width / 1600));
     });
     previewObserver.observe(previewFrame);
   }

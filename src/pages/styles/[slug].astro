@@ -45,7 +45,9 @@ const templateFile = (() => {
       <main class="style-detail">
         <div class="detail-preview">
           {templateFile && (
-            <iframe class="detail-frame" src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板预览`} sandbox="" />
+            <div class="detail-frame" data-detail-frame>
+              <iframe src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板预览`} sandbox="" />
+            </div>
           )}
         </div>
 
@@ -110,6 +112,15 @@ const templateFile = (() => {
               label.textContent = '复制失败，请手动选择文本';
             }
           });
+
+          // 详情页 iframe 等比缩放：template 内容是固定 1600×900，按容器宽度算 scale 缩放进 16:9 容器
+          const detailFrame = document.querySelector<HTMLElement>('[data-detail-frame]');
+          if (detailFrame) {
+            const ro = new ResizeObserver(([entry]) => {
+              if (entry) detailFrame.style.setProperty('--detail-scale', String(entry.contentRect.width / 1600));
+            });
+            ro.observe(detailFrame);
+          }
         </script>
       </main>
     )
