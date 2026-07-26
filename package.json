@@ -1,6 +1,7 @@
 {
   "name": "style-lab",
   "version": "0.2.0",
+  "license": "MIT",
   "private": true,
   "mcpName": "io.github.QuasarG/taste-bank",
   "type": "module",

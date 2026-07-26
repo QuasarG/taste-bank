@@ -186,6 +186,10 @@ data/           invite-code hashes, review queue, screenshot cache
 docs/SPEC.md    full style pack specification
 ```
 
+## License
+
+[MIT](LICENSE) © QuasarG
+
 ---
 
 <div align="center"><sub>English | <a href="README.zh-CN.md">中文文档</a></sub></div>

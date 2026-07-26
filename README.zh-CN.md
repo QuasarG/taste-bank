@@ -186,6 +186,10 @@ data/           邀请码哈希、审核队列、截图缓存
 docs/SPEC.md    style pack 完整规格
 ```
 
+## 开源协议
+
+[MIT](LICENSE) © QuasarG
+
 ---
 
 <div align="center"><sub><a href="README.md">English</a> | 中文文档</sub></div>
