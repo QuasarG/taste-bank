@@ -1,7 +1,7 @@
 {
   "name": "taste-bank",
-  "version": "0.0.1",
-  "description": "The front-end style library for coding agents — distill a style once, reuse it everywhere. (CLI coming soon; this is a name-reservation publish.)",
+  "version": "0.1.0",
+  "description": "The front-end style library for coding agents — browse, fetch, and apply design styles from the terminal. One-time setup: npx taste-bank setup.",
   "bin": {
     "taste-bank": "bin/cli.js"
   },
@@ -25,14 +25,19 @@
     "mcp",
     "cli",
     "style-guide",
-    "ui"
+    "ui",
+    "tui"
   ],
   "files": [
     "bin",
+    "src",
     "README.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0"
   }
 }
