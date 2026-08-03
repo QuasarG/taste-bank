@@ -1,0 +1,38 @@
+{
+  "name": "taste-bank",
+  "version": "0.0.1",
+  "description": "The front-end style library for coding agents — distill a style once, reuse it everywhere. (CLI coming soon; this is a name-reservation publish.)",
+  "bin": {
+    "taste-bank": "bin/cli.js"
+  },
+  "type": "module",
+  "author": "quasarg (https://github.com/QuasarG)",
+  "license": "MIT",
+  "homepage": "https://tastebank.cloud",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QuasarG/taste-bank.git"
+  },
+  "bugs": {
+    "url": "https://github.com/QuasarG/taste-bank/issues"
+  },
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "frontend",
+    "ai-coding",
+    "agent",
+    "mcp",
+    "cli",
+    "style-guide",
+    "ui"
+  ],
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
