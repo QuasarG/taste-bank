@@ -168,16 +168,18 @@ export async function getStylePackLive(slug) {
  * @returns {Promise<{slug, files, status, payloadHash}>}
  */
 export async function submitStyle(packObj, { inviteCode, privateKey }) {
-  const { canonicalMessage, signMessage } = await import('./auth.mjs');
+  const { canonicalMessage, signMessage, payloadHash } = await import('./auth.mjs');
   const raw = JSON.stringify(packObj); // 只序列化一次
   const timestamp = String(Date.now());
   const signature = signMessage(canonicalMessage('submit', packObj.meta.slug, timestamp, raw), privateKey);
-  return signedRequest('POST', '/api/styles.json', raw, {
+  const result = await signedRequest('POST', '/api/styles.json', raw, {
     'x-invite-code': inviteCode,
     'x-timestamp': timestamp,
     'x-signature': signature,
     'content-type': 'application/json',
   });
+  // 附带本地计算的 hash，供 submit 命令与服务端 payloadHash 对比
+  return { ...result, localPayloadHash: payloadHash(raw) };
 }
 
 /**
