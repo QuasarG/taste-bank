@@ -1,6 +1,6 @@
 ---
 name: taste-bank
-description: The front-end style library for coding agents. Use the taste-bank CLI to browse curated design styles (design tokens + rules + templates) and inject them into the current project. Invoke when the user wants design/style guidance, references, or to apply a saved visual style to a frontend. Commands: `taste-bank list` / `taste-bank skill <slug>` / `taste-bank use <slug>`.
+description: "The front-end style library for coding agents. Use the taste-bank CLI to browse curated design styles (design tokens + rules + templates) and inject them into the current project. Invoke when the user wants design/style guidance, references, or to apply a saved visual style to a frontend. Commands: taste-bank list / skill <slug> / use <slug>."
 ---
 
 # Taste Bank
