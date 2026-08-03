@@ -7,9 +7,13 @@ import { printLogo, intro, outro, spin, logOk, logErr, logInfo, logWarn, logStep
 import { getI18n } from './lib/i18n.mjs';
 
 const PKG = 'taste-bank';
-// 指向 skills/taste-bank 子目录：仓库根有 MCP 用的 SKILL.md 会 short-circuit，
-// 必须明确指向子目录，skills 才会读我们 CLI 用的 SKILL.md（name: taste-bank）
-const SKILLS_SOURCE = 'https://github.com/QuasarG/taste-bank/tree/main/skills/taste-bank';
+// 两个 skill：消费侧（taste-bank）+ 投稿侧（taste-bank-contribute），分别装。
+// 指向 skills/ 子目录：仓库根有 MCP 用的 SKILL.md 会 short-circuit，
+// 必须明确指向子目录，skills 才会读我们 CLI 用的 SKILL.md
+const SKILLS_SOURCES = [
+  'https://github.com/QuasarG/taste-bank/tree/main/skills/taste-bank',
+  'https://github.com/QuasarG/taste-bank/tree/main/skills/taste-bank-contribute',
+];
 
 export async function runSetup(args) {
   const lang = parseLangArg(args) || (isTTY ? null : 'en');
@@ -71,39 +75,40 @@ async function stepInstallSkills(t) {
     return;
   }
 
-  if (await skillsAlreadyInstalled()) {
+  if (await skillsInstalledOk()) {
     await logOk(t('step2Skip'));
     return;
   }
 
   // skills add 对部分不支持 global 的 agent（如 PromptScript）会返回非零退出码，
   // 即使主目标 agent 都已成功注入。所以不能靠 exit code 判断成败——
-  // 跑完后实际验证 taste-bank 是否在已装列表里。
+  // 跑完后实际验证 skill 是否在已装列表里。
   //
   // 交互策略：TTY 时去掉 skills 的 -y，让它走原生 agent 选择 UI（用户可挑装到哪些 agent）；
   // 非 TTY 时用 -y --all 全自动（CI/脚本场景，不能弹交互）。
-  const skillsArgs = isTTY
-    ? ['-y', 'skills', 'add', SKILLS_SOURCE, '-g']
-    : ['-y', 'skills', 'add', SKILLS_SOURCE, '-y', '-g', '--all'];
-  try {
-    if (isTTY) {
-      // 交互模式：skills 自己接管终端画选择 UI，用 run（继承 stdio）而非 runSilent
-      logInfo(t('step2Spinner'));
-      run('npx', skillsArgs);
-    } else {
-      await spin(t('step2Spinner'), async () => {
-        try {
-          await runSilent('npx', skillsArgs, { timeout: 180000 });
-        } catch {
-          // exit code 非 0 不一定是真失败（见上注释），交给下面验证判定
-        }
-      });
+  for (const source of SKILLS_SOURCES) {
+    const skillsArgs = isTTY
+      ? ['-y', 'skills', 'add', source, '-g']
+      : ['-y', 'skills', 'add', source, '-y', '-g', '--all'];
+    try {
+      if (isTTY) {
+        logInfo(t('step2Spinner') + ` (${source.split('/').pop()})`);
+        run('npx', skillsArgs);
+      } else {
+        await spin(t('step2Spinner'), async () => {
+          try {
+            await runSilent('npx', skillsArgs, { timeout: 180000 });
+          } catch {
+            // exit code 非 0 不一定是真失败（见上注释），交给下面验证判定
+          }
+        });
+      }
+    } catch {
+      // spin 包装的错误也不致命，继续下一个源
     }
-  } catch {
-    // spin 包装的错误也不致命，继续验证
   }
 
-  if (await skillsAlreadyInstalled()) {
+  if (await skillsInstalledOk()) {
     await logOk(t('step2Done'));
   } else {
     await logErr(t('step2Fail'));
@@ -135,7 +140,7 @@ async function stepEnvReport(t) {
   }
 
   // skill 注入状态
-  if (await skillsAlreadyInstalled()) {
+  if (await skillsInstalledOk()) {
     const agents = await listInjectedAgents();
     await logInfo(`skill：已注入到 ${c.green(agents.join(', ') || 'agent')}`);
   }
@@ -159,17 +164,25 @@ function getLatestVersion() {
   return /^\d+\.\d+\.\d+/.test(v) ? v : null;
 }
 
-/** 检查 taste-bank skill 是否已注入（npx skills ls -g 输出里有没有 taste-bank） */
+/** 检查两个 skill 是否都已注入。返回 { tasteBank, contribute } */
 async function skillsAlreadyInstalled() {
   try {
     const out = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 60000 });
-    // skills 输出带 ANSI 颜色码，行首不是 taste-bank 而是 \x1b[36mtaste-bank
-    // 剥掉 ANSI 码后再匹配，避免永远 false 的误判
+    // skills 输出带 ANSI 颜色码，剥掉后再匹配
     const clean = out.replace(/\x1b\[[0-9;]*m/g, '');
-    return /^taste-bank\b/m.test(clean);
+    return {
+      tasteBank: /^taste-bank\b/m.test(clean),
+      contribute: /^taste-bank-contribute\b/m.test(clean),
+    };
   } catch {
-    return false;
+    return { tasteBank: false, contribute: false };
   }
+}
+
+/** 主 skill（taste-bank）是否已注入——用于 step 的跳过/失败判定 */
+async function skillsInstalledOk() {
+  const s = await skillsAlreadyInstalled();
+  return s.tasteBank; // 主 skill 在就算 OK（contribute 是可选增强）
 }
 
 /** 列出已注入 taste-bank 的 agent（只取 taste-bank 那条的 agents 行） */

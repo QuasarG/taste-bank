@@ -46,16 +46,17 @@ export async function runDoctor(args) {
     logInfo(`${t('doctorIdentity')}: ${c.gray('无 ~/.style-lab/（消费端不需要）')}`);
   }
 
-  // 5. skill 注入
+  // 5. skill 注入（两个：消费 + 投稿）
   try {
     const raw = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 30000 });
-    // skills 输出带 ANSI 颜色码，剥掉后再匹配
     const out = raw.replace(/\x1b\[[0-9;]*m/g, '');
-    if (/^taste-bank\b/m.test(out)) {
-      logOk(t('doctorSkill') + ': 已注入');
+    const hasMain = /^taste-bank\b/m.test(out);
+    const hasContribute = /^taste-bank-contribute\b/m.test(out);
+    if (hasMain) {
+      logOk(`${t('doctorSkill')}: 已注入` + (hasContribute ? c.green('（消费 + 投稿）') : c.yellow('（仅消费，投稿 skill 未装）')));
       // 提取 agents 行
       for (const line of out.split('\n')) {
-        if (/taste-bank/i.test(line) && /agents?:/i.test(line)) {
+        if (/^taste-bank/i.test(line) && /agents?:/i.test(line)) {
           logInfo(c.gray('  ' + line.trim()));
         }
       }
