@@ -129,7 +129,7 @@ async function stepEnvReport(t) {
     if (identity.hasPrivateKey) parts.push('private.key ✓');
     if (identity.hasConfig) parts.push('config.json ✓');
     await logInfo(`身份：${identity.hasPrivateKey ? c.green('已配置投稿身份') : c.yellow('部分配置')} ${c.gray('(' + (parts.join(', ') || '无身份文件') + ')')}`);
-    await logInfo(c.gray('投稿功能将在 v0.2 支持；当前可用 MCP 或 scripts/sign.mjs'));
+    await logInfo(c.gray('投稿功能已就绪：taste-bank keygen / submit / whoami'));
   } else {
     await logInfo('身份：' + c.gray('无（消费端不需要；投稿时再引导）'));
   }

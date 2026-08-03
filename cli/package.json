@@ -1,6 +1,6 @@
 {
   "name": "taste-bank",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "The front-end style library for coding agents — browse, fetch, and apply design styles from the terminal. One-time setup: npx taste-bank setup.",
   "bin": {
     "taste-bank": "bin/cli.js"

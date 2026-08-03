@@ -13,6 +13,8 @@ export const FILES = {
   author: path.join(CONFIG_DIR, 'author'),
   authorUrl: path.join(CONFIG_DIR, 'author_url'),
   config: path.join(CONFIG_DIR, 'config.json'),
+  favorites: path.join(CONFIG_DIR, 'favorites.json'),
+  submissions: path.join(CONFIG_DIR, 'submissions.json'),
 };
 
 /** 安全读纯文本单值文件（不存在/读失败返回 null） */
@@ -58,4 +60,59 @@ export function detectIdentity() {
     hasConfig: configExists(),
     config: readConfig(),
   };
+}
+
+// ---------- v0.2：收藏 + 投稿记录 ----------
+
+/** 读收藏 slug 列表。无文件返回空数组 */
+export function readFavorites() {
+  try {
+    const arr = JSON.parse(fs.readFileSync(FILES.favorites, 'utf8'));
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 写收藏列表（覆盖） */
+export function writeFavorites(list) {
+  ensureDir();
+  fs.writeFileSync(FILES.favorites, JSON.stringify(list, null, 2) + '\n', 'utf8');
+}
+
+/** 加收藏（去重） */
+export function addFavorite(slug) {
+  const list = readFavorites();
+  if (!list.includes(slug)) list.push(slug);
+  writeFavorites(list);
+  return list;
+}
+
+/** 移除收藏 */
+export function removeFavorite(slug) {
+  const list = readFavorites().filter((s) => s !== slug);
+  writeFavorites(list);
+  return list;
+}
+
+/** 读投稿记录。无返回空数组。每条 {slug, version, submittedAt, status} */
+export function readSubmissions() {
+  try {
+    const arr = JSON.parse(fs.readFileSync(FILES.submissions, 'utf8'));
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 追加一条投稿记录（投稿成功后调） */
+export function recordSubmission(entry) {
+  const list = readSubmissions();
+  list.push({ status: 'pending', ...entry, submittedAt: new Date().toISOString() });
+  ensureDir();
+  fs.writeFileSync(FILES.submissions, JSON.stringify(list, null, 2) + '\n', 'utf8');
+}
+
+function ensureDir() {
+  if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }

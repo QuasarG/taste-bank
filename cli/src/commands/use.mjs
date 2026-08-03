@@ -1,8 +1,10 @@
 // taste-bank use <slug> [--as agents|claude|skill]
 // 把风格落地成项目级规则文件，用 sentinel 托管块（可重复运行、不覆盖用户块外内容）
+// v0.2：走完整 pack，成功后记录到项目级 ./.style-lab/used.json
 import fs from 'node:fs';
 import path from 'node:path';
-import { getSkillMarkdown, getStyle, ApiError } from '../lib/api.mjs';
+import { getStylePack, ApiError } from '../lib/api.mjs';
+import { recordProjectUsage } from '../lib/project.mjs';
 import { c, logOk, logErr, logInfo, icon } from '../lib/ui.mjs';
 import { getI18n } from '../lib/i18n.mjs';
 
@@ -15,13 +17,15 @@ export async function cmdUse(args) {
     process.exit(1);
   }
 
-  // 先取详情拿版本号（用于 sentinel 标记，方便 doctor 检测更新）
+  // 走完整 pack（含缓存），一次拿到 skill.md + 版本号
   let version = '';
   let skillMd;
+  let packSource;
   try {
-    const [detail, md] = await Promise.all([getStyle(slug), getSkillMarkdown(slug)]);
-    version = detail.meta.version;
-    skillMd = md;
+    const result = await getStylePack(slug);
+    version = result.data.meta.version;
+    skillMd = result.data.skill;
+    packSource = result.source;
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       await logErr(t('errStyleNotFound', slug));
@@ -49,12 +53,17 @@ export async function cmdUse(args) {
     const original = fs.readFileSync(dest.file, 'utf8');
     const next = replaceOrAppendBlock(original, slug, block);
     if (next === original) {
+      // 无变化也记录一次使用（表示这个项目仍在用此风格）
+      recordProjectUsage({ slug, version });
       logInfo(`无变化，${dest.file} 已是最新 (v${version})`);
       return;
     }
     fs.writeFileSync(dest.file, next);
     wrote = original.includes(beginMarker(slug)) ? 'updated' : 'appended';
   }
+
+  // 成功落地 → 记录到项目级 ./.style-lab/used.json
+  recordProjectUsage({ slug, version });
 
   logOk(`${wrote} → ${dest.file}`);
   console.log(c.gray(`  风格 ${slug} v${version} 已写入。重运行此命令可更新，不影响块外内容。`));

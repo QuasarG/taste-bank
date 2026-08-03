@@ -1,5 +1,5 @@
 // HTTP API 封装：所有打 tastebank.cloud 的请求都走这里
-// v1 只用公开 GET 端点（list/show/skill/css），无鉴权头
+// v0.2：消费端走 pack 端点（完整包）+ 3 天缓存；投稿侧走签名 POST/PUT/DELETE
 
 // 默认指向官方站；自部署/测试可用 TASTEBANK_API 环境变量覆盖
 export const API_BASE = (process.env.TASTEBANK_API || 'https://tastebank.cloud').replace(/\/$/, '');
@@ -16,22 +16,22 @@ export class ApiError extends Error {
 }
 
 /**
- * 带超时的 fetch 封装。
- * @param {string} path - 相对路径（如 /api/styles.json）
- * @param {{accept?: string, signal?: AbortSignal}} [opts]
+ * 通用请求：支持任意 method/body/headers。带超时。
+ * @param {string} path - 相对路径
+ * @param {{method?: string, body?: string, headers?: Record<string,string>, accept?: string, signal?: AbortSignal}} [opts]
  * @returns {Promise<{ok: boolean, status: number, text: string}>}
  */
-export async function apiGet(path, opts = {}) {
+export async function apiRequest(path, opts = {}) {
   const url = API_BASE + path;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  // 允许外部 signal 协同取消，但超时一定生效
   const signal = opts.signal ?? controller.signal;
 
   try {
     const res = await fetch(url, {
-      method: 'GET',
-      headers: { accept: opts.accept ?? 'application/json' },
+      method: opts.method ?? 'GET',
+      headers: { accept: opts.accept ?? 'application/json', ...(opts.headers || {}) },
+      body: opts.body,
       signal,
     });
     const text = await res.text();
@@ -44,6 +44,11 @@ export async function apiGet(path, opts = {}) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** 向后兼容：apiGet = apiRequest GET-only */
+export async function apiGet(path, opts = {}) {
+  return apiRequest(path, { accept: opts.accept, signal: opts.signal });
 }
 
 /**
@@ -112,6 +117,132 @@ export function getSkillMarkdown(slug) {
 /** 取 scoped CSS 变量块（含 overrides） */
 export function getStyleCss(slug) {
   return apiText(`/api/styles/${encodeURIComponent(slug)}/tokens.css`, 'text/css');
+}
+
+// ---------- v0.2：完整 pack + 缓存 ----------
+
+const CACHE_TTL_MS = 3 * 24 * 60 * 60 * 1000; // 3 天
+
+/**
+ * 取完整风格包：{ meta, tokens, skill, css, templates: {name:content}, version }
+ * 走 3 天缓存 + 服务器挂时 fallback 到缓存。
+ * @param {string} slug
+ * @returns {Promise<{data: object, source: 'cache'|'live'|'stale-cache'}>}
+ */
+export async function getStylePack(slug) {
+  const { getCache, setCache } = await import('./cache.mjs');
+  const cached = getCache(slug);
+
+  // 缓存有效期内直接用
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return { data: cached.data, source: 'cache' };
+  }
+
+  // 缓存过期或不存在 → 拉新的
+  try {
+    const data = await apiJson(`/api/styles/${encodeURIComponent(slug)}/pack.json`);
+    setCache(slug, data);
+    return { data, source: 'live' };
+  } catch (e) {
+    // 服务器挂了，fallback 到过期缓存（如有）+ 提示
+    if (cached) {
+      return { data: cached.data, source: 'stale-cache', warning: `使用缓存（服务器不可达：${e.message}）` };
+    }
+    throw e;
+  }
+}
+
+/** 直接拉完整包，不走缓存（某些场景需要强制 live） */
+export async function getStylePackLive(slug) {
+  return apiJson(`/api/styles/${encodeURIComponent(slug)}/pack.json`);
+}
+
+// ---------- v0.2：投稿侧签名请求 ----------
+// 致命细节：submit/update 的签名必须基于请求体的原始字节，
+// 所以 JSON.stringify 只一次，签名和发送共用这个字符串。
+
+/**
+ * 投稿（POST）。需要 inviteCode + privateKey。
+ * @param {object} packObj - { meta, tokens, skill, overrides?, templates?, ownerPubkey }
+ * @param {{inviteCode: string, privateKey: string}} auth
+ * @returns {Promise<{slug, files, status, payloadHash}>}
+ */
+export async function submitStyle(packObj, { inviteCode, privateKey }) {
+  const { canonicalMessage, signMessage } = await import('./auth.mjs');
+  const raw = JSON.stringify(packObj); // 只序列化一次
+  const timestamp = String(Date.now());
+  const signature = signMessage(canonicalMessage('submit', packObj.meta.slug, timestamp, raw), privateKey);
+  return signedRequest('POST', '/api/styles.json', raw, {
+    'x-invite-code': inviteCode,
+    'x-timestamp': timestamp,
+    'x-signature': signature,
+    'content-type': 'application/json',
+  });
+}
+
+/**
+ * 更新（PUT）。owner 签名，无需 invite。
+ * @param {string} slug
+ * @param {object} packObj
+ * @param {{privateKey: string}} auth
+ */
+export async function updateStyle(slug, packObj, { privateKey }) {
+  const { canonicalMessage, signMessage } = await import('./auth.mjs');
+  const raw = JSON.stringify(packObj);
+  const timestamp = String(Date.now());
+  const signature = signMessage(canonicalMessage('update', slug, timestamp, raw), privateKey);
+  return signedRequest('PUT', `/api/styles/${encodeURIComponent(slug)}.json`, raw, {
+    'x-timestamp': timestamp,
+    'x-signature': signature,
+    'content-type': 'application/json',
+  });
+}
+
+/**
+ * 删除（DELETE）。payload 为空字符串。
+ * @param {string} slug
+ * @param {{privateKey: string}} auth
+ */
+export async function deleteStyle(slug, { privateKey }) {
+  const { canonicalMessage, signMessage } = await import('./auth.mjs');
+  const timestamp = String(Date.now());
+  const signature = signMessage(canonicalMessage('delete', slug, timestamp, ''), privateKey);
+  return signedRequest('DELETE', `/api/styles/${encodeURIComponent(slug)}.json`, '', {
+    'x-timestamp': timestamp,
+    'x-signature': signature,
+  });
+}
+
+/**
+ * 查身份（GET，仅 inviteCode 头）。
+ * @param {string} inviteCode
+ * @returns {Promise<{bound, author, styles, pending, note}>}
+ */
+export async function whoami(inviteCode) {
+  const { ok, status, text } = await apiRequest('/api/whoami.json', {
+    headers: { 'x-invite-code': inviteCode },
+  });
+  if (!ok) {
+    let detail = text;
+    try { detail = JSON.parse(text).error || text; } catch { /* 保留 */ }
+    throw new ApiError(`API ${status}：${detail}`, { status, url: API_BASE + '/api/whoami.json' });
+  }
+  return JSON.parse(text);
+}
+
+/** 签名请求内部封装：发送 + 解析响应（201/200 成功，其他抛错） */
+async function signedRequest(method, path, body, headers) {
+  const { ok, status, text } = await apiRequest(path, { method, body, headers });
+  if (!ok) {
+    let detail = text;
+    try { detail = JSON.parse(text).error || text; } catch { /* 保留 */ }
+    throw new ApiError(`API ${status}：${detail}`, { status, url: API_BASE + path });
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ApiError(`响应不是合法 JSON：${text.slice(0, 200)}`, { status });
+  }
 }
 
 /** liveness 探测 */

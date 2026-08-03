@@ -19,20 +19,48 @@ one of the styles in taste-bank"* — or use the CLI directly.
 
 ## Commands
 
+### Browsing & applying (no auth)
+
 | Command | What it does |
 |---|---|
 | `taste-bank setup` | One-time: globally install CLI + inject skill into your agents |
 | `taste-bank list [--q WORD] [--json]` | List published styles (slug, name, mood, summary) |
 | `taste-bank show <slug> [--json]` | Full detail of one style (meta + design tokens) |
-| `taste-bank skill <slug>` | Print the assembled SKILL.md (rules + tokens) to stdout |
-| `taste-bank css <slug>` | Print the scoped CSS variable block |
+| `taste-bank skill <slug> [--md]` | Print the **complete pack** as JSON: `{meta, tokens, skill, css, templates}`. `--md` for plain SKILL.md text |
 | `taste-bank use <slug> [--as agents\|claude\|skill]` | Land a style into the current project |
-| `taste-bank doctor` | Health check (CLI, network, identity, skill injection) |
+| `taste-bank favorite <slug>` / `unfavorite <slug>` / `favorites` | Manage your favorites |
+| `taste-bank doctor` | Health check (CLI, network, identity, skill, cache, favorites) |
+
+### Contributing (invite + ed25519 identity)
+
+| Command | What it does |
+|---|---|
+| `taste-bank keygen` | Generate an ed25519 keypair into `~/.style-lab/` (one-time) |
+| `taste-bank whoami` | Look up your bound identity, owned styles, and pending submissions |
+| `taste-bank validate <pack.json>` | Dry-run validate a style pack locally (no network) |
+| `taste-bank submit <pack.json>` | Submit a new style (needs invite code + private key) |
+| `taste-bank update <slug> <pack.json>` | Update an owned style (needs private key) |
+| `taste-bank delete <slug>` | Delete an owned style (needs private key, asks to confirm) |
+
+### What `skill <slug>` returns (the complete pack)
+
+```
+{ meta, tokens, skill, css, templates }
+```
+
+- `skill` — the assembled SKILL.md (Do/Don't rules + auto-generated token appendix)
+- `tokens` — raw design tokens (color, font, size, space, radius, shadow, motion)
+- `css` — scoped `[data-style="<slug>"]` variable block, ready to inject
+- `templates` — `{ "page.html": "<full content>" }` HTML template snapshots
+
+Packs are cached locally for 3 days (`~/.style-lab/cache/<slug>/`); if the server
+is unreachable, the CLI falls back to the cache with a warning.
 
 ### What `use` does
 
 Writes a style into your project as a managed rules file, wrapped in a sentinel
-block so re-running `use` updates the style without clobbering your own edits:
+block so re-running `use` updates the style without clobbering your own edits.
+Also records usage to `./.style-lab/used.json` (project-level).
 
 ```
 <!-- BEGIN taste-bank:<slug> (v1.2) — 勿手改，运行 taste-bank use <slug> 更新 -->
@@ -74,9 +102,18 @@ The web gallery is the best way to discover styles visually:
 
 ## Contributing a style
 
-Submitting a new style still uses the invite-code + Ed25519-signed flow in v0.1
-(run via MCP or the `scripts/sign.mjs` helper). CLI-side submit/update/delete
-commands are planned for v0.2. See the [project README](https://github.com/QuasarG/taste-bank#readme).
+Submitting a style uses an invite-code + ed25519-signed flow:
+
+1. Get an invite code from the maintainer, set it in `~/.style-lab/config.json`:
+   ```json
+   { "inviteCode": "sl_xxx" }
+   ```
+2. `taste-bank keygen` — generate your identity keypair (one-time)
+3. `taste-bank validate <pack.json>` — dry-run check your pack
+4. `taste-bank submit <pack.json>` — sign and submit (enters review queue)
+
+See the [project README](https://github.com/QuasarG/taste-bank#readme) for the
+pack format (`meta` + `tokens` + `skill` + `templates`).
 
 ## License
 

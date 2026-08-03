@@ -1,6 +1,8 @@
 // doctor：只读体检——CLI/网络/身份/skill 注入健康度
 import { ping } from './lib/api.mjs';
-import { detectIdentity } from './lib/config.mjs';
+import { detectIdentity, readFavorites, readSubmissions } from './lib/config.mjs';
+import { cacheHealth } from './lib/cache.mjs';
+import { readProjectUsage } from './lib/project.mjs';
 import { meetsSkillsNodeRequirement, nodeVersion, runSyncSilent, runSilent } from './lib/platform.mjs';
 import { printLogo, logOk, logErr, logWarn, logInfo, c, isTTY } from './lib/ui.mjs';
 import { getI18n } from './lib/i18n.mjs';
@@ -63,6 +65,30 @@ export async function runDoctor(args) {
   } catch {
     logWarn(`${t('doctorSkill')}: ${c.yellow('skills 工具未安装或不可用')}`);
   }
+
+  // 6. 缓存（v0.2）
+  const cache = cacheHealth();
+  if (cache.count > 0) {
+    const ageStr = cache.oldestAgeMs != null ? `${Math.round(cache.oldestAgeMs / 3600000)}h` : '-';
+    logInfo(`缓存: ${c.green(cache.count)} 个风格包 ${c.gray(`(最旧 ${ageStr}，TTL 3 天)`)}`);
+  } else {
+    logInfo(`缓存: ${c.gray('空（首次 skill 命令会填充）')}`);
+  }
+
+  // 7. 收藏（v0.2）
+  const favs = readFavorites();
+  if (favs.length) logInfo(`收藏: ${c.green(favs.length)} 个 ${c.gray(favs.slice(0, 3).join(', ') + (favs.length > 3 ? '...' : ''))}`);
+  else logInfo(`收藏: ${c.gray('无')}`);
+
+  // 8. 投稿记录（v0.2）
+  const subs = readSubmissions();
+  if (subs.length) logInfo(`投稿: ${c.green(subs.length)} 条 ${c.gray('(状态固定为 pending，实时状态调 whoami)')}`);
+  else logInfo(`投稿: ${c.gray('无本地记录')}`);
+
+  // 9. 项目级使用记录（v0.2）
+  const used = readProjectUsage();
+  if (used.length) logInfo(`项目级: ${c.green(used.length)} 个风格 ${c.gray(used.map((u) => u.slug + '@' + u.version).join(', '))}`);
+  else logInfo(`项目级: ${c.gray('无（当前目录未 use 过风格）')}`);
 
   console.log();
 }
