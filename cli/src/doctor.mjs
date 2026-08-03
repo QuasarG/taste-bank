@@ -46,7 +46,9 @@ export async function runDoctor(args) {
 
   // 5. skill 注入
   try {
-    const out = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 30000 });
+    const raw = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 30000 });
+    // skills 输出带 ANSI 颜色码，剥掉后再匹配
+    const out = raw.replace(/\x1b\[[0-9;]*m/g, '');
     if (/^taste-bank\b/m.test(out)) {
       logOk(t('doctorSkill') + ': 已注入');
       // 提取 agents 行

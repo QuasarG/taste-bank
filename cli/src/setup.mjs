@@ -76,14 +76,37 @@ async function stepInstallSkills(t) {
     return;
   }
 
+  // skills add 对部分不支持 global 的 agent（如 PromptScript）会返回非零退出码，
+  // 即使主目标 agent 都已成功注入。所以不能靠 exit code 判断成败——
+  // 跑完后实际验证 taste-bank 是否在已装列表里。
+  //
+  // 交互策略：TTY 时去掉 skills 的 -y，让它走原生 agent 选择 UI（用户可挑装到哪些 agent）；
+  // 非 TTY 时用 -y --all 全自动（CI/脚本场景，不能弹交互）。
+  const skillsArgs = isTTY
+    ? ['-y', 'skills', 'add', SKILLS_SOURCE, '-g']
+    : ['-y', 'skills', 'add', SKILLS_SOURCE, '-y', '-g', '--all'];
   try {
-    await spin(t('step2Spinner'), async () => {
-      await runSilent('npx', ['-y', 'skills', 'add', SKILLS_SOURCE, '-y', '-g'], { timeout: 180000 });
-    });
-    await logOk(t('step2Done'));
+    if (isTTY) {
+      // 交互模式：skills 自己接管终端画选择 UI，用 run（继承 stdio）而非 runSilent
+      logInfo(t('step2Spinner'));
+      run('npx', skillsArgs);
+    } else {
+      await spin(t('step2Spinner'), async () => {
+        try {
+          await runSilent('npx', skillsArgs, { timeout: 180000 });
+        } catch {
+          // exit code 非 0 不一定是真失败（见上注释），交给下面验证判定
+        }
+      });
+    }
   } catch {
+    // spin 包装的错误也不致命，继续验证
+  }
+
+  if (await skillsAlreadyInstalled()) {
+    await logOk(t('step2Done'));
+  } else {
     await logErr(t('step2Fail'));
-    // skill 注入失败不致命——CLI 本身能用，agent 学不会而已
     if (!isTTY) process.exit(1);
   }
 }
@@ -140,24 +163,38 @@ function getLatestVersion() {
 async function skillsAlreadyInstalled() {
   try {
     const out = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 60000 });
-    return /^taste-bank\b/m.test(out);
+    // skills 输出带 ANSI 颜色码，行首不是 taste-bank 而是 \x1b[36mtaste-bank
+    // 剥掉 ANSI 码后再匹配，避免永远 false 的误判
+    const clean = out.replace(/\x1b\[[0-9;]*m/g, '');
+    return /^taste-bank\b/m.test(clean);
   } catch {
     return false;
   }
 }
 
-/** 列出已注入 taste-bank 的 agent（解析 skills ls -g 输出） */
+/** 列出已注入 taste-bank 的 agent（只取 taste-bank 那条的 agents 行） */
 async function listInjectedAgents() {
   try {
-    const out = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 60000 });
-    const agents = [];
-    for (const line of out.split('\n')) {
-      if (/agents?:/i.test(line)) {
-        const m = line.match(/agents?:\s*(.+)/i);
-        if (m) agents.push(...m[1].split(',').map((s) => s.trim()));
+    const raw = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 60000 });
+    const clean = raw.replace(/\x1b\[[0-9;]*m/g, '');
+    const lines = clean.split('\n');
+    // skills ls -g 格式：skill 名字独占一行，下一行是 "  Agents: ..., ...  Source: ..."
+    // 找到 taste-bank 名字行，取紧跟的 Agents 行
+    for (let i = 0; i < lines.length; i++) {
+      if (/^taste-bank\b/.test(lines[i].trim())) {
+        const next = lines[i + 1] || '';
+        const m = next.match(/agents?:\s*([^]+)/i);
+        if (m) {
+          // Agents 行里可能还带 "  Source: ..."，截到 Source 前
+          let agentsPart = m[1];
+          const srcIdx = agentsPart.search(/\bsource:/i);
+          if (srcIdx >= 0) agentsPart = agentsPart.slice(0, srcIdx);
+          return agentsPart.split(',').map((s) => s.trim()).filter(Boolean);
+        }
+        return [];
       }
     }
-    return agents;
+    return [];
   } catch {
     return [];
   }
