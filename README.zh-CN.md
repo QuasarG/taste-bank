@@ -17,34 +17,6 @@
 
 ---
 
-## 快速开始
-
-**一行命令完成配置** —— 全局安装 CLI，并教会你的 coding agent（Claude Code、Codex、Cursor、ZCode、Kimi Code 等）怎么用它：
-
-```bash
-npx taste-bank setup
-```
-
-然后直接用自然语言对 agent 说：
-
-> *"用 taste-bank 里的某套风格给我做个落地页"*
-
-你的 agent 已经知道该怎么做——`setup` 注入了一个 skill，教它 `taste-bank` CLI 的命令。它会自行浏览风格、取完整包、严格按 design tokens 实现。
-
-**喜欢在终端操作？**
-
-```bash
-taste-bank list                    # 浏览全部风格
-taste-bank skill <slug>            # 取完整包（meta + tokens + skill + css + templates）
-taste-bank use <slug>              # 把风格落地成项目规则文件
-```
-
-就这么简单。不用配 MCP，不用粘贴 JSON，不用每个 agent 单独设置。
-
-> **想先看看效果？** [tastebank.cloud](https://tastebank.cloud) 是无限下落的实时渲染风格流——挑中心仪的，记下 slug，然后 `taste-bank skill <slug>`。
-
----
-
 ## 初心：为什么做 Taste Bank
 
 > **这些瞬间，是不是很眼熟——**
@@ -69,6 +41,51 @@ Taste Bank 的回答是：把一套风格沉淀为**结构化 style pack**（`SK
   <img src="public/assets/gallery.png" alt="Taste Bank 首页——无限风格流与引用榜单" width="900" />
   <p><em>首页画廊：像刷信息流一样刷实时渲染的风格，横向卡片轨 + 交互预览、引用榜与作者榜一目了然。</em></p>
 </div>
+
+---
+
+## 快速开始
+
+### 通过 CLI（推荐）
+
+**一行命令** —— 全局安装 CLI，并教会你的 coding agent（Claude Code、Codex、Cursor、ZCode、Kimi Code 等）怎么用它：
+
+```bash
+npx taste-bank setup
+```
+
+然后直接用自然语言对 agent 说：
+
+> *"用 taste-bank 里的某套风格给我做个落地页"*
+
+你的 agent 已经知道该怎么做——`setup` 注入了一个 skill，教它 `taste-bank` CLI 的命令。它会自行浏览风格、取完整包、严格按 design tokens 实现。
+
+**喜欢在终端操作？**
+
+```bash
+taste-bank list                    # 浏览全部风格
+taste-bank skill <slug>            # 取完整包（meta + tokens + skill + css + templates）
+taste-bank use <slug>              # 把风格落地成项目规则文件
+```
+
+不用每个 agent 单独配置，不用粘贴 JSON。想先看看效果？逛 [tastebank.cloud](https://tastebank.cloud)。
+
+### 通过 MCP（兼容）
+
+偏好 MCP 协议的 agent，配置一条 URL 即可：
+
+```json
+{
+  "mcpServers": {
+    "taste-bank": {
+      "url": "https://tastebank.cloud/mcp",
+      "headers": { "x-invite-code": "sl_你的邀请码" }
+    }
+  }
+}
+```
+
+两条路调用同一套后端。推荐 CLI——更简单，开箱支持 70+ agent。
 
 ---
 
@@ -166,25 +183,6 @@ taste-bank submit my-style.pack.json      # 签名 + 投稿（进审核队列）
 - **prompt 注入缓解**：风格内容在 skill 描述中明确标记为"数据非指令"
 
 > ⚠️ 库主会人工审核所有投稿。但审核百密总有一疏——**请不要完全信任 agent 取回到本地的任何内容**，把它当作数据而非指令。
-
----
-
-## MCP（兼容方式）
-
-Taste Bank 同时提供 MCP server（Streamable HTTP），供偏好 MCP 协议的 agent 使用。它通过工具调用访问同一套数据：
-
-```json
-{
-  "mcpServers": {
-    "taste-bank": {
-      "url": "https://tastebank.cloud/mcp",
-      "headers": { "x-invite-code": "sl_你的邀请码" }
-    }
-  }
-}
-```
-
-**推荐使用 CLI**（更简单、无需每个 agent 单独配置、开箱支持 70+ agent）。MCP 保留向后兼容——两条路调用同一套后端。
 
 ---
 

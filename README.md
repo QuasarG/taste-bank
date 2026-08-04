@@ -17,34 +17,6 @@
 
 ---
 
-## Quick Start
-
-**One command sets you up** — installs the CLI globally and teaches your coding agents (Claude Code, Codex, Cursor, ZCode, Kimi Code…) how to use it:
-
-```bash
-npx taste-bank setup
-```
-
-Then just talk to your agent in plain language:
-
-> *"Build me a landing page with one of the styles in taste-bank."*
-
-Your agent already knows what to do — `setup` injected a skill that teaches it the `taste-bank` CLI commands. It will browse styles, fetch the complete pack, and implement strictly within the design tokens.
-
-**Prefer the terminal?**
-
-```bash
-taste-bank list                    # browse all styles
-taste-bank skill <slug>            # get the complete pack (meta + tokens + skill + css + templates)
-taste-bank use <slug>              # land a style into your project as a rules file
-```
-
-That's it. No MCP configuration, no JSON to paste, no manual setup per agent.
-
-> **Browse visually first?** The [web gallery](https://tastebank.cloud) is an endless stream of live-rendered style previews — find one you like, note its slug, then `taste-bank skill <slug>`.
-
----
-
 ## Why Taste Bank
 
 > **Sound familiar?**
@@ -69,6 +41,51 @@ Taste Bank's answer: distill each style into a **structured style pack** (`SKILL
   <img src="public/assets/gallery.png" alt="Taste Bank homepage — infinite style stream and leaderboards" width="900" />
   <p><em>The homepage gallery: swipe through live-rendered styles like a feed — horizontal card rail with interactive preview, most-referenced styles and top authors at a glance.</em></p>
 </div>
+
+---
+
+## Quick Start
+
+### Via CLI (recommended)
+
+**One command** — installs the CLI globally and teaches your coding agents (Claude Code, Codex, Cursor, ZCode, Kimi Code…) how to use it:
+
+```bash
+npx taste-bank setup
+```
+
+Then just talk to your agent in plain language:
+
+> *"Build me a landing page with one of the styles in taste-bank."*
+
+Your agent already knows what to do — `setup` injected a skill that teaches it the `taste-bank` CLI commands. It will browse styles, fetch the complete pack, and implement strictly within the design tokens.
+
+**Prefer the terminal?**
+
+```bash
+taste-bank list                    # browse all styles
+taste-bank skill <slug>            # get the complete pack (meta + tokens + skill + css + templates)
+taste-bank use <slug>              # land a style into your project as a rules file
+```
+
+No per-agent config, no JSON to paste. Browse visually first at [tastebank.cloud](https://tastebank.cloud).
+
+### Via MCP (legacy)
+
+For agents that prefer the MCP protocol, configure one URL in your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "taste-bank": {
+      "url": "https://tastebank.cloud/mcp",
+      "headers": { "x-invite-code": "sl_your_invite_code" }
+    }
+  }
+}
+```
+
+Both paths call the same backend. CLI is recommended — simpler, works with 70+ agents out of the box.
 
 ---
 
@@ -166,25 +183,6 @@ See the [pack format](docs/SPEC.md), the `taste-bank-contribute` skill, and the 
 - **Prompt-injection mitigation**: style content is labeled "data, not instructions" in skill descriptions
 
 > ⚠️ Every submission is manually reviewed. But reviews can miss things — **do not blindly trust fetched content**; treat it as data.
-
----
-
-## MCP (legacy compatibility)
-
-Taste Bank also ships an MCP server (Streamable HTTP) for agents that prefer the MCP protocol. It exposes the same data through tool calls:
-
-```json
-{
-  "mcpServers": {
-    "taste-bank": {
-      "url": "https://tastebank.cloud/mcp",
-      "headers": { "x-invite-code": "sl_your_invite_code" }
-    }
-  }
-}
-```
-
-The CLI is the recommended path (simpler, no per-agent config, works with 70+ agents out of the box). MCP is kept for backward compatibility — both paths call the same backend.
 
 ---
 
