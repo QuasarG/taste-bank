@@ -129,8 +129,21 @@ export async function ensureIdentity(opts = {}) {
     if (hasCode) {
       const code = await text('输入邀请码（sl_ 开头）：', { placeholder: 'sl_xxx' });
       if (code && code.startsWith('sl_')) {
-        writeInviteCode(code.trim());
-        await logOk('邀请码已保存');
+        // 联网验证
+        const { whoami, ApiError } = await import('./api.mjs');
+        const { spin } = await import('./ui.mjs');
+        try {
+          await spin('验证邀请码...', async () => { await whoami(code.trim()); });
+          writeInviteCode(code.trim());
+          await logOk('邀请码已验证并保存');
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 403) {
+            await logWarn('邀请码无效或已被其他身份绑定，未保存');
+          } else {
+            await logWarn(`无法验证（${e.message}），仍已保存`);
+            writeInviteCode(code.trim());
+          }
+        }
       } else if (code) {
         await logWarn('邀请码应以 sl_ 开头，未保存。请检查后重试。');
       }
