@@ -71,6 +71,11 @@ const liveStyles = listStyles().map((slug) => {
           </div>
         ))}
       </div>
+
+      <h2 class="live-head">邀请码申请者</h2>
+      <button class="copy-btn" data-refresh-applicants>刷新</button>
+      <div class="applicants-list" data-applicants></div>
+      <p class="empty" data-applicants-empty hidden>暂无申请者。</p>
     </div>
   </div>
 </Base>
@@ -146,6 +151,16 @@ const liveStyles = listStyles().map((slug) => {
   .diff-summary { font-family: var(--shell-font-serif); font-style: italic; font-size: 0.82rem; color: var(--shell-muted); margin-bottom: 8px; }
   .diff-skill { max-height: 320px; overflow: auto; font-size: 0.72rem; }
   .diff-frame { height: 320px; }
+
+  /* 申请者列表 */
+  .applicants-list { margin-bottom: 32px; }
+  .applicant-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 12px 16px; }
+  .applicant-info { display: flex; flex-direction: column; gap: 2px; }
+  .applicant-info strong { font-size: 0.9rem; }
+  .applicant-date { font-size: 0.7rem; color: var(--shell-muted); }
+  .applicant-status { font-size: 0.68rem; padding: 1px 6px; border-radius: 2px; display: inline-block; width: fit-content; margin-top: 2px; }
+  .applicant-status.pending { background: rgba(255,200,0,0.15); color: #b8860b; }
+  .applicant-status.served { background: rgba(0,200,100,0.15); color: #2e8b57; }
 </style>
 
 <script>
@@ -180,6 +195,61 @@ const liveStyles = listStyles().map((slug) => {
     } catch {}
   }
 
+  // ===== 申请者管理 =====
+  const applicantsEl = $('[data-applicants]')!;
+  async function loadApplicants() {
+    try {
+      const res = await fetch('/api/admin/applicants.json');
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = data.applicants || [];
+      $('[data-applicants-empty]').hidden = list.length !== 0;
+      applicantsEl.innerHTML = list
+        .map((a: any) => {
+          const date = new Date(a.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+          const statusBadge = a.status === 'served'
+            ? `<span class="applicant-status served">已发放</span>`
+            : `<span class="applicant-status pending">待处理</span>`;
+          const actionBtn = a.status === 'served'
+            ? ''
+            : `<button class="copy-btn" data-act="send-invite" data-email="${esc(a.email)}">发放邀请码</button>`;
+          return `<div class="panel applicant-item">
+            <div class="applicant-info">
+              <strong>${esc(a.email)}</strong>
+              <span class="applicant-date">${date}</span>
+              ${statusBadge}
+            </div>
+            <div class="applicant-actions">${actionBtn}</div>
+          </div>`;
+        })
+        .join('');
+    } catch {}
+  }
+
+  async function sendInvite(email: string) {
+    const btn = applicantsEl.querySelector(`[data-email="${CSS.escape(email)}"]`);
+    if (btn) (btn as HTMLButtonElement).disabled = true;
+    try {
+      const res = await fetch(`/api/admin/applicants/${encodeURIComponent(email)}/send.json`, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        if (data.mailed) {
+          alert(`已发送邀请码到 ${email}`);
+        } else {
+          // 邮件未发（SMTP 未配），返回码让 admin 手动复制
+          alert(`邀请码已生成但邮件未发送（${data.mailReason || 'SMTP 未配置'}）。\n邀请码：${data.code}`);
+        }
+        loadApplicants(); // 刷新状态
+      } else {
+        alert(data.error || '发放失败');
+        if (btn) (btn as HTMLButtonElement).disabled = false;
+      }
+    } catch (e) {
+      alert('网络错误');
+      if (btn) (btn as HTMLButtonElement).disabled = false;
+    }
+  }
+
   async function probe() {
     const res = await fetch('/api/admin/pending.json');
     if (res.status === 403) {
@@ -194,6 +264,7 @@ const liveStyles = listStyles().map((slug) => {
     $('[data-logout]').hidden = false;
     render(await res.json());
     loadStats();
+    loadApplicants();
   }
 
   function render(data: any) {
@@ -359,6 +430,14 @@ const liveStyles = listStyles().map((slug) => {
   $('[data-refresh]').addEventListener('click', () => {
     detailCache.clear();
     probe();
+  });
+
+  $('[data-refresh-applicants]').addEventListener('click', () => loadApplicants());
+
+  applicantsEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-act="send-invite"]');
+    if (!btn) return;
+    sendInvite(btn.dataset.email || '');
   });
 
   $('[data-approve-all]').addEventListener('click', async () => {

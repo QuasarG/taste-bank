@@ -1,68 +1,127 @@
 ---
 import Base from '../layouts/Base.astro';
 import '../styles/pages.css';
+// About 页：一屏不滚动。CLI 突出（主区域），MCP 折叠（副区域），底部申请邀请码表单。
 ---
 
-<Base title="About" titleZh="关于" description="How Taste Bank turns visual references into reusable front-end systems." wide>
-  <main class="subpage about-page">
-    <div class="about-layout">
-      <header class="about-intro">
+<Base title="About" titleZh="关于" description="How to use Taste Bank with your coding agent.">
+  <main class="subpage about-page-compact">
+    <!-- 左：CLI 突出（主区域） -->
+    <section class="about-main">
+      <header class="about-intro-compact">
         <p class="eyebrow"><span data-ui-en>About Taste Bank</span><span data-ui-zh>关于 Taste Bank</span></p>
         <h1>
-          <span data-ui-en>Visual taste,<br /><em>made usable.</em></span>
-          <span class="cn-display" data-ui-zh>视觉品味，<br /><em>转化为系统。</em></span>
+          <span data-ui-en>Visual taste, made usable.</span>
+          <span data-ui-zh style="display:none">视觉品味，即刻可用。</span>
         </h1>
       </header>
-      <div class="about-content">
-        <p class="about-lead"><span data-ui-en>Taste Bank turns visual references into front-end directions that coding agents can actually apply.</span><span data-ui-zh>Taste Bank 将视觉参考转译为 coding agent 真正能够执行的前端方向。</span></p>
-        <div class="method-list">
-          <article>
-            <h2><span data-ui-en>Collect</span><span data-ui-zh>收集</span></h2>
-            <p><span data-ui-en>Start from a real interface with a distinct point of view, not an abstract mood board or a list of fashionable adjectives.</span><span data-ui-zh>从观点鲜明的真实界面出发，而不是抽象情绪板或流行形容词的堆叠。</span></p>
-          </article>
-          <article>
-            <h2><span data-ui-en>Translate</span><span data-ui-zh>转译</span></h2>
-            <p><span data-ui-en>Extract typography, spacing, color, motion, voice, and explicit constraints into a structured style pack.</span><span data-ui-zh>提取字体、间距、色彩、动效、语气和明确约束，整理为结构化风格包。</span></p>
-          </article>
-          <article>
-            <h2><span data-ui-en>Build</span><span data-ui-zh>构建</span></h2>
-            <p><span data-ui-en>Give the complete skill, tokens, and templates to a coding agent so the visual intent survives implementation.</span><span data-ui-zh>将完整的 skill、tokens 和 templates 交给 coding agent，让视觉意图完整进入实现。</span></p>
-          </article>
+
+      <div class="about-cli-block">
+        <p class="about-cli-label">
+          <span data-ui-en>One command sets you up:</span>
+          <span data-ui-zh style="display:none">一行命令完成配置：</span>
+        </p>
+        <pre class="about-cli-cmd">npx taste-bank setup</pre>
+        <p class="about-cli-desc">
+          <span data-ui-en>Installs the CLI globally and teaches your coding agent (Claude Code, Codex, Cursor, ZCode, Kimi Code…) how to browse and apply styles.</span>
+          <span data-ui-zh style="display:none">全局安装 CLI，并教会你的 coding agent 怎么浏览和取用风格。</span>
+        </p>
+        <div class="about-cli-commands">
+          <code>taste-bank list</code>
+          <code>taste-bank skill &lt;slug&gt;</code>
+          <code>taste-bank use &lt;slug&gt;</code>
+          <code>taste-bank submit &lt;pack&gt;</code>
         </div>
-        <section class="about-mcp">
-          <h2 class="about-mcp-title"><span data-ui-en>Plug it into your agent</span><span data-ui-zh>接入你的 Agent</span></h2>
-          <p class="about-mcp-lead"><span data-ui-en>No clone, no local Node — one URL in your MCP client config and your agent can browse, fetch, and apply every style in the bank.</span><span data-ui-zh>无需克隆仓库、无需本地 Node——在 MCP 客户端配置里加一条 URL，agent 就能浏览、取用、应用库里的每一套风格。</span></p>
-          <pre class="code about-mcp-config">{`{
+      </div>
+
+      <!-- MCP 折叠（副区域） -->
+      <details class="about-mcp-collapse">
+        <summary>
+          <span data-ui-en>Use via MCP instead (legacy)</span>
+          <span data-ui-zh style="display:none">改用 MCP（兼容方式）</span>
+        </summary>
+        <p class="about-mcp-note">
+          <span data-ui-en>For agents that prefer the MCP protocol, configure one URL:</span>
+          <span data-ui-zh style="display:none">偏好 MCP 协议的 agent，配置一条 URL：</span>
+        </p>
+        <pre class="about-mcp-config" set:html={`{
   "mcpServers": {
     "taste-bank": {
-      "url": "http://182.92.129.1:3100/mcp",
-      "headers": { "x-invite-code": "sl_你的邀请码" }
+      "url": "https://tastebank.cloud/mcp",
+      "headers": { "x-invite-code": "sl_your_invite_code" }
     }
   }
-}`}</pre>
-          <p class="about-mcp-note"><span data-ui-en>Browsing is open; submitting requires an invite code (ask the maintainer). Then just talk: "Build a landing page with the mono-console style from style-lab" — the agent lists styles, fetches the skill, and implements within the tokens.</span><span data-ui-zh>浏览无需邀请码，投稿才需要（向库主索取）。配好后直接说人话："用 style-lab 里的 mono-console 风格做个落地页"——agent 会自行挑风格、取 skill、按 tokens 实现。</span></p>
-          <div class="mcp-tools">
-            <article>
-              <h3><span data-ui-en>Browse</span><span data-ui-zh>浏览</span></h3>
-              <p><code>list_styles</code> · <code>get_style</code> · <code>get_style_css</code> · <code>get_style_file</code><br /><span data-ui-en>Survey the bank, read exact tokens, export scoped CSS, inspect templates.</span><span data-ui-zh>浏览全库、读取精确设计参数、导出 scoped CSS、查看模板快照。</span></p>
-            </article>
-            <article>
-              <h3><span data-ui-en>Apply</span><span data-ui-zh>取用</span></h3>
-              <p><code>get_style_skill</code><br /><span data-ui-en>Returns the assembled SKILL.md — hand it to any coding agent and it implements strictly within the style's tokens.</span><span data-ui-zh>返回组装好的 SKILL.md——交给任意 coding agent，即可让它严格按 tokens 实现该风格。</span></p>
-            </article>
-            <article>
-              <h3><span data-ui-en>Publish</span><span data-ui-zh>投稿</span></h3>
-              <p><code>submit_style</code> · <code>generate_keypair</code><br /><span data-ui-en>Submit your own style pack (invite code + ed25519 signature). It enters the review queue and goes live on approval.</span><span data-ui-zh>提交你自己的风格包（邀请码 + ed25519 签名）。先进入审核队列，库主通过后上架。</span></p>
-            </article>
-            <article>
-              <h3><span data-ui-en>Own &amp; iterate</span><span data-ui-zh>管理与迭代</span></h3>
-              <p><code>update_style</code> · <code>delete_style</code><br /><span data-ui-en>Your private key is your ownership. Bump the version to iterate, sign to delete — no account, no password.</span><span data-ui-zh>私钥即所有权。升版本号即可迭代，签名即可下架——没有账号，没有密码。</span></p>
-            </article>
-          </div>
-          <p class="about-mcp-note"><span data-ui-en>Agents can also call <code>get_usage_guide</code> to fetch the full workflow themselves.</span><span data-ui-zh>agent 也可以随时调 <code>get_usage_guide</code> 自取完整工作流说明。</span></p>
-        </section>
-        <p class="about-signoff"><span data-ui-en>Created and maintained by QuasarG.</span><span data-ui-zh>由 QuasarG 创建并维护。</span></p>
-      </div>
-    </div>
+}`}></pre>
+        <p class="about-mcp-note">
+          <span data-ui-en>Browsing needs no invite code; submitting requires one. Both CLI and MCP call the same backend.</span>
+          <span data-ui-zh style="display:none">浏览无需邀请码；投稿需要。CLI 与 MCP 调用同一套后端。</span>
+        </p>
+      </details>
+    </section>
+
+    <!-- 右：申请邀请码表单 -->
+    <aside class="about-apply">
+      <h2>
+        <span data-ui-en>Need an invite code?</span>
+        <span data-ui-zh style="display:none">需要邀请码？</span>
+      </h2>
+      <p class="about-apply-desc">
+        <span data-ui-en>Submitting a style requires an invite code. Leave your email and we'll send one to you.</span>
+        <span data-ui-zh style="display:none">投稿风格需要邀请码。留下邮箱，我们会发送给你。</span>
+      </p>
+      <form id="apply-form" class="about-apply-form">
+        <input type="email" id="apply-email" placeholder="you@example.com" required />
+        <button type="submit">
+          <span data-ui-en>Request invite</span>
+          <span data-ui-zh style="display:none">申请邀请码</span>
+        </button>
+      </form>
+      <p class="about-apply-status" id="apply-status"></p>
+      <p class="about-signoff">
+        <span data-ui-en>Created and maintained by </span>
+        <span data-ui-zh style="display:none">由 </span>
+        <a href="https://github.com/QuasarG">QuasarG</a>
+        <span data-ui-zh style="display:none"> 创建与维护</span>
+      </p>
+    </aside>
   </main>
+
+  <script is:inline>
+    (function () {
+      const form = document.getElementById('apply-form');
+      const emailInput = document.getElementById('apply-email');
+      const status = document.getElementById('apply-status');
+      if (!form) return;
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        if (!email) return;
+        const btn = form.querySelector('button');
+        if (btn) btn.disabled = true;
+        status.textContent = '';
+        status.className = 'about-apply-status';
+        try {
+          const resp = await fetch('/api/apply-invite.json', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const data = await resp.json();
+          if (resp.ok) {
+            status.textContent = data.message || 'Application received.';
+            status.classList.add('ok');
+            emailInput.value = '';
+          } else {
+            status.textContent = data.error || 'Something went wrong.';
+            status.classList.add('err');
+          }
+        } catch {
+          status.textContent = 'Network error. Please try again.';
+          status.classList.add('err');
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+    })();
+  </script>
 </Base>

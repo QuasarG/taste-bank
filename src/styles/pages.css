@@ -216,3 +216,124 @@ html[lang="zh-CN"] .contact-page-top h1 { font-size: 4.5rem; line-height: .98; t
   .contact-page-foot { grid-template-columns: 1fr; gap: 7px; }
   .contact-page-foot span:nth-child(2), .contact-page-foot span:last-child { text-align: left; }
 }
+
+/* ===== About 紧凑版（一屏不滚动） ===== */
+.about-page-compact {
+  min-height: calc(100dvh - 66px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  gap: 5vw;
+  padding: 60px 4vw 40px;
+  background: var(--accent-soft);
+  align-items: start;
+}
+.about-intro-compact h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 4vw, 3.8rem);
+  line-height: 0.92;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0 0 24px;
+}
+html[lang="zh-CN"] .about-intro-compact h1 { font-size: clamp(2.2rem, 3.5vw, 3rem); text-transform: none; }
+.about-intro-compact .eyebrow { margin-bottom: 16px; }
+
+/* CLI 主区域 */
+.about-cli-block {
+  margin-bottom: 28px;
+}
+.about-cli-label { font-size: 0.85rem; color: var(--muted); margin: 0 0 8px; }
+.about-cli-cmd {
+  font-family: var(--font-display), monospace;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  background: var(--ink);
+  color: var(--surface);
+  padding: 16px 24px;
+  border-radius: 4px;
+  margin: 0 0 12px;
+  overflow-x: auto;
+}
+.about-cli-desc { font-size: 0.82rem; color: var(--muted); margin: 0 0 16px; max-width: 50ch; line-height: 1.5; }
+.about-cli-commands { display: flex; flex-wrap: wrap; gap: 8px; }
+.about-cli-commands code {
+  font-size: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 2px;
+  color: var(--accent);
+}
+
+/* MCP 折叠 */
+.about-mcp-collapse {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 8px;
+}
+.about-mcp-collapse summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.about-mcp-collapse summary:hover { color: var(--accent); }
+.about-mcp-config {
+  font-size: 0.72rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 12px 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.about-mcp-note { font-size: 0.78rem; color: var(--muted); margin: 8px 0; line-height: 1.5; }
+
+/* 申请邀请码侧栏 */
+.about-apply {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 32px 28px;
+  border-radius: 4px;
+  position: sticky;
+  top: 80px;
+}
+.about-apply h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+html[lang="zh-CN"] .about-apply h2 { text-transform: none; }
+.about-apply-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0 0 20px; }
+.about-apply-form { display: flex; flex-direction: column; gap: 10px; }
+.about-apply-form input {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 0.88rem;
+  background: var(--bg);
+  color: var(--ink);
+}
+.about-apply-form input:focus { outline: none; border-color: var(--accent); }
+.about-apply-form button {
+  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: 2px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.about-apply-form button:hover { opacity: 0.88; }
+.about-apply-form button:disabled { opacity: 0.5; cursor: wait; }
+.about-apply-status { font-size: 0.8rem; margin: 8px 0 0; min-height: 1.2em; }
+.about-apply-status.ok { color: var(--accent); }
+.about-apply-status.err { color: #c0392b; }
+
+/* 移动端：两栏变一栏 */
+@media (max-width: 768px) {
+  .about-page-compact { grid-template-columns: 1fr; gap: 30px; padding: 40px 20px; }
+  .about-apply { position: static; }
+}
