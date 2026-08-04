@@ -7,13 +7,9 @@ import { printLogo, intro, outro, spin, logOk, logErr, logInfo, logWarn, logStep
 import { getI18n } from './lib/i18n.mjs';
 
 const PKG = 'taste-bank';
-// 两个 skill：消费侧（taste-bank）+ 投稿侧（taste-bank-contribute），分别装。
-// 指向 skills/ 子目录：仓库根有 MCP 用的 SKILL.md 会 short-circuit，
-// 必须明确指向子目录，skills 才会读我们 CLI 用的 SKILL.md
-const SKILLS_SOURCES = [
-  'https://github.com/QuasarG/taste-bank/tree/main/skills/taste-bank',
-  'https://github.com/QuasarG/taste-bank/tree/main/skills/taste-bank-contribute',
-];
+// 两个 skill（消费 + 投稿）都在 skills/ 子目录，skills 工具从 repo 根递归发现。
+// 仓库根已无 SKILL.md（挪到 docs/mcp-usage-guide.md），不会 short-circuit。
+const SKILLS_SOURCE = 'QuasarG/taste-bank';
 
 export async function runSetup(args) {
   const lang = parseLangArg(args) || (isTTY ? null : 'en');
@@ -80,32 +76,26 @@ async function stepInstallSkills(t) {
     return;
   }
 
-  // skills add 对部分不支持 global 的 agent（如 PromptScript）会返回非零退出码，
-  // 即使主目标 agent 都已成功注入。所以不能靠 exit code 判断成败——
-  // 跑完后实际验证 skill 是否在已装列表里。
-  //
-  // 交互策略：TTY 时去掉 skills 的 -y，让它走原生 agent 选择 UI（用户可挑装到哪些 agent）；
-  // 非 TTY 时用 -y --all 全自动（CI/脚本场景，不能弹交互）。
-  for (const source of SKILLS_SOURCES) {
-    const skillsArgs = isTTY
-      ? ['-y', 'skills', 'add', source, '-g']
-      : ['-y', 'skills', 'add', source, '-y', '-g', '--all'];
-    try {
-      if (isTTY) {
-        logInfo(t('step2Spinner') + ` (${source.split('/').pop()})`);
-        run('npx', skillsArgs);
-      } else {
-        await spin(t('step2Spinner'), async () => {
-          try {
-            await runSilent('npx', skillsArgs, { timeout: 180000 });
-          } catch {
-            // exit code 非 0 不一定是真失败（见上注释），交给下面验证判定
-          }
-        });
-      }
-    } catch {
-      // spin 包装的错误也不致命，继续下一个源
+  // 一次 add 整个 repo，skills 工具递归发现 skills/ 下的两个 skill（消费 + 投稿）。
+  // TTY 时去掉 -y，让 skills 走原生 agent 选择 UI；非 TTY 全自动。
+  const skillsArgs = isTTY
+    ? ['-y', 'skills', 'add', SKILLS_SOURCE, '-g']
+    : ['-y', 'skills', 'add', SKILLS_SOURCE, '-y', '-g', '--all'];
+  try {
+    if (isTTY) {
+      logInfo(t('step2Spinner'));
+      run('npx', skillsArgs);
+    } else {
+      await spin(t('step2Spinner'), async () => {
+        try {
+          await runSilent('npx', skillsArgs, { timeout: 180000 });
+        } catch {
+          // exit code 非 0 不一定是真失败，交给下面验证判定
+        }
+      });
     }
+  } catch {
+    // 不致命，继续验证
   }
 
   if (await skillsInstalledOk()) {

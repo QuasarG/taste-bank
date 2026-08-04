@@ -9,7 +9,7 @@ import { generateKeypair } from '../src/lib/auth';
 import { incrementUsage } from '../src/lib/usage';
 import { whoami } from '../src/lib/whoami';
 
-const USAGE_PATH = fileURLToPath(new URL('../SKILL.md', import.meta.url));
+const USAGE_PATH = fileURLToPath(new URL('../docs/mcp-usage-guide.md', import.meta.url));
 
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] });
 const fail = (e: unknown) => ({ content: [{ type: 'text' as const, text: String(e) }], isError: true });
