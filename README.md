@@ -146,7 +146,7 @@ taste-bank submit my-style.pack.json      # sign + submit (enters review queue)
 
 Or just tell your agent: *"submit this project's style to taste-bank"* — the injected `taste-bank-contribute` skill guides it through the full SOP (sample 2 files max, extract real tokens, sanitize business-identifying content, pack, validate, submit).
 
-See the [pack format](docs/SPEC.md) and the `taste-bank-contribute` skill for the complete contribution guide.
+See the [pack format](docs/SPEC.md), the `taste-bank-contribute` skill, and the **[agent workflow guide](docs/agent-workflow.md)** (how to manage project styles in agent conversations).
 
 ---
 
