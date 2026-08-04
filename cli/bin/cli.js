@@ -31,6 +31,7 @@ const COMMANDS = {
   use: () => import('../src/commands/use.mjs').then((m) => m.cmdUse(rest)),
   // v0.2 投稿侧
   keygen: () => import('../src/commands/keygen.mjs').then((m) => m.cmdKeygen(rest)),
+  config: () => import('../src/commands/config.mjs').then((m) => m.cmdConfig(rest)),
   whoami: () => import('../src/commands/whoami.mjs').then((m) => m.cmdWhoami(rest)),
   validate: () => import('../src/commands/validate.mjs').then((m) => m.cmdValidate(rest)),
   submit: () => import('../src/commands/submit.mjs').then((m) => m.cmdSubmit(rest)),
@@ -80,7 +81,8 @@ function printHelp() {
     '    taste-bank favorites              列收藏',
     '',
     '  投稿：',
-    '    taste-bank keygen                 生成 ed25519 密钥对（投稿身份）',
+    '    taste-bank keygen                 生成密钥对 + 绑定作者名（一次性）',
+    '    taste-bank config [show|invite|author]  配置/查看投稿身份',
     '    taste-bank whoami                 查身份 + 名下风格 + 待审',
     '    taste-bank validate <pack.json>   干跑校验 pack（不发送）',
     '    taste-bank submit <pack.json>     投稿新风格（需邀请码 + 私钥）',

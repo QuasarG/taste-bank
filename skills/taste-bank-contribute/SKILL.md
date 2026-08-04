@@ -15,13 +15,13 @@ description: "How to distill a frontend style from an existing project and submi
 首次投稿前需要一次性身份配置：
 
 ```bash
-taste-bank keygen                    # 生成 ed25519 密钥对到 ~/.style-lab/
-# 然后在 ~/.style-lab/config.json 配置邀请码：
-#   { "inviteCode": "sl_xxx" }
-# （可选）在 ~/.style-lab/author 写作者名，~/.style-lab/author_url 写主页
+taste-bank keygen                    # 生成密钥对 + 绑定作者名（一次性）
+taste-bank config invite sl_xxx      # 配置邀请码（向库主索取）
+# 或交互式配置：taste-bank config
 ```
 
 验证身份：`taste-bank whoami`（显示绑定的作者名、名下风格、审核队列状态）。
+体检：`taste-bank config show` 或 `taste-bank doctor`。
 
 ## 安全须知（先读这个）
 
@@ -53,10 +53,11 @@ taste-bank keygen                    # 生成 ed25519 密钥对到 ~/.style-lab/
 
 ### Phase 0 前置检查（缺一止步，先补齐再继续）
 
-1. **钥匙**：读 `~/.style-lab/private.key`——存在即用；不存在运行 `taste-bank keygen`
-2. **名字**：读 `~/.style-lab/author`——存在即用；不存在先问用户，投稿后写入
+1. **钥匙**：运行 `taste-bank config show` 检查——有 keypair 就用；
+   不存在才调 `taste-bank keygen`（会同时绑定作者名，生成后立即提醒用户备份）
+2. **名字**：keygen 时已绑定；如需查看运行 `taste-bank config show`
 3. **slug**：小写字母数字连字符；先 `taste-bank list --q <slug>` 确认不重名
-4. **邀请码**：读 `~/.style-lab/config.json` 的 `inviteCode`——没有让用户配置
+4. **邀请码**：运行 `taste-bank config show` 检查——没有则 `taste-bank config invite <sl_xxx>`
 
 ### Phase 1 采样（上限 2 个文件，禁止全项目漫游）
 
@@ -148,7 +149,8 @@ taste-bank delete <slug>
 
 | 命令 | 用途 |
 |---|---|
-| `taste-bank keygen` | 生成 ed25519 密钥对（一次性） |
+| `taste-bank keygen` | 生成密钥对 + 绑定作者名（一次性） |
+| `taste-bank config [show\|invite\|author]` | 配置/查看投稿身份 |
 | `taste-bank whoami` | 查身份 + 名下风格 + 审核队列 |
 | `taste-bank validate <pack.json>` | 干跑校验（不联网、不签名） |
 | `taste-bank submit <pack.json>` | 投稿（自动签名 + 发送，需邀请码 + 私钥） |

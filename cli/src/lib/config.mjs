@@ -116,3 +116,59 @@ export function recordSubmission(entry) {
 function ensureDir() {
   if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }
+
+// ---------- v0.3：身份写入 helpers + key 校验 ----------
+
+/** 通用安全写入纯文本（确保目录存在） */
+export function writeText(file, content, { mode } = {}) {
+  ensureDir();
+  const opts = mode ? { mode } : {};
+  fs.writeFileSync(file, content + (content.endsWith('\n') ? '' : '\n'), { ...opts, encoding: 'utf8' });
+}
+
+/** 写作者名 */
+export function writeAuthor(name) {
+  writeText(FILES.author, name);
+}
+
+/** 写作者主页 */
+export function writeAuthorUrl(url) {
+  writeText(FILES.authorUrl, url);
+}
+
+/** 写 config.json（合并写入，不覆盖其他字段） */
+export function writeConfig(patch) {
+  const current = readConfig();
+  const next = { ...current, ...patch };
+  ensureDir();
+  fs.writeFileSync(FILES.config, JSON.stringify(next, null, 2) + '\n', 'utf8');
+}
+
+/** 写邀请码到 config.json */
+export function writeInviteCode(code) {
+  writeConfig({ inviteCode: code });
+}
+
+/** 检查密钥对是否成对且完整 */
+export function keyPairStatus() {
+  const hasPriv = fs.existsSync(FILES.privateKey);
+  const hasPub = fs.existsSync(FILES.publicKey);
+  let privValid = false;
+  let pubValid = false;
+  if (hasPriv) {
+    const content = readText(FILES.privateKey);
+    privValid = !!(content && content.length > 30 && /^[A-Za-z0-9+/=]+$/.test(content));
+  }
+  if (hasPub) {
+    const content = readText(FILES.publicKey);
+    pubValid = !!(content && content.length > 30 && /^[A-Za-z0-9+/=]+$/.test(content));
+  }
+  return {
+    hasPrivateKey: hasPriv,
+    hasPublicKey: hasPub,
+    privateKeyValid: privValid,
+    publicKeyValid: pubValid,
+    complete: hasPriv && hasPub && privValid && pubValid,
+    orphaned: (!hasPriv && hasPub) || (hasPriv && !hasPub), // 只有一个
+  };
+}

@@ -196,17 +196,26 @@ export async function logStep(msg) {
   p.log.step(msg);
 }
 
-// ---------- 确认/选择（仅 TTY；非 TTY 直接返回默认值，不打断管道）----------
+// ---------- 确认/选择/文本输入（仅 TTY；非 TTY 返回默认值，不打断管道）----------
 export async function confirm(message, { defaultValue = true } = {}) {
   if (!isTTY) return defaultValue;
   const p = await getClack();
-  return p.confirm({ message, initialValue: defaultValue });
+  const v = await p.confirm({ message, initialValue: defaultValue });
+  return p.isCancel(v) ? defaultValue : v;
 }
 
 export async function select(message, options) {
   if (!isTTY) return options[0]?.value;
   const p = await getClack();
-  return p.select({ message, options });
+  const v = await p.select({ message, options });
+  return p.isCancel(v) ? options[0]?.value : v;
+}
+
+export async function text(message, { defaultValue = '', placeholder = '' } = {}) {
+  if (!isTTY) return defaultValue;
+  const p = await getClack();
+  const v = await p.text({ message, defaultValue, placeholder });
+  return p.isCancel(v) ? defaultValue : (v || defaultValue);
 }
 
 export { c, icon, isTTY, NO_COLOR };

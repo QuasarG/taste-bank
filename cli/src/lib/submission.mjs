@@ -25,12 +25,20 @@ export function resolveIdentity(opts = {}) {
     throw new Error('未找到私钥。运行 taste-bank keygen 生成密钥对。');
   }
   const publicKey = readText(FILES.publicKey);
-  const author = readText(FILES.author) || 'anonymous';
+  const authorFile = readText(FILES.author);
+  const author = authorFile || 'anonymous';
   const inviteCode = readConfig().inviteCode;
   if (opts.needInvite && !inviteCode) {
-    throw new Error('未配置邀请码。在 ~/.style-lab/config.json 设置 { "inviteCode": "sl_xxx" }');
+    throw new Error('未配置邀请码。运行 taste-bank config invite <sl_xxx> 设置。');
   }
-  return { privateKey, publicKey, author, authorUrl: readText(FILES.authorUrl), inviteCode };
+  return {
+    privateKey,
+    publicKey,
+    author,
+    authorUrl: readText(FILES.authorUrl),
+    inviteCode,
+    authorMissing: !authorFile, // 让调用方决定是否警告
+  };
 }
 
 /**
@@ -57,6 +65,7 @@ export async function doSubmit(packFile) {
   const fullPack = injectIdentity(pack, id);
   const result = await submitStyle(fullPack, { inviteCode: id.inviteCode, privateKey: id.privateKey });
   recordSubmission({ slug: result.slug, version: pack.meta.version });
+  return { ...result, authorMissing: id.authorMissing };
   return result;
 }
 

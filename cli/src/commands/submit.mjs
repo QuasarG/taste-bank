@@ -1,6 +1,6 @@
 // taste-bank submit <pack.json>
 import { doSubmit } from '../lib/submission.mjs';
-import { logOk, logErr, c } from '../lib/ui.mjs';
+import { logOk, logErr, logWarn, c } from '../lib/ui.mjs';
 
 export async function cmdSubmit(args) {
   const file = args.find((a) => !a.startsWith('-'));
@@ -10,6 +10,9 @@ export async function cmdSubmit(args) {
   }
   try {
     const result = await doSubmit(file);
+    if (result.authorMissing) {
+      await logWarn('未配置作者名，使用了 anonymous。运行 taste-bank config author <名字> 设置。');
+    }
     await logOk(`投稿成功 → ${c.cyan(result.slug)}（进入审核队列）`);
     // 核对 payloadHash：本地（实际发送的 raw）vs 服务端收到
     const local = result.localPayloadHash;

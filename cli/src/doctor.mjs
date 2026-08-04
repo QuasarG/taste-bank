@@ -1,6 +1,6 @@
 // doctor：只读体检——CLI/网络/身份/skill 注入健康度
 import { ping } from './lib/api.mjs';
-import { detectIdentity, readFavorites, readSubmissions } from './lib/config.mjs';
+import { readFavorites, readSubmissions } from './lib/config.mjs';
 import { cacheHealth } from './lib/cache.mjs';
 import { readProjectUsage } from './lib/project.mjs';
 import { meetsSkillsNodeRequirement, nodeVersion, runSyncSilent, runSilent } from './lib/platform.mjs';
@@ -33,17 +33,14 @@ export async function runDoctor(args) {
   if (netOk) logOk(t('doctorNetwork') + ': ' + t('networkOk'));
   else logErr(t('doctorNetwork') + ': ' + t('networkFail', ''));
 
-  // 4. 身份
-  const id = detectIdentity();
-  if (id.hasDir) {
-    const bits = [];
-    if (id.author) bits.push(`author=${id.author}`);
-    if (id.hasPrivateKey) bits.push('private.key');
-    if (id.hasPublicKey) bits.push('public.key');
-    if (id.hasConfig) bits.push('config.json');
-    logInfo(`${t('doctorIdentity')}: ${c.gray('~/.style-lab/')} ${bits.length ? c.gray('(' + bits.join(', ') + ')') : c.gray('(目录存在，无身份文件)')}`);
-  } else {
-    logInfo(`${t('doctorIdentity')}: ${c.gray('无 ~/.style-lab/（消费端不需要）')}`);
+  // 4. 身份（用共享逻辑：结构化状态 + 缺项提示）
+  const { identityStatus, formatIdentityReport } = await import('./lib/identity.mjs');
+  const idStatus = identityStatus();
+  for (const line of formatIdentityReport(idStatus).split('\n')) {
+    logInfo(line);
+  }
+  if (!idStatus.canSubmit && idStatus.missing.length > 0) {
+    logInfo(c.gray('  → 运行 taste-bank config 补全投稿身份'));
   }
 
   // 5. skill 注入（两个：消费 + 投稿）

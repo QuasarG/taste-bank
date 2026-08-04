@@ -1,7 +1,6 @@
 // setup 向导：三步（全局装 CLI → 注入 skill → 环境检测）
 // 对标 @larksuite/cli 的 install-wizard.js，但无 native binary、无鉴权
 import { runSilent, runSyncSilent, run, meetsSkillsNodeRequirement, nodeVersion } from './lib/platform.mjs';
-import { detectIdentity } from './lib/config.mjs';
 import { ping } from './lib/api.mjs';
 import { printLogo, intro, outro, spin, logOk, logErr, logInfo, logWarn, logStep, c, isTTY } from './lib/ui.mjs';
 import { getI18n } from './lib/i18n.mjs';
@@ -110,33 +109,32 @@ async function stepInstallSkills(t) {
 async function stepEnvReport(t) {
   if (isTTY) logStep(t('step3Name'));
 
-  const identity = detectIdentity();
   const netOk = await ping();
 
   // 网络
   if (netOk) await logInfo(t('networkOk'));
   else await logWarn(t('networkFail', ''));
 
-  // 身份（分级报告：消费端不需要身份；投稿需要 key + 邀请码）
-  if (identity.hasDir || identity.hasPrivateKey) {
-    const parts = [];
-    if (identity.author) parts.push(`author=${identity.author}`);
-    parts.push(identity.hasPrivateKey ? 'private.key ✓' : 'private.key ✗');
-    parts.push(identity.hasPublicKey ? 'public.key ✓' : 'public.key ✗');
-    parts.push(identity.config.inviteCode ? 'inviteCode ✓' : 'inviteCode ✗');
+  // 身份（用共享逻辑：检测 + TTY 时交互补全）
+  const { identityStatus, ensureIdentity } = await import('./lib/identity.mjs');
+  let idStatus = identityStatus();
 
-    const canConsume = true; // 消费不需要任何身份
-    const canSubmit = !!(identity.hasPrivateKey && identity.config.inviteCode);
-
-    if (canSubmit) {
-      await logInfo(`身份：${c.green('投稿就绪')} ${c.gray('(' + parts.join(', ') + ')')}`);
-    } else if (identity.hasPrivateKey) {
-      await logInfo(`身份：${c.yellow('部分就绪')}（有私钥但缺邀请码，可消费不能投稿） ${c.gray(parts.join(', '))}`);
+  if (idStatus.canSubmit) {
+    await logInfo(`身份：${c.green('投稿就绪')}`);
+  } else if (idStatus.missing.length > 0) {
+    if (isTTY) {
+      // TTY：交互式补全
+      idStatus = await ensureIdentity({ interactive: true });
+      if (idStatus.canSubmit) {
+        await logInfo(`身份：${c.green('投稿就绪')}`);
+      } else {
+        await logInfo(`身份：${c.yellow('部分就绪')} ${c.gray('（运行 taste-bank config 补全）')}`);
+      }
     } else {
-      await logInfo(`身份：${c.yellow('未配置')}（消费不需要；投稿需运行 taste-bank keygen）`);
+      await logInfo(`身份：${c.yellow('投稿未就绪')} ${c.gray('（缺 ' + idStatus.missing.join(', ') + '；运行 taste-bank config 补全）')}`);
     }
   } else {
-    await logInfo('身份：' + c.gray('无（消费端不需要；投稿时运行 taste-bank keygen）'));
+    await logInfo('身份：' + c.gray('无（消费端不需要）'));
   }
 
   // skill 注入状态
