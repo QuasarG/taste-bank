@@ -38,9 +38,27 @@ export async function apiRequest(path, opts = {}) {
     return { ok: res.ok, status: res.status, text };
   } catch (e) {
     if (e.name === 'AbortError') {
-      throw new ApiError(`请求超时（${TIMEOUT_MS / 1000}s）：${url}`, { url });
+      throw new ApiError(`请求超时（${TIMEOUT_MS / 1000}s）——服务器可能不可达或响应过慢：${url}`, { url });
     }
-    throw new ApiError(`网络错误：${e.message}（${url}）`, { url });
+    // 区分错误类型，给出可操作的提示
+    const cause = e.cause;
+    let hint = '网络错误';
+    if (cause?.code === 'ENOTFOUND' || cause?.code === 'EAI_AGAIN') {
+      hint = 'DNS 解析失败——检查网络连接或 DNS 设置';
+    } else if (cause?.code === 'ECONNREFUSED') {
+      hint = '连接被拒绝——服务器端口未开放或防火墙拦截';
+    } else if (cause?.code === 'ECONNRESET') {
+      hint = '连接被重置——网络不稳定或中间代理拦截';
+    } else if (cause?.code === 'CERT_HAS_EXPIRED' || cause?.code === 'CERT_NOT_YET_VALID' || cause?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
+      hint = 'SSL 证书问题——服务器证书无效或已过期';
+    } else if (cause?.code === 'ECONNABORTED' || /timeout/i.test(String(cause?.message || ''))) {
+      hint = '连接超时——网络受限或服务器不可达';
+    } else if (e.message === 'fetch failed') {
+      hint = '网络不可达——可能是沙箱/防火墙限制，或服务器离线';
+    } else {
+      hint = e.message;
+    }
+    throw new ApiError(`${hint}（${url}）\n  如持续失败，检查网络或运行 taste-bank doctor 诊断`, { url, cause: cause?.code });
   } finally {
     clearTimeout(timer);
   }
