@@ -127,16 +127,26 @@ async function stepEnvReport(t) {
   if (netOk) await logInfo(t('networkOk'));
   else await logWarn(t('networkFail', ''));
 
-  // 身份
-  if (identity.hasDir) {
+  // 身份（分级报告：消费端不需要身份；投稿需要 key + 邀请码）
+  if (identity.hasDir || identity.hasPrivateKey) {
     const parts = [];
     if (identity.author) parts.push(`author=${identity.author}`);
-    if (identity.hasPrivateKey) parts.push('private.key ✓');
-    if (identity.hasConfig) parts.push('config.json ✓');
-    await logInfo(`身份：${identity.hasPrivateKey ? c.green('已配置投稿身份') : c.yellow('部分配置')} ${c.gray('(' + (parts.join(', ') || '无身份文件') + ')')}`);
-    await logInfo(c.gray('投稿功能已就绪：taste-bank keygen / submit / whoami'));
+    parts.push(identity.hasPrivateKey ? 'private.key ✓' : 'private.key ✗');
+    parts.push(identity.hasPublicKey ? 'public.key ✓' : 'public.key ✗');
+    parts.push(identity.config.inviteCode ? 'inviteCode ✓' : 'inviteCode ✗');
+
+    const canConsume = true; // 消费不需要任何身份
+    const canSubmit = !!(identity.hasPrivateKey && identity.config.inviteCode);
+
+    if (canSubmit) {
+      await logInfo(`身份：${c.green('投稿就绪')} ${c.gray('(' + parts.join(', ') + ')')}`);
+    } else if (identity.hasPrivateKey) {
+      await logInfo(`身份：${c.yellow('部分就绪')}（有私钥但缺邀请码，可消费不能投稿） ${c.gray(parts.join(', '))}`);
+    } else {
+      await logInfo(`身份：${c.yellow('未配置')}（消费不需要；投稿需运行 taste-bank keygen）`);
+    }
   } else {
-    await logInfo('身份：' + c.gray('无（消费端不需要；投稿时再引导）'));
+    await logInfo('身份：' + c.gray('无（消费端不需要；投稿时运行 taste-bank keygen）'));
   }
 
   // skill 注入状态
