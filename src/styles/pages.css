@@ -219,13 +219,21 @@ html[lang="zh-CN"] .contact-page-top h1 { font-size: 4.5rem; line-height: .98; t
 
 /* ===== About 紧凑版（一屏不滚动） ===== */
 .about-page-compact {
-  min-height: calc(100dvh - 66px);
+  height: calc(100dvh - 66px);
+  max-height: calc(100dvh - 66px);
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
-  gap: 5vw;
-  padding: 60px 4vw 40px;
+  gap: 4vw;
+  padding: 40px 4vw 24px;
   background: var(--accent-soft);
   align-items: start;
+}
+/* about 页的父容器也要锁定，禁止 body 滚动 */
+.wide-shell:has(.about-page-compact) {
+  height: calc(100dvh - 66px);
+  max-height: calc(100dvh - 66px);
+  overflow: hidden;
 }
 .about-intro-compact h1 {
   font-family: var(--font-display);
@@ -244,7 +252,7 @@ html[lang="zh-CN"] .about-intro-compact h1 { font-size: clamp(2.2rem, 3.5vw, 3re
 }
 .about-cli-label { font-size: 0.85rem; color: var(--muted); margin: 0 0 8px; }
 .about-cli-cmd {
-  font-family: var(--font-display), monospace;
+  font-family: 'SF Mono', 'Fira Code', var(--font-display), monospace;
   font-size: clamp(1.1rem, 2vw, 1.6rem);
   background: var(--ink);
   color: var(--surface);
@@ -253,6 +261,9 @@ html[lang="zh-CN"] .about-intro-compact h1 { font-size: clamp(2.2rem, 3.5vw, 3re
   margin: 0 0 12px;
   overflow-x: auto;
 }
+.about-cli-cmd .cmd-prompt { color: #6bcb77; margin-right: 4px; }
+.about-cli-cmd .cmd-cmd { color: #4dd2ff; font-weight: 600; }
+.about-cli-cmd .cmd-arg { color: #ffd93d; }
 .about-cli-desc { font-size: 0.82rem; color: var(--muted); margin: 0 0 16px; max-width: 50ch; line-height: 1.5; }
 .about-cli-commands { display: flex; flex-wrap: wrap; gap: 8px; }
 .about-cli-commands code {
