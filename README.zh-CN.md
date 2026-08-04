@@ -146,7 +146,7 @@ taste-bank submit my-style.pack.json      # 签名 + 投稿（进审核队列）
 
 或者直接对 agent 说："把这个项目的风格投递到 taste-bank"——注入的 `taste-bank-contribute` skill 会引导它走完整 SOP（最多采样 2 个文件、提取真实 tokens、脱敏业务痕迹、打包、校验、投稿）。
 
-完整 pack 格式见 [docs/SPEC.md](docs/SPEC.md)、`taste-bank-contribute` skill，以及 **[Agent 工作流指南](docs/agent-workflow.md)**（如何在 agent 对话中管理项目风格）。
+完整 pack 格式见 [docs/SPEC.md](docs/SPEC.md)、`taste-bank-contribute` skill，以及 **[Agent 工作流指南](docs/agent-workflow.zh-CN.md)**（如何在 agent 对话中管理项目风格）。English version: [agent-workflow.md](docs/agent-workflow.md).
 
 ---
 

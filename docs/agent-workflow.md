@@ -1,189 +1,189 @@
-# 在 Agent 对话中管理项目风格
+# Managing Project Styles in Agent Conversations
 
-> 前提：已运行 `npx taste-bank setup`（CLI 全局可用 + skill 已注入 agent）。
+> Prerequisite: you've run `npx taste-bank setup` (CLI installed globally + skill injected into your agent).
 
-本文档讲清楚四件事：给项目**选定**一套风格、**切换**风格、**投稿**当前项目的风格、以及**团队协作**时风格怎么共享。
+This guide covers four things: **picking** a style for a project, **switching** styles, **submitting** the current project's style, and **team collaboration** with shared style bindings.
 
 ---
 
-## 场景一：给新项目选一套风格
+## Scenario 1: Pick a style for a new project
 
-你刚开了个项目，想让 agent 按某个风格写前端。两种姿势：
+You just started a project and want the agent to write frontend in a certain style. Two approaches:
 
-### 姿势 A：在 agent 对话里直接说（推荐）
+### Approach A: Just ask in the agent conversation (recommended)
 
 ```
-你：我想给这个项目找个干净现代的风格，有什么推荐？
+You: I want a clean, modern style for this project. What do you recommend?
 ```
 
-agent 已经装了 `taste-bank` skill，它会：
+Your agent has the `taste-bank` skill installed. It will:
 
-1. 跑 `taste-bank list` 浏览风格，挑 2-3 个匹配你描述的给你看
-2. 你选定后，它跑 `taste-bank skill <slug>` 拿到**完整包**（规则 + tokens + CSS + 模板）
-3. 把包内容读进上下文，严格按里面的 tokens 实现代码
+1. Run `taste-bank list` to browse styles, pick 2-3 matching your description
+2. Once you choose, it runs `taste-bank skill <slug>` to fetch the **complete pack** (rules + tokens + CSS + template)
+3. Read the pack into its context, then implement strictly within the design tokens
 
-**全程你不用碰终端**——agent 自己调 CLI。
+**You never touch the terminal** — the agent calls the CLI itself.
 
-### 姿势 B：终端挑好，再让 agent 实现
+### Approach B: Pick in the terminal, then let the agent implement
 
 ```bash
-taste-bank list --q dashboard      # 浏览
-taste-bank show ai-slop-dashboard  # 看详情（含真实颜色色样）
+taste-bank list --q dashboard      # browse
+taste-bank show ai-slop-dashboard  # see detail (with real color swatches)
 ```
 
-挑好后，在 agent 对话里直接说：
+Once you've picked, tell the agent:
 
 ```
-你：用 taste-bank 里的 ai-slop-dashboard 风格做这个页面
+You: Use the ai-slop-dashboard style from taste-bank for this page
 ```
 
-agent 会调 `taste-bank skill ai-slop-dashboard` 拿完整包，然后实现。
+The agent runs `taste-bank skill ai-slop-dashboard` to get the full pack, then implements.
 
 ---
 
-## 场景二：把风格"钉"在项目里（持久化）
+## Scenario 2: Pin a style to the project (persist)
 
-上面两种姿势有个问题：**换一次 agent 会话，风格就忘了**——因为包只是临时进了上下文。如果你希望这个项目**长期绑定**一套风格，用 `use` 命令把它写进项目文件：
+The two approaches above share a problem: **switching agent sessions loses the style** — the pack only lives in temporary context. If you want a project to **long-term bind** to a style, use `use` to write it into a project file:
 
 ```bash
 taste-bank use ai-slop-dashboard
 ```
 
-这会在项目里创建 `.agents/skills/ai-slop-dashboard/SKILL.md`（默认）。之后**每次 agent 启动**都会自动读到这个文件，知道"这个项目用 ai-slop-dashboard 风格"。
+This creates `.agents/skills/ai-slop-dashboard/SKILL.md` (default). After this, **every agent session start** auto-reads this file — the agent knows "this project uses ai-slop-dashboard."
 
-### 三种落地位置（按你的 agent 选）
+### Three landing locations (pick based on your agent)
 
 ```bash
-taste-bank use <slug>                  # 默认：./.agents/skills/<slug>/SKILL.md（通用 skill 目录）
-taste-bank use <slug> --as agents      # 追加到 ./AGENTS.md（Codex 读这个）
-taste-bank use <slug> --as claude      # 写 ./.claude/commands/<slug>.md（Claude Code）
+taste-bank use <slug>                  # default: ./.agents/skills/<slug>/SKILL.md (universal skill dir)
+taste-bank use <slug> --as agents      # append to ./AGENTS.md (Codex reads this)
+taste-bank use <slug> --as claude      # write ./.claude/commands/<slug>.md (Claude Code)
 ```
 
-### 托管块机制（不会覆盖你的手写内容）
+### Managed block mechanism (won't clobber your edits)
 
-`use` 写入的内容用 sentinel 标记包裹：
+Content written by `use` is wrapped in sentinel markers:
 
 ```markdown
-<!-- BEGIN taste-bank:ai-slop-dashboard (v1.3.0) — 勿手改，运行 taste-bank use ai-slop-dashboard 更新 -->
-...风格规则 + tokens...
+<!-- BEGIN taste-bank:ai-slop-dashboard (v1.3.0) — do not hand-edit; run taste-bank use ai-slop-dashboard to update -->
+...style rules + tokens...
 <!-- END taste-bank:ai-slop-dashboard -->
 ```
 
-- **重跑 `use`**：只更新标记块内的内容，块外你手写的项目规则原样保留
-- **手动编辑了块内**：下次 `use` 会覆盖回去（所以别改块内，改风格就换一套）
-- **项目级记录**：`use` 同时写 `.style-lab/used.json`，记录"这个项目用了哪些风格、什么版本"——`taste-bank doctor` 能看到
+- **Re-run `use`**: only updates content inside the markers; your hand-written project rules outside the block stay untouched
+- **Manually edited inside the block**: next `use` overwrites it back (so don't edit inside the block — switch styles instead)
+- **Project-level record**: `use` also writes `.style-lab/used.json`, recording "which styles this project uses, at what version" — `taste-bank doctor` shows this
 
 ---
 
-## 场景三：切换风格
+## Scenario 3: Switch styles
 
-项目一开始用了 A 风格，现在想换成 B。两步：
+The project started with style A, now you want B. Two steps:
 
 ```bash
-# 1. 落地新风格（会在项目里新增一个 sentinel 块/文件）
+# 1. Land the new style (adds a new sentinel block/file to the project)
 taste-bank use <new-slug>
 
-# 2. （可选）清掉旧风格的痕迹
-# 如果旧的是 --as agents 模式，手动删 AGENTS.md 里旧的 BEGIN/END 块
-# 如果是独立文件模式（skill/claude），直接删那个文件
+# 2. (Optional) Clean up the old style's traces
+# If old one was --as agents mode, manually delete the old BEGIN/END block in AGENTS.md
+# If standalone file mode (skill/claude), just delete that file
 ```
 
-**一个项目可以同时绑多个风格**——`used.json` 是数组，能记多个。但实践上建议一个项目只绑一套，避免 agent 困惑。
+**A project can bind multiple styles at once** — `used.json` is an array. But in practice, stick to one per project to avoid confusing the agent.
 
 ---
 
-## 场景四：投稿当前项目的风格
+## Scenario 4: Submit the current project's style
 
-你有个项目的前端风格很棒，想沉淀成 pack 投到 taste-bank。**最省事的方式**是让 agent 走完整 SOP：
+You have a project with a great frontend style and want to distill it into a pack for taste-bank. **The easiest way** is to let the agent run the full SOP:
 
 ```
-你：把这个项目的风格投稿到 taste-bank
+You: Submit this project's style to taste-bank
 ```
 
-agent 装了 `taste-bank-contribute` skill，它会按 SOP 执行：
+The agent has the `taste-bank-contribute` skill. It will:
 
-1. **采样**（最多读 2 个文件：1 个主样式 + 1 个代表性页面）
-2. **提取真实 tokens**（颜色/字体/间距，只取项目里真实出现的值）
-3. **脱敏**（业务术语、产品名、域名全换成中性词——"旁观者猜不出原业务"为准）
-4. **打包**（meta + tokens + skill + templates，按 zod schema）
-5. **校验**（`taste-bank validate`）
-6. **投稿**（`taste-bank submit`，签名 + 发送，进审核队列）
+1. **Sample** (read at most 2 files: 1 main stylesheet + 1 representative page)
+2. **Extract real tokens** (colors/fonts/spacing — only values actually used in the project)
+3. **Sanitize** (business terms, product names, domains all replaced with neutral words — "a bystander shouldn't be able to guess the original business")
+4. **Pack** (meta + tokens + skill + templates, per zod schema)
+5. **Validate** (`taste-bank validate`)
+6. **Submit** (`taste-bank submit`, sign + send, enters review queue)
 
-全程你只需确认几个事：作者名、邀请码（首次）、模板脱敏是否满意。
+You only confirm a few things: author name, invite code (first time), whether the sanitized template looks good.
 
-### 手动投稿（想自己控制每一步）
+### Manual submission (if you want control over each step)
 
 ```bash
-# 1. 一次性身份配置
+# 1. One-time identity setup
 taste-bank keygen
 echo '{ "inviteCode": "sl_xxx" }' > ~/.style-lab/config.json
 
-# 2. 手写 pack.json（格式见 docs/SPEC.md 或 taste-bank-contribute skill）
-# 3. 校验
+# 2. Hand-write pack.json (format in docs/SPEC.md or the taste-bank-contribute skill)
+# 3. Validate
 taste-bank validate my-style.pack.json
 
-# 4. 投稿
+# 4. Submit
 taste-bank submit my-style.pack.json
 ```
 
-> 投稿后进入审核队列，库主 approve 后才上架。`taste-bank whoami` 可查状态。
+> After submitting, it enters the review queue and goes live only after the maintainer approves. Check status with `taste-bank whoami`.
 
 ---
 
-## 场景五：团队协作——共享风格绑定
+## Scenario 5: Team collaboration — shared style binding
 
-如果团队都用 taste-bank，最简单的协作方式是把 `use` 写的文件**提交进 git**：
+If your team all uses taste-bank, the simplest workflow is to **commit the `use`-written files into git**:
 
 ```bash
-taste-bank use ai-slop-dashboard --as agents   # 写进 AGENTS.md
+taste-bank use ai-slop-dashboard --as agents   # writes into AGENTS.md
 git add AGENTS.md .style-lab/used.json
-git commit -m "chore: 绑定 ai-slop-dashboard 风格"
+git commit -m "chore: bind ai-slop-dashboard style"
 ```
 
-这样队友 clone 仓库后，他们的 agent 启动时**自动读到** AGENTS.md 里的风格规则——不用每个人手动 `use`。
+Now when teammates clone the repo, their agents **automatically read** the style rules from AGENTS.md on startup — no one needs to manually `use`.
 
-> `.style-lab/used.json` 也建议提交——它记录了项目绑定的风格 + 版本，`taste-bank doctor` 能检测"线上版本更新了，该重新 `use` 了"。
+> `.style-lab/used.json` should also be committed — it records the project's bound style + version, and `taste-bank doctor` can detect "the live version has updated, time to re-`use`."
 
 ---
 
-## 常见问题
+## FAQ
 
-### Q：agent 会自己调 taste-bank，还是我得告诉它？
+### Q: Does the agent call taste-bank on its own, or do I have to tell it?
 
-**它会自己调**——前提是跑过 `setup`（skill 已注入）。agent 识别到"设计/风格"相关意图时，会主动跑 `taste-bank list` / `skill`。但第一次你可以显式说"用 taste-bank 里的 xxx 风格"，帮它建立关联。
+**It calls it on its own** — provided you've run `setup` (skill is injected). When the agent detects design/style-related intent, it proactively runs `taste-bank list` / `skill`. But the first time, you can explicitly say "use the xxx style from taste-bank" to help it make the association.
 
-### Q：风格更新了（线上版本升了），我项目里的是不是过期了？
+### Q: The style updated online (version bumped) — is my project's copy stale?
 
-可能。`taste-bank doctor` 会检测本地缓存的新鲜度（3 天 TTL）。要更新项目里钉死的版本，重跑：
+Possibly. `taste-bank doctor` checks local cache freshness (3-day TTL). To update the version pinned in your project, re-run:
 
 ```bash
-taste-bank use <slug>    # 会拉最新版本，覆盖 sentinel 块内内容
+taste-bank use <slug>    # fetches latest, overwrites sentinel block content
 ```
 
-### Q：离线时还能用吗？
+### Q: Does it work offline?
 
-- `taste-bank skill <slug>`：3 天内拉过的会走缓存；超 3 天或没拉过则需要网络
-- `taste-bank use`：需要网络（要拉最新包）
-- 已经 `use` 写进项目的文件：**永远离线可用**（内容已经在文件里了）
+- `taste-bank skill <slug>`: uses cache if fetched within 3 days; beyond 3 days or never fetched, needs network
+- `taste-bank use`: needs network (fetches latest pack)
+- Files already written into the project by `use`: **always work offline** (content is already in the file)
 
-### Q：一个项目能同时用多套风格吗？
+### Q: Can a project use multiple styles at once?
 
-技术上可以（`used.json` 支持多个），但**不建议**——agent 会困惑该遵循哪套 tokens。一个项目一套风格，想混搭就投稿一套新的混搭风格。
+Technically yes (`used.json` supports multiple), but **not recommended** — the agent gets confused about which tokens to follow. One style per project; if you want to mix, submit a new blended style.
 
-### Q：怎么知道 agent 真的按风格实现了？
+### Q: How do I verify the agent actually followed the style?
 
-让它实现完跑一下 `taste-bank show <slug>` 对照 tokens——颜色/字体/间距是否都取自包内定义。或者在对话里直接问："你用的颜色变量是不是都来自这套 tokens？"
+After implementation, have it check against `taste-bank show <slug>` — are the colors/fonts/spacing all from the pack's definitions? Or just ask in conversation: "Are all the color variables you used from this token set?"
 
 ---
 
-## 速查：日常对话里怎么说
+## Cheat sheet: what to say in daily conversations
 
-| 你想要的 | 对 agent 说 |
+| What you want | What to say |
 |---|---|
-| 选个风格 | "帮我从 taste-bank 找几个适合 dashboard 的风格" |
-| 用某套 | "用 taste-bank 的 ai-slop-dashboard 风格做这个页面" |
-| 钉到项目 | （终端）`taste-bank use <slug>` |
-| 换风格 | （终端）`taste-bank use <新slug>` + 删旧块 |
-| 投稿这个项目 | "把这个项目的风格投稿到 taste-bank" |
-| 查我投过什么 | （终端）`taste-bank whoami` |
-| 体检 | （终端）`taste-bank doctor` |
+| Pick a style | "Find me some dashboard-friendly styles from taste-bank" |
+| Use a specific one | "Use the ai-slop-dashboard style from taste-bank for this page" |
+| Pin to project | (terminal) `taste-bank use <slug>` |
+| Switch style | (terminal) `taste-bank use <new-slug>` + delete old block |
+| Submit this project | "Submit this project's style to taste-bank" |
+| Check what I've submitted | (terminal) `taste-bank whoami` |
+| Health check | (terminal) `taste-bank doctor` |
