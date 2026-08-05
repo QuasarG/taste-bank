@@ -251,6 +251,61 @@ html[lang="zh-CN"] .about-intro-compact h1 { font-size: clamp(2.2rem, 3.5vw, 3re
   margin-bottom: 28px;
 }
 .about-cli-label { font-size: 0.85rem; color: var(--muted); margin: 0 0 8px; }
+/* ===== Oh My Zsh 风格终端窗口 ===== */
+.terminal-window {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 4px 0 rgba(0,0,0,0.1);
+  margin: 0 0 16px;
+  border: 1px solid #2a2a3a;
+}
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #1e1e2e;
+  border-bottom: 1px solid #2a2a3a;
+}
+.terminal-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+}
+.terminal-dot-red { background: #ff5f57; }
+.terminal-dot-yellow { background: #febc2e; }
+.terminal-dot-green { background: #28c840; }
+.terminal-title {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  color: #6c6c80;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.terminal-body {
+  background: #1a1b26;
+  padding: 16px 20px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  font-size: clamp(0.95rem, 2vw, 1.3rem);
+  line-height: 1.8;
+}
+.terminal-line { white-space: nowrap; overflow-x: auto; }
+.terminal-output { color: #9aa5ce; font-size: 0.85em; padding-left: 20px; }
+.t-prompt { color: #28c840; font-weight: bold; margin-right: 6px; }
+.t-path { color: #7aa2f7; margin-right: 6px; }
+.t-cmd { color: #bb9af7; font-weight: 600; }
+.t-arg { color: #e0af68; }
+.t-success { color: #28c840; font-weight: bold; }
+.t-warn { color: #e0af68; }
+.t-dim { color: #565f89; }
+.t-cursor { animation: blink 1.2s steps(2) infinite; }
+.t-cursor-block {
+  display: inline-block;
+  width: 9px; height: 1.1em;
+  background: #bb9af7;
+  vertical-align: text-bottom;
+  animation: blink 1.2s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* 保留旧的 about-cli-cmd（向后兼容，但不再用于终端窗口） */
 .about-cli-cmd {
   font-family: 'SF Mono', 'Fira Code', var(--font-display), monospace;
   font-size: clamp(1.1rem, 2vw, 1.6rem);
