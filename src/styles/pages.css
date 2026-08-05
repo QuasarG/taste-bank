@@ -52,6 +52,17 @@ html[lang="zh-CN"] .cn-page-title[data-ui-zh] { display: inline-block !important
   width: 1600px; height: 900px; border: 0; background: #fff;
   transform: scale(var(--detail-scale, 1)); transform-origin: left top;
 }
+/* 风格间左右导航 */
+.preview-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 10; width: 40px; height: 56px; display: grid; place-items: center;
+  font-size: 1.8rem; line-height: 1; text-decoration: none; cursor: pointer;
+  background: rgba(0,0,0,0.45); color: #fff; backdrop-filter: blur(4px);
+  transition: background 0.2s; border: none;
+}
+.preview-nav:hover { background: rgba(0,0,0,0.7); }
+.preview-nav.prev { left: 0; border-radius: 0 8px 8px 0; }
+.preview-nav.next { right: 0; border-radius: 8px 0 0 8px; }
 .detail-side { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding-right: 4px; }
 .detail-card { margin-bottom: 0; padding: 20px; }
 .detail-name { font-family: var(--font-display); font-size: 1.9rem; line-height: .95; text-transform: uppercase; font-weight: 560; margin: 0 0 10px; }

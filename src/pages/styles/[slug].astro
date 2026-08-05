@@ -35,6 +35,18 @@ const templateFile = (() => {
   if (htmls.length === 0) return null;
   return (htmls.includes('templates/page.html') ? 'templates/page.html' : htmls[0]).replace('templates/', '');
 })();
+
+// 全部模板页（供左右切换）
+const templateFiles = pack
+  ? pack.files.filter((f) => f.startsWith('templates/') && f.endsWith('.html')).map((f) => f.replace('templates/', ''))
+  : [];
+const currentIdx = templateFiles.indexOf(templateFile || '');
+
+// 相邻风格（prev/next 导航）
+const allSlugs = listStyles();
+const slugIdx = allSlugs.indexOf(slug);
+const prevSlug = slugIdx > 0 ? allSlugs[slugIdx - 1] : allSlugs[allSlugs.length - 1];
+const nextSlug = slugIdx >= 0 && slugIdx < allSlugs.length - 1 ? allSlugs[slugIdx + 1] : allSlugs[0];
 ---
 
 <Base title={pack ? pack.meta.name : '风格不存在'} wide>
@@ -46,7 +58,9 @@ const templateFile = (() => {
         <div class="detail-preview">
           {templateFile && (
             <div class="detail-frame" data-detail-frame>
+              <a class="preview-nav prev" href={`/styles/${prevSlug}`} aria-label="上一个风格">‹</a>
               <iframe src={`/styles/${slug}/template.html?file=${templateFile}`} title={`${pack.meta.name} 模板预览`} sandbox="" />
+              <a class="preview-nav next" href={`/styles/${nextSlug}`} aria-label="下一个风格">›</a>
             </div>
           )}
         </div>
