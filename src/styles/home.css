@@ -90,7 +90,24 @@ html[lang="zh-CN"] .hero h1 em { font-family: var(--font-cn-display); font-weigh
 .wheel-details dt { color: #52737b; font-size: .62rem; letter-spacing: .11em; text-transform: uppercase; }
 .wheel-details dd { color: #294750; font-size: .76rem; }
 .ratio-tag { display: inline-block; margin-left: 8px; padding: 1px 5px; border: 1px solid #8ba9b0; color: #315d69; font-size: .58rem; }
-.wheel-actions { display: flex; align-items: center; gap: 28px; margin-top: 24px; }
+.wheel-actions { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+.wheel-actions .text-link-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: #fff; font-size: 0.82rem; font-weight: 600;
+  padding: 10px 20px; border-radius: 6px; text-decoration: none; border: none;
+  transition: opacity 0.2s;
+}
+.wheel-actions .text-link-primary:hover { opacity: 0.85; color: #fff; }
+.wheel-actions [data-copy-prompt] {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--muted); font-size: 0.82rem; font-weight: 500;
+  padding: 10px 20px; border-radius: 6px; border: 1px solid var(--line);
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+  border-bottom: 1px solid var(--line) !important;
+}
+.wheel-actions [data-copy-prompt]:hover {
+  color: var(--accent); border-color: var(--accent);
+}
 .wheel-mode.is-empty .wheel-info { justify-content: center; }
 .wheel-mode.is-empty .wheel-info > .eyebrow { position: absolute; top: 48px; }
 .wheel-empty-copy > span { display: block; margin-bottom: 28px; color: #7b999f; font-family: var(--font-display); font-size: 7rem; font-weight: 300; line-height: .8; }
