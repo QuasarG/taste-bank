@@ -1,0 +1,104 @@
+---
+import Base from '../layouts/Base.astro';
+import { findByAutoToken, markServed } from '../lib/applicants';
+import { createInvite } from '../lib/invites';
+import { sendMail } from '../lib/mail';
+import { inviteMail } from '../lib/mail-templates';
+import crypto from 'node:crypto';
+
+const email = Astro.url.searchParams.get('email')?.toLowerCase() || '';
+const token = Astro.url.searchParams.get('token') || '';
+
+let result: { ok: boolean; message: string; email?: string } = { ok: false, message: '' };
+
+if (!email || !token) {
+  result = { ok: false, message: '缺少参数' };
+} else {
+  const applicant = findByAutoToken(token);
+  if (!applicant || applicant.email !== email) {
+    result = { ok: false, message: '链接无效或已使用' };
+  } else {
+    try {
+      // 生成邀请码
+      const code = createInvite(email);
+      const inviteHash = crypto.createHash('sha256').update(code).digest('hex');
+      markServed(email, inviteHash);
+
+      // 发邮件（默认英文，因为不知道申请者当前语言——这里用 en）
+      const t = inviteMail.en;
+      const mailResult = await sendMail({
+        to: email,
+        subject: t.subject,
+        text: t.text(code),
+        html: t.html(code),
+      });
+
+      result = mailResult.ok
+        ? { ok: true, message: '邀请码已生成并发送', email }
+        : { ok: false, message: `邀请码已生成但邮件发送失败（${mailResult.reason}）`, email };
+    } catch (e) {
+      result = { ok: false, message: `出错：${e}` };
+    }
+  }
+}
+---
+
+<Base title="Auto Approve" description="One-click invite code approval">
+  <main class="auto-approve-page">
+    <div class="auto-approve-card">
+      {result.ok ? (
+        <>
+          <div class="auto-icon">✓</div>
+          <h1>邀请码已发送</h1>
+          <p>已自动生成邀请码并发送到 <strong>{result.email}</strong></p>
+        </>
+      ) : (
+        <>
+          <div class="auto-icon auto-icon-err">✗</div>
+          <h1>操作失败</h1>
+          <p>{result.message}</p>
+        </>
+      )}
+      <a href="/" class="auto-back">返回首页</a>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .auto-approve-page {
+    min-height: calc(100dvh - 66px);
+    display: grid;
+    place-items: center;
+    background: var(--accent-soft);
+    padding: 20px;
+  }
+  .auto-approve-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  }
+  .auto-icon {
+    width: 64px; height: 64px;
+    background: #28c840; color: #fff;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 2rem; margin: 0 auto 20px;
+  }
+  .auto-icon-err { background: #e74c3c; }
+  .auto-approve-card h1 {
+    font-size: 1.4rem; color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .auto-approve-card p {
+    color: var(--muted); font-size: 0.9rem; margin: 0 0 24px;
+  }
+  .auto-back {
+    display: inline-block; color: var(--accent);
+    text-decoration: none; font-size: 0.85rem;
+    border-bottom: 1px solid currentColor; padding-bottom: 2px;
+  }
+</style>

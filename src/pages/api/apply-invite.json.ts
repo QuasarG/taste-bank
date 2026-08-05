@@ -53,13 +53,26 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (created) {
       try {
-        const { notifyAdmin, sendMail } = await import('@lib/mail');
+        const { sendMail } = await import('@lib/mail');
         const t = confirmMail[lang];
-        // 1. 给管理员发提醒
-        await notifyAdmin(
-          '新的邀请码申请',
-          `邮箱：${email}\n时间：${applicant.createdAt}\n\n前往 https://tastebank.cloud/admin 处理。`,
-        );
+        const autoUrl = `https://tastebank.cloud/auto-approve?email=${encodeURIComponent(email)}&token=${applicant.autoToken}`;
+        // 1. 给管理员发提醒（带一键发放按钮）
+        await sendMail({
+          to: process.env.NOTIFY_TO || '',
+          subject: `[Taste Bank] 新的邀请码申请：${email}`,
+          text: `新的邀请码申请\n\n邮箱：${email}\n时间：${applicant.createdAt}\n\n一键发放：${autoUrl}\n（链接一次性有效，点击后自动生成邀请码并发送给申请人）\n\n或前往 https://tastebank.cloud/admin 手动处理。`,
+          html: `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#333;line-height:1.6">
+<h2 style="color:#126984;border-bottom:2px solid #126984;padding-bottom:8px">新的邀请码申请</h2>
+<table style="width:100%;margin:12px 0">
+<tr><td style="color:#999;width:60px">邮箱</td><td style="font-weight:bold">${email}</td></tr>
+<tr><td style="color:#999">时间</td><td>${applicant.createdAt}</td></tr>
+</table>
+<div style="text-align:center;margin:20px 0">
+<a href="${autoUrl}" style="display:inline-block;background:#126984;color:#fff;text-decoration:none;padding:12px 32px;border-radius:6px;font-weight:bold;font-size:1.05em">一键发放邀请码 →</a>
+</div>
+<p style="font-size:0.85em;color:#999;text-align:center">点击后自动生成邀请码并发送给申请人<br>链接一次性有效，或前往 <a href="https://tastebank.cloud/admin" style="color:#126984">admin 台</a> 手动处理</p>
+<hr style="border:none;border-top:1px solid #eee;margin:20px 0"><p style="color:#999;font-size:0.8em">— Taste Bank</p></div>`,
+        });
         // 2. 给申请者发确认邮件
         await sendMail({ to: email, subject: t.subject, text: t.text(''), html: t.html });
       } catch {

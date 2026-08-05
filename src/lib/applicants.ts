@@ -2,6 +2,7 @@
 // 用户在 About 页填邮箱 → 存 pending → admin 发放后标记 served
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { STYLES_DIR } from './store';
 
 const APPLICANTS_FILE = path.join(path.dirname(STYLES_DIR), 'data', 'applicants.json');
@@ -12,6 +13,7 @@ export interface Applicant {
   status: 'pending' | 'served';
   inviteHash?: string; // 发放后记录邀请码 hash
   servedAt?: string; // ISO
+  autoToken?: string; // 一次性自动发放 token
 }
 
 function readAll(): Applicant[] {
@@ -34,10 +36,21 @@ export function addApplicant(email: string): { created: boolean; applicant: Appl
   const list = readAll();
   const existing = list.find((a) => a.email === email);
   if (existing) return { created: false, applicant: existing };
-  const applicant: Applicant = { email, createdAt: new Date().toISOString(), status: 'pending' };
+  const applicant: Applicant = {
+    email,
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+    autoToken: crypto.randomBytes(24).toString('base64url'),
+  };
   list.push(applicant);
   writeAll(list);
   return { created: true, applicant };
+}
+
+/** 按 token 查找申请者（用于邮件一键发放） */
+export function findByAutoToken(token: string): Applicant | null {
+  const list = readAll();
+  return list.find((a) => a.autoToken === token && a.status === 'pending') ?? null;
 }
 
 /** 列全部申请者（admin 用） */
