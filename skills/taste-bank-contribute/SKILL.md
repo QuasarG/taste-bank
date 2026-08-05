@@ -16,7 +16,7 @@ description: "How to distill a frontend style from an existing project and submi
 
 ```bash
 taste-bank keygen                    # 生成密钥对 + 绑定作者名（一次性）
-taste-bank config invite sl_xxx      # 配置邀请码（向库主索取）
+taste-bank config invite sl_xxx      # 配置邀请码（在 tastebank.cloud/quick-start 申请）
 # 或交互式配置：taste-bank config
 ```
 
@@ -32,7 +32,7 @@ taste-bank config invite sl_xxx      # 配置邀请码（向库主索取）
 
 ## 管理自己的风格（身份纪律）
 
-1. **邀请码**：投稿需要邀请码（向库主索取），写在 `~/.style-lab/config.json` 的 `inviteCode`。
+1. **邀请码**：投稿需要邀请码（在 tastebank.cloud/quick-start 填邮箱申请），用 `taste-bank config invite <码>` 配置。
    邀请码与公钥一码一身份绑定（首次投稿时永久绑定）
 2. **钥匙**（**会话失忆是最大的坑**，严格按顺序来）：
    - **先查** `~/.style-lab/private.key`——存在就直接用，**绝不重复生成**
