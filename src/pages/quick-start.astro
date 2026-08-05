@@ -117,7 +117,7 @@ import '../styles/pages.css';
           const resp = await fetch('/api/apply-invite.json', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, lang: document.documentElement.lang === 'zh-CN' ? 'zh' : 'en' }),
           });
           const data = await resp.json();
           if (resp.ok) {
