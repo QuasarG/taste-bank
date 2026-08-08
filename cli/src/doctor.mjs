@@ -43,25 +43,27 @@ export async function runDoctor(args) {
     logInfo(c.gray('  → 运行 taste-bank config 补全投稿身份'));
   }
 
-  // 5. skill 注入（两个：消费 + 投稿）
-  try {
-    const raw = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 30000 });
-    const out = raw.replace(/\x1b\[[0-9;]*m/g, '');
-    const hasMain = /^taste-bank\b/m.test(out);
-    const hasContribute = /^taste-bank-contribute\b/m.test(out);
-    if (hasMain) {
-      logOk(`${t('doctorSkill')}: 已注入` + (hasContribute ? c.green('（消费 + 投稿）') : c.yellow('（仅消费，投稿 skill 未装）')));
-      // 提取 agents 行
+  // 5. skill 注入（双重检测：文件系统优先，skills ls 备选）
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const agentsDir = path.join(os.homedir(), '.agents', 'skills');
+  const hasMain = fs.existsSync(path.join(agentsDir, 'taste-bank', 'SKILL.md'));
+  const hasContribute = fs.existsSync(path.join(agentsDir, 'taste-bank-contribute', 'SKILL.md'));
+  if (hasMain) {
+    logOk(`${t('doctorSkill')}: 已注入` + (hasContribute ? c.green('（消费 + 投稿）') : c.yellow('（仅消费，投稿 skill 未装）')));
+    // 尝试从 skills ls 提取 agents 信息（可选，失败不崩）
+    try {
+      const raw = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 30000 });
+      const out = raw.replace(/\x1b\[[0-9;]*m/g, '');
       for (const line of out.split('\n')) {
         if (/^taste-bank/i.test(line) && /agents?:/i.test(line)) {
           logInfo(c.gray('  ' + line.trim()));
         }
       }
-    } else {
-      logWarn(`${t('doctorSkill')}: ${c.yellow('未注入')} ${c.gray('(运行 taste-bank setup)')}`);
-    }
-  } catch {
-    logWarn(`${t('doctorSkill')}: ${c.yellow('skills 工具未安装或不可用')}`);
+    } catch {}
+  } else {
+    logWarn(`${t('doctorSkill')}: ${c.yellow('未注入')} ${c.gray('(运行 taste-bank setup)')}`);
   }
 
   // 6. 缓存（v0.2）

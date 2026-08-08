@@ -76,6 +76,8 @@ async function stepInstallSkills(t) {
   }
 
   // 一次 add 整个 repo，skills 工具递归发现 skills/ 下的两个 skill（消费 + 投稿）。
+  // skills add 对部分不支持 global 的 agent（如 PromptScript）返回非零退出码，
+  // 即使主目标 agent 都已成功注入。所以不能靠 exit code 判断成败。
   // TTY 时去掉 -y，让 skills 走原生 agent 选择 UI；非 TTY 全自动。
   const skillsArgs = isTTY
     ? ['-y', 'skills', 'add', SKILLS_SOURCE, '-g']
@@ -83,7 +85,7 @@ async function stepInstallSkills(t) {
   try {
     if (isTTY) {
       logInfo(t('step2Spinner'));
-      run('npx', skillsArgs);
+      try { run('npx', skillsArgs); } catch { /* exit code 非 0 不一定是失败 */ }
     } else {
       await spin(t('step2Spinner'), async () => {
         try {
@@ -164,9 +166,20 @@ function getLatestVersion() {
 
 /** 检查两个 skill 是否都已注入。返回 { tasteBank, contribute } */
 async function skillsAlreadyInstalled() {
+  // 双重检测：优先查文件系统（最可靠），fallback 到 skills ls -g
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const agentsDir = path.join(os.homedir(), '.agents', 'skills');
+  const fsCheck = {
+    tasteBank: fs.existsSync(path.join(agentsDir, 'taste-bank', 'SKILL.md')),
+    contribute: fs.existsSync(path.join(agentsDir, 'taste-bank-contribute', 'SKILL.md')),
+  };
+  if (fsCheck.tasteBank) return fsCheck; // 文件系统有就够
+
+  // fallback: skills ls -g（可能不准，但作为备选）
   try {
     const out = await runSilent('npx', ['-y', 'skills', 'ls', '-g'], { timeout: 60000 });
-    // skills 输出带 ANSI 颜色码，剥掉后再匹配
     const clean = out.replace(/\x1b\[[0-9;]*m/g, '');
     return {
       tasteBank: /^taste-bank\b/m.test(clean),
