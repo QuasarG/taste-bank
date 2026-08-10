@@ -30,7 +30,7 @@ const wheelItems = styles.map((style) => ({
       version: style.meta.version,
       createdAt: style.meta.createdAt,
       renderer: 'Astro / Interactive',
-      href: `/styles/${style.slug}`,
+      href: '',
     }));
 const initialItem = wheelItems[0] ?? null;
 const flowColumnA = [...wheelItems, ...wheelItems];
@@ -57,7 +57,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
                 <ol class="top-list">
                   {topStyles.map((style, i) => (
                     <li>
-                      <a class="top-row" href={`/styles/${style.slug}`}>
+                      <a class="top-row" href="#wheel-mode" data-slug={style.slug}>
                         <span class="top-rank">{String(i + 1).padStart(2, '0')}</span>
                         <span class="top-name">{style.meta.name}</span>
                         <span class="top-refs">{usageMap[style.slug] ?? 0} refs</span>
