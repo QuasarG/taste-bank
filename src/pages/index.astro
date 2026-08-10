@@ -18,6 +18,7 @@ for (const style of styles) {
 }
 const topAuthors = [...authorMap.values()].sort((a, b) => b.refs - a.refs || a.name.localeCompare(b.name)).slice(0, 5);
 const wheelItems = styles.map((style) => ({
+      slug: style.slug,
       name: style.meta.name,
       image: `/api/styles/${style.slug}/screenshot.png`,
       alt: `${style.meta.name} style preview`,
@@ -30,7 +31,6 @@ const wheelItems = styles.map((style) => ({
       version: style.meta.version,
       createdAt: style.meta.createdAt,
       renderer: 'Astro / Interactive',
-      href: '',
     }));
 const initialItem = wheelItems[0] ?? null;
 const flowColumnA = [...wheelItems, ...wheelItems];
@@ -129,6 +129,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
                   class="cover-card"
                   data-cover-card
                   data-index={index}
+                  data-slug={item.slug}
                   data-preview={item.previewUrl}
                   data-name={item.name}
                   data-summary={item.summary}
@@ -139,7 +140,6 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
                   data-version={item.version}
                   data-date={item.createdAt}
                   data-renderer={item.renderer}
-                  data-href={item.href}
                 >
                   <img src={item.image} alt={item.name} loading={index < 3 ? 'eager' : 'lazy'} decoding="async" />
                 </div>
@@ -209,8 +209,13 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
   const activeDate = document.querySelector<HTMLElement>('[data-wheel-date]');
   const activeRenderer = document.querySelector<HTMLElement>('[data-wheel-renderer]');
   const copyPrompt = document.querySelector<HTMLButtonElement>('[data-copy-prompt]');
+  const topStyleRows = Array.from(document.querySelectorAll<HTMLAnchorElement>('.top-row[data-slug]'));
   const narrow = window.matchMedia('(max-width: 900px)');
-  let active = 0;
+  const requestedSlug = new URLSearchParams(window.location.search).get('style');
+  const requestedIndex = requestedSlug
+    ? coverCards.findIndex((card) => card.dataset.slug === requestedSlug)
+    : -1;
+  let active = requestedIndex >= 0 ? requestedIndex : 0;
   let railLock = 0;
 
   // cover flow 布局：中间一张大图（scale=1, opacity=1），两侧相邻图半透明缩小
@@ -250,7 +255,7 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
     if (activeVersion) activeVersion.textContent = `v${selected.dataset.version ?? ''}`;
     if (activeDate) activeDate.textContent = selected.dataset.date ?? '';
     if (activeRenderer) activeRenderer.textContent = selected.dataset.renderer ?? '';
-    if (copyPrompt) copyPrompt.dataset.slug = selected.dataset.href?.split('/').pop() ?? '';
+    if (copyPrompt) copyPrompt.dataset.slug = selected.dataset.slug ?? '';
   }
 
   function shiftRail(direction: 1 | -1) {
@@ -275,6 +280,15 @@ const flowDurationB = Math.max(24, Math.round(flowDurationA * 1.15));
   coverCards.forEach((card, index) => {
     card.addEventListener('click', () => {
       if (index === active) return; // 焦点卡不跳转（详情页已砍）
+      active = index;
+      layoutRail();
+      applyActive();
+    });
+  });
+  topStyleRows.forEach((row) => {
+    row.addEventListener('click', () => {
+      const index = coverCards.findIndex((card) => card.dataset.slug === row.dataset.slug);
+      if (index < 0) return;
       active = index;
       layoutRail();
       applyActive();
