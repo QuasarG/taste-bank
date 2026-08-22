@@ -58,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
         const t = confirmMail[lang];
         const autoUrl = `https://tastebank.cloud/auto-approve?email=${encodeURIComponent(email)}&token=${applicant.autoToken}`;
         // 1. 给管理员发提醒（带一键发放按钮）
-        await sendMail({
+        const adminR = await sendMail({
           to: process.env.NOTIFY_TO || '',
           subject: `[Taste Bank] 新的邀请码申请：${email}`,
           text: `新的邀请码申请\n\n邮箱：${email}\n时间：${applicant.createdAt}\n\n一键发放：${autoUrl}\n（链接一次性有效，点击后自动生成邀请码并发送给申请人）\n\n或前往 https://tastebank.cloud/admin 手动处理。`,
@@ -73,11 +73,14 @@ export const POST: APIRoute = async ({ request }) => {
 </div>
 <p style="font-size:0.85em;color:#999;text-align:center">点击后自动生成邀请码并发送给申请人<br>链接一次性有效，或前往 <a href="https://tastebank.cloud/admin" style="color:#126984">admin 台</a> 手动处理</p>
 <hr style="border:none;border-top:1px solid #eee;margin:20px 0"><p style="color:#999;font-size:0.8em">— Taste Bank</p></div>`,
-        });
+          });
+        if (!adminR.ok) console.error('[mail] 邀请码申请管理员通知发送失败:', adminR.reason);
         // 2. 给申请者发确认邮件
-        await sendMail({ to: email, subject: t.subject, text: t.text(''), html: t.html });
-      } catch {
-        // mail.ts 不存在或未配置，静默跳过
+        const confirmR = await sendMail({ to: email, subject: t.subject, text: t.text(''), html: t.html });
+        if (!confirmR.ok) console.error('[mail] 邀请码申请确认信发送失败:', confirmR.reason);
+      } catch (e) {
+        // 邮件链路异常（未配置/网络/凭据失效）要落日志，不能静默——否则管理员永远不会发现没收到通知
+        console.error('[mail] 邀请码申请邮件发送异常:', e);
       }
     }
 

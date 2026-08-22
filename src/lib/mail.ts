@@ -36,9 +36,11 @@ async function getAccessToken(): Promise<string> {
 
 /** RFC 822 邮件构建（base64url 编码，Gmail API 要求） */
 function buildRawEmail(opts: { to: string; subject: string; text: string; html?: string }): string {
-  const from = process.env.GMAIL_FROM || 'me';
+  // Gmail API 要求 From 是合法地址（"名字 <邮箱>" 或裸邮箱）；缺失/非法时省略该头，
+  // Gmail 会用已认证账号补上，避免 From: Taste 这类格式直接被 API 拒收
+  const from = process.env.GMAIL_FROM?.trim() ?? '';
   const lines = [
-    `From: ${from}`,
+    ...(from.includes('@') ? [`From: ${from}`] : []),
     `To: ${opts.to}`,
     `Subject: =?UTF-8?B?${Buffer.from(opts.subject).toString('base64')}?=`,
     'MIME-Version: 1.0',
