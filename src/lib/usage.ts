@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { STYLES_DIR, listStyles } from './store';
 import { trackUsage } from './stats';
+import { checkRate, rateKey } from './ratelimit';
 
 // 引用计数：agent 每取一次某风格的 SKILL（MCP 或 HTTP），计数 +1
 // 落盘在 STYLE_LAB_DIR/data/usage.json，{ slug: count }
@@ -29,6 +30,12 @@ export function incrementUsage(slug: string): number {
   fs.writeFileSync(usageFile(), JSON.stringify(all, null, 2));
   trackUsage();
   return all[slug];
+}
+
+// 引用计数入口（对外请求路径）：按 slug + 客户端 IP 限流，防匿名刷引用榜
+export function incrementUsageLimited(slug: string, clientIp: string | undefined): number {
+  checkRate(rateKey(`usage:${slug}`, clientIp || 'direct'), 5, 60_000);
+  return incrementUsage(slug);
 }
 
 // 引用量 Top N（仅统计仍在架的风格；并列按 slug 字典序，保证稳定）

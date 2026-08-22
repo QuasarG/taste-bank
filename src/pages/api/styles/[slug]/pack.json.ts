@@ -1,16 +1,16 @@
 import type { APIRoute } from 'astro';
 import { loadStyle, readStyleFile } from '@lib/store';
 import { assembleSkill, fullCss } from '@lib/assemble';
-import { json, apiError } from '@lib/api-utils';
-import { incrementUsage } from '@lib/usage';
+import { json, apiError, realIp } from '@lib/api-utils';
+import { incrementUsageLimited } from '@lib/usage';
 
 // 完整风格包：一次返回 meta + tokens + skill(含安全须知+tokens附录) + css(含overrides) + 全部模板文件内容。
 // 给 CLI/agent 当上下文用——agent 调一次拿全，不再需要逐个文件拉。
-export const GET: APIRoute = ({ params }) => {
+export const GET: APIRoute = ({ params, request }) => {
   try {
     const slug = params.slug!;
     const pack = loadStyle(slug);
-    incrementUsage(pack.slug);
+    incrementUsageLimited(pack.slug, realIp(request));
 
     // 组装 templates 内容 map：key 去掉 "templates/" 前缀，value 为文件全文
     const templates: Record<string, string> = {};

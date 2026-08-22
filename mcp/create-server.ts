@@ -6,7 +6,7 @@ import { listStyles, loadStyle, readStyleFile } from '../src/lib/store';
 import { assembleSkill, fullCss } from '../src/lib/assemble';
 import { createStylePack, updateStylePack, deleteStylePack, validateStylePack } from '../src/lib/create';
 import { generateKeypair } from '../src/lib/auth';
-import { incrementUsage } from '../src/lib/usage';
+import { incrementUsageLimited } from '../src/lib/usage';
 import { whoami } from '../src/lib/whoami';
 
 const USAGE_PATH = fileURLToPath(new URL('../docs/mcp-usage-guide.md', import.meta.url));
@@ -14,8 +14,8 @@ const USAGE_PATH = fileURLToPath(new URL('../docs/mcp-usage-guide.md', import.me
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] });
 const fail = (e: unknown) => ({ content: [{ type: 'text' as const, text: String(e) }], isError: true });
 
-// Streamable HTTP 传输的 server 工厂；inviteCode 由请求头注入
-export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpServer {
+// Streamable HTTP 传输的 server 工厂；inviteCode 由请求头注入，clientIp 用于引用计数限流
+export function createStyleLabServer(opts: { inviteCode?: string; clientIp?: string } = {}): McpServer {
   const server = new McpServer({ name: 'style-lab', version: '0.2.0' });
 
   server.registerTool(
@@ -73,7 +73,7 @@ export function createStyleLabServer(opts: { inviteCode?: string } = {}): McpSer
     async ({ slug }) => {
       try {
         const pack = loadStyle(slug);
-        incrementUsage(slug);
+        incrementUsageLimited(slug, opts.clientIp);
         return text(assembleSkill(pack.meta, pack.tokens, pack.skillRaw));
       } catch (e) {
         return fail(e);

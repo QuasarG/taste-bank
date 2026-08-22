@@ -40,8 +40,8 @@ export function checkAdminToken(token: string): boolean {
 }
 
 export function adminCookie(token: string): string {
-  // 裸 HTTP 阶段不带 Secure；上 HTTPS 后补上
-  return `${COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
+  // 站点全量 HTTPS（80 端口由 nginx 301），cookie 恒带 Secure
+  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
 }
 
 export function clearAdminCookie(): string {

@@ -11,7 +11,10 @@ export const GET: APIRoute = async ({ params, request }) => {
   try {
     const file = new URL(request.url).searchParams.get('file') ?? 'page.html';
     if (!/^[\w][\w.-]*\.html$/.test(file)) throw new Error(`非法模板文件名: ${file}`);
-    const templateUrl = new URL(`/styles/${params.slug}/template.html?file=${file}`, request.url);
+    // 抓取基址用服务端配置的公开域名（STYLE_LAB_PUBLIC_ORIGIN），不能信客户端 Host 头；
+    // 开发环境未配置时才退回请求 origin
+    const origin = process.env.STYLE_LAB_PUBLIC_ORIGIN?.replace(/\/+$/, '') ?? new URL(request.url).origin;
+    const templateUrl = new URL(`/styles/${params.slug}/template.html?file=${file}`, origin).toString();
     const png = await ensureScreenshot(params.slug!, templateUrl.toString(), file);
 
     // ETag 基于文件名（含内容 hash），稳定且无需读文件内容算 hash

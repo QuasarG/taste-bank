@@ -24,14 +24,19 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const inviteCode = req.headers['x-invite-code'];
-    // 按来源 IP 粗限流，防无脑刷请求
+    // 按来源 IP 粗限流，防无脑刷请求：只信 nginx 注入的 X-Real-IP，
+    // 直连时才用 socket 地址（反代后所有客户端共享 127.0.0.1，不能当身份）
+    const clientIp = (req.headers['x-real-ip'] as string | undefined) ?? req.socket.remoteAddress ?? '';
     try {
-      checkRate(rateKey('ip', req.socket.remoteAddress), 120, 60_000);
+      checkRate(rateKey('ip', clientIp), 120, 60_000);
     } catch {
       res.writeHead(429, { 'content-type': 'text/plain' }).end('rate limited');
       return;
     }
-    const mcpServer = createStyleLabServer({ inviteCode: Array.isArray(inviteCode) ? inviteCode[0] : inviteCode });
+    const mcpServer = createStyleLabServer({
+      inviteCode: Array.isArray(inviteCode) ? inviteCode[0] : inviteCode,
+      clientIp,
+    });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {
       transport.close();

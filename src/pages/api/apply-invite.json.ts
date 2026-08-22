@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { addApplicant } from '@lib/applicants';
 import { checkRate, rateKey } from '@lib/ratelimit';
-import { json, apiError } from '@lib/api-utils';
+import { json, apiError, realIp } from '@lib/api-utils';
 
 // 确认邮件模板（双语）
 const confirmMail = {
@@ -39,7 +39,8 @@ Once approved, you'll receive another email with your invite code and setup inst
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    checkRate(rateKey('apply', request.headers.get('x-forwarded-for') || request.socket?.remoteAddress), 3, 3600_000);
+    // 限流按 nginx 注入的真实客户端 IP（X-Real-IP，不可伪造）；X-Forwarded-For 客户端可控，一律不信任
+    checkRate(rateKey('apply', realIp(request)), 3, 3600_000);
 
     const body = await request.json();
     const email = String(body?.email || '').trim().toLowerCase();
