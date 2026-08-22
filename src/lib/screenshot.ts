@@ -36,14 +36,26 @@ export async function ensureScreenshot(slug: string, templateUrl: string, file =
   const target = path.join(CACHE_DIR, `${slug}-${hash}.png`);
   if (fs.existsSync(target)) return target;
 
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  const browser = await getBrowser();
-  const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
-  try {
-    await page.goto(templateUrl, { waitUntil: 'networkidle', timeout: 30_000 });
-    await page.screenshot({ path: target, type: 'png' });
-  } finally {
-    await page.close();
-  }
-  return target;
+  // 1GB 内存机器（Azure B1s 规格）扛不住并发 chromium：整条截图链路排队执行，一次只渲染一个
+  return screenshotQueue(async () => {
+    if (fs.existsSync(target)) return target; // 排队期间可能已被前面的请求渲染完
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    const browser = await getBrowser();
+    const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+    try {
+      await page.goto(templateUrl, { waitUntil: 'networkidle', timeout: 30_000 });
+      await page.screenshot({ path: target, type: 'png' });
+    } finally {
+      await page.close();
+    }
+    return target;
+  });
+}
+
+// 全局串行队列：截图任务逐个执行，避免多个 chromium 页面同时驻留内存
+let screenshotChain: Promise<unknown> = Promise.resolve();
+function screenshotQueue<T>(fn: () => Promise<T>): Promise<T> {
+  const next = screenshotChain.then(fn, fn);
+  screenshotChain = next.catch(() => {});
+  return next;
 }
