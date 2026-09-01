@@ -382,6 +382,11 @@ html[lang="zh-CN"] .about-intro-compact h1 { font-size: clamp(2.2rem, 3.5vw, 3re
   color: var(--ink);
 }
 html[lang="zh-CN"] .about-apply h2 { text-transform: none; }
+.mail-maintenance {
+  background: #fff8e6; border: 1px solid #e8d48b; border-radius: 6px;
+  padding: 10px 14px; margin: 0 0 14px;
+  font-size: 0.78rem; color: #8a6d1a; line-height: 1.5;
+}
 .about-apply-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0 0 20px; }
 .about-apply-form { display: flex; flex-direction: column; gap: 10px; }
 .about-apply-form input {

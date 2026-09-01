@@ -75,6 +75,10 @@ import '../styles/pages.css';
         <span data-ui-en>Need an invite code?</span>
         <span data-ui-zh style="display:none">需要邀请码？</span>
       </h2>
+      <div class="mail-maintenance" id="mail-maintenance" hidden>
+        <span data-ui-en>⚠ Email delivery is under maintenance — your request will still be recorded, we'll process it manually.</span>
+        <span data-ui-zh style="display:none">⚠ 邮件服务维护中——申请仍会记录，我们会人工处理</span>
+      </div>
       <p class="about-apply-desc">
         <span data-ui-en>Submitting a style requires an invite code. Leave your email and we'll send one to you.</span>
         <span data-ui-zh style="display:none">投稿风格需要邀请码。留下邮箱，我们会发送给你。</span>
@@ -104,7 +108,17 @@ import '../styles/pages.css';
       const form = document.getElementById('apply-form');
       const emailInput = document.getElementById('apply-email');
       const status = document.getElementById('apply-status');
+      const maintenance = document.getElementById('mail-maintenance');
       if (!form) return;
+
+      // 检测邮件服务状态（停了显示维护提示）
+      fetch('/api/mail-status.json')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d && d.mailEnabled === false && maintenance) maintenance.hidden = false;
+        })
+        .catch(() => {});
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = emailInput.value.trim();
